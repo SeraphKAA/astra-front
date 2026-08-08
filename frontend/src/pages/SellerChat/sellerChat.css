@@ -1,0 +1,290 @@
+.seller-chat-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    color: #fff;
+    box-sizing: border-box;
+    animation: fadeIn var(--duration-slow, 0.5s) ease;
+}
+
+.seller-chat-head h1 {
+    margin: 0 0 6px 0;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.seller-chat-sub {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 13px;
+}
+
+.seller-chat-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    margin-bottom: 14px;
+}
+
+.seller-chat-status-tabs {
+    margin-bottom: 14px;
+    display: inline-flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.seller-chat-tabs {
+    margin-top: 14px;
+    display: inline-flex;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.seller-tab {
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.75);
+    padding: 9px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    transition:
+        background var(--duration-fast, 0.2s) ease,
+        color var(--duration-fast, 0.2s) ease,
+        transform var(--duration-fast, 0.2s) var(--ease-spring, ease);
+}
+
+.seller-tab:hover:not(.is-active) {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+.seller-tab:active {
+    transform: scale(0.97);
+}
+
+.seller-tab.is-active {
+    background: rgba(226, 121, 155, 0.18);
+    color: #fff;
+    box-shadow: 0 0 0 1px rgba(226, 121, 155, 0.25);
+}
+
+.seller-chat-search {
+    flex: 1;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #1c1c1f;
+    color: #fff;
+    transition:
+        border-color var(--duration-fast, 0.2s) ease,
+        box-shadow var(--duration-fast, 0.2s) ease;
+}
+
+.seller-chat-search:focus {
+    outline: none;
+    border-color: rgba(226, 121, 155, 0.4);
+    box-shadow: 0 0 0 3px rgba(226, 121, 155, 0.1);
+}
+
+.seller-chat-btn {
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+    font-weight: 600;
+    transition:
+        background var(--duration-fast, 0.2s) ease,
+        border-color var(--duration-fast, 0.2s) ease,
+        transform var(--duration-fast, 0.2s) ease;
+}
+
+.seller-chat-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.seller-chat-btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.seller-chat-btn.primary {
+    background: var(--accent, #e2799b);
+    border-color: var(--accent, #e2799b);
+}
+
+.seller-chat-btn.primary:hover:not(:disabled) {
+    background: #eb8fb0;
+    border-color: #eb8fb0;
+}
+
+.seller-chat-muted {
+    color: rgba(255, 255, 255, 0.72);
+    padding: 24px 0;
+    text-align: center;
+}
+
+.seller-chat-error {
+    color: #ff8a8a;
+    padding: 12px 16px;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+.seller-chat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.seller-order-card {
+    background: #1c1c1f;
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition:
+        transform var(--duration-fast, 0.2s) var(--ease-out-smooth, ease),
+        border-color var(--duration-fast, 0.2s) ease,
+        box-shadow var(--duration-fast, 0.2s) ease;
+    animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease) backwards;
+}
+
+.seller-chat-list > .seller-order-card:nth-child(1) { animation-delay: 0.03s; }
+.seller-chat-list > .seller-order-card:nth-child(2) { animation-delay: 0.06s; }
+.seller-chat-list > .seller-order-card:nth-child(3) { animation-delay: 0.09s; }
+.seller-chat-list > .seller-order-card:nth-child(n+4) { animation-delay: 0.12s; }
+
+.seller-order-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(226, 121, 155, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.seller-order-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+}
+
+.seller-order-title {
+    font-weight: 800;
+    font-size: 15px;
+}
+
+.seller-order-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.seller-badge {
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 600;
+    text-transform: lowercase;
+}
+
+.seller-order-grid {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.seller-order-grid span {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.seller-order-actions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.seller-order-status {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.seller-order-select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #232328;
+    color: #f4f4f6;
+    transition: border-color var(--duration-fast, 0.2s) ease;
+}
+
+.seller-order-select:focus {
+    outline: none;
+    border-color: rgba(226, 121, 155, 0.4);
+}
+
+.seller-order-select option {
+    background: #232328;
+    color: #f4f4f6;
+}
+
+.seller-chat-link {
+    color: var(--accent, #e2799b);
+    text-decoration: none;
+    font-weight: 700;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(226, 121, 155, 0.1);
+    border: 1px solid rgba(226, 121, 155, 0.2);
+    transition:
+        background var(--duration-fast, 0.2s) ease,
+        color var(--duration-fast, 0.2s) ease;
+}
+
+.seller-chat-link:hover {
+    background: rgba(226, 121, 155, 0.18);
+    color: #f5d4e0;
+}
+
+@media (max-width: 720px) {
+    .seller-chat-controls {
+        flex-direction: column;
+    }
+
+    .seller-order-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .seller-chat-status-tabs {
+        display: flex;
+        width: 100%;
+        gap: 6px;
+        flex-wrap: nowrap;
+    }
+
+    .seller-chat-status-tabs .seller-tab {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 6px 8px;
+        font-size: 12px;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}

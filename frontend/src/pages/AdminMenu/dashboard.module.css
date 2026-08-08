@@ -1,0 +1,579 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeInUp 0.45s var(--ease-out-smooth, ease);
+}
+
+.loadingWrap,
+.errorBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+}
+
+.errorBox {
+  flex-direction: column;
+  gap: 14px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top right, rgba(226, 121, 155, 0.18), transparent 42%),
+    linear-gradient(135deg, rgba(32, 32, 34, 0.98), rgba(24, 24, 26, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(226, 121, 155, 0.85);
+}
+
+.title {
+  margin: 0;
+  font-family: "Nunito", sans-serif;
+  font-size: clamp(28px, 4vw, 36px);
+  font-weight: 800;
+  color: #fff;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  max-width: 640px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.refreshBtn,
+.exportBtn {
+  border: 1px solid rgba(226, 121, 155, 0.35);
+  background: rgba(226, 121, 155, 0.12);
+  color: #f3b4c8;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.refreshBtn:hover:not(:disabled),
+.exportBtn:hover:not(:disabled) {
+  background: rgba(226, 121, 155, 0.22);
+  transform: translateY(-1px);
+}
+
+.refreshBtn:disabled,
+.exportBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.alertCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: rgba(255, 193, 7, 0.08);
+  border: 1px solid rgba(255, 193, 7, 0.22);
+  color: #ffe08a;
+}
+
+.alertCard svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.alertCard p {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
+}
+
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.kpiCard {
+  display: flex;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(32, 32, 34, 0.92);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.kpiCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+.kpiIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.kpiIcon svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.kpiBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.kpiTitle {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.kpiValue {
+  font-family: "Nunito", sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.kpiHint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.kpiPink .kpiIcon {
+  background: rgba(226, 121, 155, 0.16);
+  color: #f0a8c0;
+}
+
+.kpiBlue .kpiIcon {
+  background: rgba(74, 158, 255, 0.16);
+  color: #9ec5ff;
+}
+
+.kpiGreen .kpiIcon {
+  background: rgba(129, 199, 132, 0.16);
+  color: #b8e6ba;
+}
+
+.kpiPurple .kpiIcon {
+  background: rgba(171, 130, 255, 0.16);
+  color: #d4b8ff;
+}
+
+.periodGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.periodCard {
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.periodCard h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.periodStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.periodStats span {
+  display: block;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 4px;
+}
+
+.periodStats strong {
+  font-size: 15px;
+  color: #fff;
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.panel {
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(26, 26, 28, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.panelHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panelHead h2 {
+  margin: 0;
+  font-size: 16px;
+  color: #fff;
+}
+
+.panelHead span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.chart {
+  height: 220px;
+}
+
+.chartBars {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.chartBarWrap {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.chartBar {
+  width: 100%;
+  max-width: 28px;
+  border-radius: 8px 8px 4px 4px;
+  background: linear-gradient(180deg, #f0a8c0 0%, #e2799b 100%);
+  box-shadow: 0 8px 18px rgba(226, 121, 155, 0.22);
+  transition: transform 0.18s ease;
+}
+
+.chartBarWrap:hover .chartBar {
+  transform: scaleY(1.03);
+}
+
+.chartLabel {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.42);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.statusList,
+.topList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.statusRow {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.statusMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.statusCount {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.statusTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.statusFill {
+  height: 100%;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusCreated {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.statusPaid {
+  background: rgba(74, 158, 255, 0.14);
+  color: #9ec5ff;
+}
+
+.statusProcessing {
+  background: rgba(255, 193, 7, 0.14);
+  color: #ffd56a;
+}
+
+.statusCompleted {
+  background: rgba(129, 199, 132, 0.14);
+  color: #b8e6ba;
+}
+
+.statusCanceled {
+  background: rgba(239, 68, 68, 0.14);
+  color: #ff9a9a;
+}
+
+.statusPaid.statusFill {
+  background: #4a9eff;
+}
+
+.statusProcessing.statusFill {
+  background: #ffc107;
+}
+
+.statusCompleted.statusFill {
+  background: #81c784;
+}
+
+.statusCanceled.statusFill {
+  background: #ef4444;
+}
+
+.statusCreated.statusFill {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.topItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.topRank {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(226, 121, 155, 0.14);
+  color: #f0a8c0;
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.topInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.topInfo strong {
+  font-size: 14px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topInfo span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.catalogStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.catalogStats div {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.catalogStats span {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+}
+
+.catalogStats strong {
+  font-size: 18px;
+  color: #fff;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 13px;
+}
+
+.table th {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.table td {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.emptyCell,
+.emptyText {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 24px 12px;
+}
+
+.exportCard {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(32, 32, 34, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.exportCard h2 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #fff;
+}
+
+.exportCard p {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.exportForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.exportForm label {
+  display: grid;
+  gap: 6px;
+}
+
+.exportForm span {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.exportForm input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+}
+
+.exportForm input:focus {
+  border-color: rgba(226, 121, 155, 0.45);
+}
+
+@media (max-width: 1100px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .periodGrid,
+  .periodStats {
+    grid-template-columns: 1fr;
+  }
+
+  .hero,
+  .exportCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 640px) {
+  .kpiGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .catalogStats {
+    grid-template-columns: 1fr;
+  }
+}

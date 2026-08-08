@@ -1,0 +1,28 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.spinner {
+  border-style: solid;
+  border-color: #2a2a2e;
+  border-top-color: var(--spinner-color, #E2799B);
+  border-radius: 50%;
+  animation: astraSpin 0.8s linear infinite;
+}
+
+.label {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 14px;
+}
+
+@keyframes astraSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

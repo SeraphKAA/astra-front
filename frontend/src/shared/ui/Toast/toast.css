@@ -1,0 +1,130 @@
+.toast-viewport {
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 5000;
+    width: min(360px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.toast-item {
+    pointer-events: auto;
+    background: #1c1c1f;
+    border-radius: 14px;
+    padding: 12px 12px 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    transition: transform 0.22s ease, opacity 0.22s ease;
+    touch-action: pan-y;
+    opacity: 1;
+}
+
+.toast-item.is-entering {
+    animation: toastIn 0.48s ease forwards;
+}
+
+.toast-item.is-closing {
+    animation: toastOutLeft 0.48s ease forwards;
+}
+
+.toast-item.is-info {
+    border-left: 4px solid rgba(154, 160, 166, 0.9);
+}
+
+.toast-item.is-success {
+    border-left: 4px solid rgba(76, 175, 80, 0.9);
+}
+
+.toast-item.is-error {
+    border-left: 4px solid rgba(244, 67, 54, 0.9);
+}
+
+.toast-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-title {
+    font-weight: 800;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.92);
+    margin-bottom: 2px;
+}
+
+.toast-message {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.78);
+    line-height: 1.25;
+    word-break: break-word;
+}
+
+.toast-close {
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.65);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+.toast-close:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 768px) {
+    .toast-viewport {
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(520px, calc(100vw - 24px));
+        bottom: 12px;
+    }
+
+    .toast-item.is-closing {
+        animation: toastOutDown 0.48s ease forwards;
+    }
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes toastOutLeft {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(-24px);
+    }
+}
+
+@keyframes toastOutDown {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+}

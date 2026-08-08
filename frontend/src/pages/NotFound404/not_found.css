@@ -1,0 +1,195 @@
+.not-found-page {
+  padding: 96px 16px 72px;
+  min-height: calc(100vh - 120px);
+  color: #fff;
+  animation: fadeIn var(--duration-slow, 0.5s) ease;
+}
+
+.not-found-container {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.not-found-hero {
+  text-align: center;
+  padding: 32px 24px 28px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top, rgba(226, 121, 155, 0.14), transparent 55%),
+    rgba(26, 26, 28, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+  animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease);
+}
+
+.not-found-eyebrow {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent, #e2799b);
+}
+
+.not-found-code {
+  margin: 0;
+  font-size: clamp(72px, 18vw, 120px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, #f0a8c0 0%, #e2799b 45%, #d0688a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.not-found-title-divider {
+  width: 52px;
+  height: 3px;
+  margin: 16px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent, #e2799b), transparent);
+  opacity: 0.9;
+}
+
+.not-found-title {
+  margin: 16px 0 0;
+  font-size: clamp(22px, 4vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.not-found-subtitle {
+  margin: 12px auto 0;
+  max-width: 460px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.not-found-path {
+  display: inline-block;
+  margin: 16px 0 0;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  animation: fadeInUp 0.55s var(--ease-out-smooth, ease) 0.08s backwards;
+}
+
+.not-found-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background var(--duration-fast, 0.2s) ease,
+    border-color var(--duration-fast, 0.2s) ease,
+    transform var(--duration-fast, 0.2s) var(--ease-spring, ease),
+    box-shadow var(--duration-fast, 0.2s) ease;
+}
+
+.not-found-btn-primary {
+  background: linear-gradient(135deg, #e2799b 0%, #d0688a 100%);
+  color: #fff;
+  box-shadow: 0 8px 22px var(--accent-glow, rgba(226, 121, 155, 0.32));
+}
+
+.not-found-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px var(--accent-glow, rgba(226, 121, 155, 0.4));
+}
+
+.not-found-btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.not-found-btn-secondary:hover {
+  background: rgba(226, 121, 155, 0.1);
+  border-color: rgba(226, 121, 155, 0.28);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.not-found-links {
+  text-align: center;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  animation: fadeInUp 0.55s var(--ease-out-smooth, ease) 0.14s backwards;
+}
+
+.not-found-links-label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.not-found-links-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 18px;
+}
+
+.not-found-links-row a {
+  color: var(--accent, #e2799b);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--duration-fast, 0.2s) ease;
+}
+
+.not-found-links-row a:hover {
+  color: #f0a8c0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .not-found-page {
+    padding: 88px 12px 64px;
+  }
+
+  .not-found-hero {
+    padding: 24px 16px 22px;
+  }
+
+  .not-found-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .not-found-btn {
+    width: 100%;
+  }
+}

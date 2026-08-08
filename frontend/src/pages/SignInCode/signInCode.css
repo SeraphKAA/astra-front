@@ -1,0 +1,5 @@
+@import "../../shared/styles/authPages.css";
+
+.div_for_login_.auth-code-card {
+    /* наследует общие стили карточки */
+}

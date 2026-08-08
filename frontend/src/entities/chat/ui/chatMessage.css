@@ -1,0 +1,280 @@
+.chat-message-shell {
+    position: relative;
+    max-width: 72%;
+    margin-bottom: 4px;
+    animation: chatMessageIn 0.35s var(--ease-out-smooth, cubic-bezier(0.22, 1, 0.36, 1)) backwards;
+}
+
+.chat-message-shell.own {
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.chat-message-shell.other {
+    align-self: flex-start;
+}
+
+/* Невидимый мост между пузырём и панелью действий — иначе hover срывается в зазоре */
+.chat-message-shell.own.is-actions-visible::before {
+    content: "";
+    position: absolute;
+    top: -56px;
+    left: -12px;
+    right: -12px;
+    height: 56px;
+    z-index: 1;
+}
+
+.chat-message-shell.is-actions-open {
+    z-index: 2;
+}
+
+.chat-message-shell.is-actions-open .chat-message {
+    transform: scale(0.98);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+
+.chat-message {
+    position: relative;
+    padding: 10px 14px 12px;
+    border-radius: 16px;
+    word-wrap: break-word;
+    transition:
+        transform var(--duration-fast, 0.2s) var(--ease-out-smooth, ease),
+        box-shadow var(--duration-fast, 0.2s) ease;
+}
+
+.chat-message.own {
+    background: linear-gradient(135deg, #e2799b 0%, #c96a88 100%);
+    color: #fff;
+    border-bottom-right-radius: 5px;
+    box-shadow: 0 4px 14px rgba(226, 121, 155, 0.22);
+}
+
+.chat-message.other {
+    background: #232328;
+    color: #ececec;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom-left-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    opacity: 0.85;
+}
+
+.message-sender {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+.message-sender.clickable {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 2px;
+}
+
+.message-sender.clickable:hover {
+    opacity: 1;
+}
+
+.message-time {
+    font-size: 10px;
+    flex-shrink: 0;
+    opacity: 0.75;
+}
+
+.message-text {
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+
+.message-edit {
+    width: 100%;
+}
+
+.edit-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    color: white;
+    font-size: 14px;
+    resize: none;
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 8px;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: border-color var(--duration-fast, 0.2s) ease;
+}
+
+.edit-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.edit-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.edit-actions button {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition:
+        background var(--duration-fast, 0.2s) ease,
+        transform var(--duration-fast, 0.2s) var(--ease-spring, ease);
+}
+
+.edit-actions button:active {
+    transform: scale(0.97);
+}
+
+.save-btn {
+    background: rgba(255, 255, 255, 0.92);
+    color: #1a1a1c;
+}
+
+.cancel-btn {
+    background: rgba(0, 0, 0, 0.25);
+    color: #f0f0f0;
+}
+
+.message-actions {
+    position: absolute;
+    top: -6px;
+    right: 8px;
+    transform: translateY(-100%);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: #1c1c1f;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 4px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    animation: actionsPopIn 0.22s var(--ease-out-smooth, cubic-bezier(0.22, 1, 0.36, 1));
+    z-index: 3;
+}
+
+.message-actions--mobile {
+    top: -8px;
+    right: 50%;
+    transform: translate(50%, -100%);
+    padding: 6px;
+    border-radius: 14px;
+    box-shadow:
+        0 12px 32px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(226, 121, 155, 0.15);
+    animation-name: actionsPopInMobile;
+}
+
+.message-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.88);
+    transition:
+        background var(--duration-fast, 0.2s) ease,
+        color var(--duration-fast, 0.2s) ease,
+        transform var(--duration-fast, 0.2s) var(--ease-spring, ease);
+}
+
+.message-action-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.message-action-btn:active {
+    transform: scale(0.92);
+}
+
+.message-action-btn.edit-btn:hover {
+    color: #8ec3ff;
+    background: rgba(74, 158, 255, 0.12);
+}
+
+.message-action-btn.delete-btn:hover {
+    color: #ff8a8a;
+    background: rgba(255, 107, 107, 0.12);
+}
+
+.message-action-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.message-actions-divider {
+    width: 1px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+@keyframes chatMessageIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes actionsPopIn {
+    from {
+        opacity: 0;
+        transform: translateY(-90%) scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-100%) scale(1);
+    }
+}
+
+@keyframes actionsPopInMobile {
+    from {
+        opacity: 0;
+        transform: translate(50%, -90%) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translate(50%, -100%) scale(1);
+    }
+}
+
+@media (max-width: 768px) {
+    .chat-message-shell {
+        max-width: 88%;
+    }
+
+    .chat-message-shell.own.is-actions-visible::before {
+        display: none;
+    }
+
+    .message-action-btn {
+        width: 42px;
+        height: 42px;
+    }
+}

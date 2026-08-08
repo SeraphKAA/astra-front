@@ -1,0 +1,41 @@
+/* Shared with PublicOffer — typography for long legal text */
+
+.legal-page {
+  /* padding-top: 96px; */
+  padding-bottom: 24px;
+}
+
+.legal-content .about-section p {
+  text-align: left;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.legal-content .about-section h2 {
+  text-align: left;
+}
+
+.legal-content a {
+  color: #7eb8ff;
+  text-decoration: underline;
+}
+
+.legal-footer {
+  margin-top: 2rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.legal-list {
+  margin: 0.5rem 0 1rem;
+  padding-left: 1.25rem;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.55;
+}
+
+.legal-list li {
+  margin-bottom: 0.35rem;
+}
