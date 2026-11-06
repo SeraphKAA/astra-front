@@ -8,6 +8,7 @@ export const MAIN_CATEGORY_LABELS = {
   game_currency: "Игровая валюта",
   neural_networks: "Нейросети",
   subscriptions: "Подписки",
+  steam_gift: "Steam гифты"
 };
 
 /** Порядок в фильтрах и селектах (без «all» — добавляется отдельно). */
@@ -17,6 +18,7 @@ export const MAIN_CATEGORY_OPTIONS = [
   { value: "game_currency", label: MAIN_CATEGORY_LABELS.game_currency },
   { value: "neural_networks", label: MAIN_CATEGORY_LABELS.neural_networks },
   { value: "subscriptions", label: MAIN_CATEGORY_LABELS.subscriptions },
+  { value: "steam_gift", label: MAIN_CATEGORY_LABELS.steam_gift },
 ];
 
 /**

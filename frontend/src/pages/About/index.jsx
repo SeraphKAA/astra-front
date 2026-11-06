@@ -1,6 +1,9 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { SendIcon, BadgeCheckIcon, ClockIcon, CalendarIcon, ShoppingBagIcon } from "../../shared/icons/lucide";
 import "./about.css";
+
+const COOP_TELEGRAM_URL = "https://t.me/astrashopsupport";
 
 const VALUES = [
   {
@@ -39,7 +42,7 @@ const VALUES = [
   },
   {
     title: "Команда",
-    text: "Ценим каждого участника и создаём комфортную атмосферу",
+    text: "Ценим каждого участника и создаём атмосферу, в которой все друг другу равны",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" aria-hidden>
         <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5" />
@@ -69,27 +72,6 @@ const VALUES = [
   },
 ];
 
-const TEAM = [
-  {
-    name: "Алексей Иванов",
-    role: "Основатель & CEO",
-    bio: "10+ лет опыта в IT-индустрии",
-    initials: "АИ",
-  },
-  {
-    name: "Мария Петрова",
-    role: "Технический директор",
-    bio: "Эксперт в области веб-технологий",
-    initials: "МП",
-  },
-  {
-    name: "Дмитрий Сидоров",
-    role: "Дизайнер",
-    bio: "Создаёт красивый и удобный интерфейс",
-    initials: "ДС",
-  },
-];
-
 const CONTACTS = [
   {
     label: "Email",
@@ -102,36 +84,15 @@ const CONTACTS = [
       </svg>
     ),
   },
-  // {
-  //   label: "Телефон",
-  //   value: "+7 (123) 456-78-90",
-  //   href: "tel:+71234567890",
-  //   icon: (
-  //     <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-  //       <path
-  //         d="M6.5 4h3l1.5 5-2 1.2a11 11 0 005.8 5.8L16 14l5 1.5v3A2.5 2.5 0 0118.6 21 15.5 15.5 0 016 7.4 2.5 2.5 0 016.5 4z"
-  //         stroke="currentColor"
-  //         strokeWidth="1.5"
-  //         strokeLinejoin="round"
-  //       />
-  //     </svg>
-  //   ),
-  // },
-  // {
-  //   label: "Адрес",
-  //   value: "Улица Пушкина, дом Колотушкина",
-  //   icon: (
-  //     <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-  //       <path
-  //         d="M12 21s6-5.2 6-10a6 6 0 10-12 0c0 4.8 6 10 6 10z"
-  //         stroke="currentColor"
-  //         strokeWidth="1.5"
-  //         strokeLinejoin="round"
-  //       />
-  //       <circle cx="12" cy="11" r="2" stroke="currentColor" strokeWidth="1.5" />
-  //     </svg>
-  //   ),
-  // },
+  {
+    label: "Telegram",
+    value: "@astrashopsupport",
+    href: COOP_TELEGRAM_URL,
+    target: "_blank",
+    rel: "noreferrer",
+    icon: <SendIcon className="coop-btn-icon" />
+  }
+
 ];
 
 const About = () => {
@@ -149,16 +110,25 @@ const About = () => {
 
         <div className="about-stats">
           <div className="about-stat-card">
-            <span className="about-stat-value">2024</span>
-            <span className="about-stat-label">Год основания</span>
+            <div className="about-stat-text">
+              <span className="about-stat-value">2024</span>
+              <span className="about-stat-label">Год основания</span>
+            </div>
+            <CalendarIcon className="about-stat-icon" />
           </div>
           <div className="about-stat-card">
-            <span className="about-stat-value">24/7</span>
-            <span className="about-stat-label">Поддержка</span>
+            <div className="about-stat-text">
+              <span className="about-stat-value">24/7</span>
+              <span className="about-stat-label">Поддержка</span>
+            </div>
+            <ClockIcon className="about-stat-icon" />
           </div>
           <div className="about-stat-card">
-            <span className="about-stat-value">100%</span>
-            <span className="about-stat-label">Фокус на клиенте</span>
+            <div className="about-stat-text">
+              <span className="about-stat-value">100%</span>
+              <span className="about-stat-label">Фокус на клиенте</span>
+            </div>
+            <BadgeCheckIcon className="about-stat-icon" />
           </div>
         </div>
 
@@ -166,19 +136,18 @@ const About = () => {
           <section className="about-section about-section-card">
             <h2 className="about-section-title">Наша миссия</h2>
             <p className="about-section-text">
-              Мы стремимся создавать инновационные решения, которые делают жизнь
-              проще и интереснее. Наша команда объединяет талантливых специалистов,
-              увлечённых своей работой и развитием цифровых продуктов.
+              Мы стремимся создавать инновационные решения, которые делают опыт клиента проще и интереснее.
+              Мы объединяем талантливых специалистов, молодых инфлюенсеров и умных ребят, 
+              увлечённых своей работой и развитием сферы ритейла и цифровых продуктов.
             </p>
           </section>
 
           <section className="about-section about-section-card">
             <h2 className="about-section-title">Наша история</h2>
             <p className="about-section-text">
-              Проект был основан в 2024 году группой энтузиастов, которые хотели
-              создать удобный и надёжный магазин. За это время мы прошли путь от
-              небольшой команды до современной платформы, сохранив дух инноваций
-              и стремление к совершенству.
+              Проект был основан в 2024 году группой энтузиастов, которые жили и живут исключительно идеей, а не заработком.
+              За это время мы прошли путь от небольшой команды до современной платформы, сохранив командную атмосферу,
+              дух инноваций и стремление к совершенству.
             </p>
           </section>
 
@@ -190,22 +159,6 @@ const About = () => {
                   <div className="about-value-icon">{item.icon}</div>
                   <h3>{item.title}</h3>
                   <p>{item.text}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-
-          <section className="about-section">
-            <h2 className="about-section-title">Наша команда</h2>
-            <div className="about-team-grid">
-              {TEAM.map((member) => (
-                <article key={member.name} className="about-team-card">
-                  <div className="about-member-avatar" aria-hidden>
-                    {member.initials}
-                  </div>
-                  <h3>{member.name}</h3>
-                  <p className="about-member-role">{member.role}</p>
-                  <p className="about-member-bio">{member.bio}</p>
                 </article>
               ))}
             </div>
@@ -250,9 +203,11 @@ const About = () => {
             <div className="about-cta-inner">
               <h2>Готовы начать покупки?</h2>
               <p>Загляните в каталог — там уже ждут лучшие предложения</p>
-              <NavLink to="/menu" className="about-cta-btn">
+              <NavLink to="/main" className="about-cta-btn">
                 Перейти в магазин
               </NavLink>
+              <ShoppingBagIcon className="about-cta-right-icon" />
+              <ShoppingBagIcon className="about-cta-left-icon" />
             </div>
           </section>
         </div>

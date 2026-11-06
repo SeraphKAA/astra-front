@@ -1,3 +1,16 @@
+/* ============================================================
+   Одноразовый код — ячейки v3 «ash and signal».
+
+   Пепельная поверхность, волосяная кромка, скругление 8px
+   (--astra-r-md, лестница 6/8/10/12). Фокус НЕЙТРАЛЬНЫЙ и
+   КЛАВИАТУРНЫЙ: ясеневое кольцо --astra-focus-field только при
+   обходе с клавиатуры. Раньше кольцо было «всегда видимым» —
+   но ячейка кода такое же поле ввода, как остальные, и клик
+   мышью по ней подсвечивал её серым: ровно то, что владелец
+   запретил. Ввод кода никуда не делся: каретка и цифра видны.
+   Кегль 20px: правило «шестнадцати пикселей» соблюдено с запасом.
+   ============================================================ */
+
 .root {
   display: flex;
   gap: 10px;
@@ -10,28 +23,45 @@
 .cell {
   width: 44px;
   height: 54px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #1a1a1c;
-  color: rgba(255, 255, 255, 0.92);
+  box-sizing: border-box;
+  padding: 0;
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+  border-radius: var(--astra-r-md, 8px);
+  background: var(--astra-card-2, #1f1f23);
+  color: var(--astra-ink, #eceaee);
+  font-family: var(--astra-display, "Unbounded", sans-serif);
+  /* Sixteen-Pixel-Input: iOS не перепрыгивает вёрстку */
   font-size: 20px;
-  font-weight: 800;
+  font-weight: 700;
   text-align: center;
   outline: none;
+  box-shadow: none;
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-color var(--astra-t-color, 150ms) var(--astra-ease, ease),
+    box-shadow var(--astra-t-color, 150ms) var(--astra-ease, ease);
 }
 
-.cell:focus {
-  border-color: rgba(226, 121, 155, 0.55);
-  box-shadow: 0 0 0 3px rgba(226, 121, 155, 0.12);
-  transform: scale(1.04);
+/* Brighter-Never-Darker */
+.cell:hover:not(:disabled) {
+  border-color: var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+}
+
+:root[data-modality="keyboard"] .cell:focus {
+  border-color: var(--astra-focus-field, rgba(236, 234, 238, 0.55));
+  box-shadow: 0 0 0 1px var(--astra-focus-field, rgba(236, 234, 238, 0.55));
 }
 
 .cell:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* В режиме принудительных цветов box-shadow не рисуется — возвращаем outline */
+@media (forced-colors: active) {
+  .cell:focus {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
 }
 
 @media (max-width: 420px) {
@@ -45,3 +75,8 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .cell {
+    transition: none;
+  }
+}

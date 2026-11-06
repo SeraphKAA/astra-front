@@ -1,52 +1,105 @@
+/* ============================================================
+   Поля <Label> / <Input> — базовые классы по умолчанию.
+
+   Экраны входа/регистрации передают собственные классы
+   (.astra-auth-label / .astra-auth-input, см. shared/styles/authPages.css).
+   Классы ниже остаются дефолтом компонентов и используются
+   widgets/ProfileSetupModal — поэтому они живые и переписаны
+   в грамматику v3: поверхность --astra-card-2, волосяная кромка,
+   светлее на ховере, 16px (iOS не зумит).
+
+   Раунд 5: фокус поля НЕЙТРАЛЬНЫЙ (--astra-focus-field) — розовая
+   подсветка ввода убрана, но индикатор остаётся видимым.
+   ============================================================ */
+
 .login-input {
     display: block;
     width: 100%;
-    margin-bottom: 8px;
-    padding: 10px 14px;
     box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    background: #1a1a1c;
-    color: rgba(255, 255, 255, 0.92);
+    height: 48px;
+    margin-bottom: 8px;
+    padding: 0 16px;
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    /* Sixteen-Pixel-Input */
+    font-size: 16px;
+    line-height: 1.4;
     outline: none;
-    height: 44px;
+    box-shadow: none;
     transition:
-        border-color var(--duration-fast, 0.2s) ease,
-        box-shadow var(--duration-fast, 0.2s) ease,
-        background var(--duration-fast, 0.2s) ease;
+        border-color var(--astra-t-color) var(--astra-ease),
+        box-shadow var(--astra-t-color) var(--astra-ease);
 }
 
 .login-input::placeholder {
-    color: rgba(255, 255, 255, 0.45);
+    color: var(--astra-ink-dim);
 }
 
+/* Brighter-Never-Darker */
+.login-input:hover:not(:disabled) {
+    border-color: var(--astra-line-strong);
+}
+
+/* Клик мышью не подсвечивает поле; кольцо — только для клавиатуры */
 .login-input:focus {
-    border-color: rgba(226, 121, 155, 0.5);
-    box-shadow: 0 0 0 3px rgba(226, 121, 155, 0.12);
-    background: #1e1e20;
+    outline: none;
+    box-shadow: none;
 }
 
-/* Chrome/Safari autofill paints its own background unless overridden */
+:root[data-modality="keyboard"] .login-input:focus {
+    outline: 1px solid var(--astra-focus-field);
+    outline-offset: 0;
+}
+
+/* forced-colors: собственные контуры игнорируются — берём системный */
+@media (forced-colors: active) {
+    .login-input:focus {
+        outline: 2px solid Highlight;
+        outline-offset: 1px;
+    }
+}
+
+.login-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Chrome/Safari перекрашивают автозаполнение своим фоном */
 .login-input:-webkit-autofill,
 .login-input:-webkit-autofill:hover,
 .login-input:-webkit-autofill:focus,
 .login-input:-webkit-autofill:active {
-    -webkit-text-fill-color: rgba(255, 255, 255, 0.92) !important;
-    caret-color: rgba(255, 255, 255, 0.92);
-    -webkit-box-shadow: 0 0 0 1000px #1c1c1e inset !important;
-    box-shadow: 0 0 0 1000px #1c1c1e inset !important;
+    -webkit-text-fill-color: var(--astra-ink) !important;
+    caret-color: var(--astra-ink);
+    -webkit-box-shadow: 0 0 0 1000px var(--astra-card-2) inset !important;
+    box-shadow: 0 0 0 1000px var(--astra-card-2) inset !important;
     transition: background-color 9999s ease-out 0s;
+}
+
+/* Заливка автозаполнения занимает box-shadow целиком, поэтому кольцо для
+   КЛАВИАТУРЫ приходится добавлять первым слоем той же тени (outline тут не
+   поможет: он рисуется, но заливка перекрывает кромку). Без гейта это
+   кольцо появлялось и от клика мышью — по автозаполненному полю. */
+:root[data-modality="keyboard"] .login-input:-webkit-autofill:focus {
+    -webkit-box-shadow:
+        0 0 0 1px var(--astra-focus-field),
+        0 0 0 1000px var(--astra-card-2) inset !important;
+    box-shadow:
+        0 0 0 1px var(--astra-focus-field),
+        0 0 0 1000px var(--astra-card-2) inset !important;
 }
 
 .login-label {
     display: block;
     width: 100%;
-    margin-top: 12px;
-    margin-bottom: 8px;
-    padding-left: 2px;
-    font-size: 14px;
-    text-align: left;
-    color: rgba(255, 255, 255, 0.88);
+    margin: 12px 0 8px;
+    font-family: var(--astra-body);
+    font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.01em;
+    text-align: left;
+    color: var(--astra-ink-dim);
 }

@@ -1,18 +1,50 @@
-.support-chat {
-    display: flex;
-    flex-direction: row;
-    height: calc(100vh - 120px);
-    max-width: 1300px;
-    margin: 0 auto;
-    margin-top: 18px;
-    background: #0e0e10;
-    border-radius: 16px;
+/* ============================================================
+   Техподдержка — v3 «Ash and Signal», compact.
+
+   Экран — это ЛЕНТА. Всё вокруг неё сжато до минимума:
+   • шапка 56px: назад · заголовок (Mon Trappist, КАПС) + одна тихая
+     подпись (часы работы / номер чата) · действие справа;
+   • композер — один «док» 52px: скрепка, поле, круглая розовая
+     «отправить». Строки-подсказки под полем больше нет: часы
+     работы — в шапке, счётчик вложений — в ряду вложений;
+   • пузыри плотнее (8×12), лента — шаг 6px, разделители дней.
+   Розовый: заливка «отправить» и выбранный диалог оператора.
+   Своё сообщение — пепел с розовым подтоном, СВЕТЛЫЕ чернила.
+   Поля не подсвечиваются по клику; клавиатурный фокус — ясеневое
+   кольцо на доке целиком (:focus-within под data-modality).
+   Появление играет только у новых сообщений (.support-msg.is-new).
+   ============================================================ */
+
+.support-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
     overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ---------- оболочка ---------- */
+.support-chat,
+.support-chat-loading {
+    display: flex;
     width: 100%;
+    max-width: 880px;
+    height: calc(100dvh - 64px - 40px);
+    min-height: 420px;
+    margin: 20px auto 0;
     box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-    animation: fadeIn var(--duration-slow, 0.5s) ease;
+    overflow: hidden;
+    background: var(--astra-bg-elev);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-xl);
+}
+
+.support-chat--operator {
+    max-width: 1180px;
 }
 
 .support-chat-main {
@@ -20,724 +52,1520 @@
     flex-direction: column;
     flex: 1;
     min-width: 0;
+    min-height: 0;
 }
 
+/* ---------- список диалогов оператора ---------- */
 .support-chat-sidebar {
+    display: flex;
+    flex-direction: column;
     width: 280px;
-    border-right: 1px solid rgba(255, 255, 255, 0.06);
-    background: #141416;
-    padding: 16px;
+    flex: none;
     box-sizing: border-box;
-    overflow-y: auto;
+    min-height: 0;
+    background: var(--astra-bg);
+    border-right: 1px solid var(--astra-line);
 }
 
-.support-chat-sidebar h3 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    color: #f3f3f3;
-    font-size: 16px;
+.support-sidebar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 56px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    border-bottom: 1px solid var(--astra-line);
+}
+
+.support-chat-sidebar-title {
+    margin: 0;
+    font-family: var(--astra-heading);
+    font-size: calc((9px) * var(--astra-heading-scale, 1));
     font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--astra-ink);
 }
 
+.support-sidebar-count {
+    font-family: var(--astra-display);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--astra-ink-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+/* 16px: iOS не зумит ввод */
 .support-chat-search {
-    width: 100%;
+    flex: none;
+    width: calc(100% - 24px);
+    height: 44px;
+    margin: 12px;
+    padding: 0 14px;
     box-sizing: border-box;
-    margin-bottom: 12px;
-    padding: 10px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    background: #0e0e10;
-    color: #efefef;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-size: 16px;
     transition:
-        border-color var(--duration-fast, 0.2s) ease,
-        box-shadow var(--duration-fast, 0.2s) ease;
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
 }
 
-.support-chat-search:focus {
+.support-chat-search::placeholder {
+    color: var(--astra-ink-dim);
+}
+
+.support-chat-search:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--astra-line-strong);
+}
+
+.support-chat .support-chat-search:focus {
     outline: none;
-    border-color: rgba(226, 121, 155, 0.45);
-    box-shadow: 0 0 0 3px rgba(226, 121, 155, 0.12);
+    border-color: var(--astra-line);
+    box-shadow: none;
+}
+
+:root[data-modality="keyboard"] .support-chat .support-chat-search:focus-visible {
+    outline: 1px solid var(--astra-focus-field);
+    outline-offset: 0;
 }
 
 .support-chat-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.support-chat-list-item {
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    background: #1a1a1c;
-    color: #efefef;
-    border-radius: 12px;
-    padding: 12px 14px;
-    text-align: left;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    transition:
-        background var(--duration-fast, 0.2s) ease,
-        border-color var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) var(--ease-spring, ease);
-}
-
-.support-chat-list-item:hover {
-    background: #222226;
-    border-color: rgba(255, 255, 255, 0.1);
-    transform: translateX(2px);
-}
-
-.support-chat-list-title {
-    color: #f3f3f3;
-    font-size: 14px;
-    font-weight: 600;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.support-chat-list-subtitle {
-    color: #8c8c8f;
-    font-size: 12px;
-}
-
-.support-chat-list-item.is-active {
-    border-color: rgba(226, 121, 155, 0.45);
-    background: rgba(226, 121, 155, 0.12);
-    box-shadow: inset 3px 0 0 var(--accent, #e2799b);
-}
-
-.support-chat-empty-list {
-    color: #7e7e7e;
-    font-size: 14px;
-    padding: 8px 4px;
-}
-
-.chat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 18px 24px;
-    background: #1a1a1c;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.support-chat-back-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: #141416;
-    color: #efefef;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    margin-right: 10px;
-    transition:
-        background var(--duration-fast, 0.2s) ease,
-        border-color var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) ease;
-}
-
-.support-chat-back-btn:hover {
-    background: #222226;
-    border-color: rgba(226, 121, 155, 0.3);
-}
-
-.support-chat-back-btn:active {
-    transform: scale(0.96);
-}
-
-.chat-header h2 {
-    color: white;
-    font-size: 20px;
-    font-weight: 700;
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.connection-status {
-    font-size: 12px;
-}
-
-.status {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 20px;
-}
-
-.status.online {
-    background: rgba(226, 121, 155, 0.12);
-    color: var(--accent, #e2799b);
-}
-
-.status.offline {
-    background: rgba(255, 107, 107, 0.1);
-    color: #ff6b6b;
-}
-
-.chat-messages {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 20px 24px;
     display: flex;
     flex-direction: column;
+    gap: 2px;
+    padding: 0 8px 12px;
+}
+
+.support-chat-list-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;                      /* тело растягивается, бейдж прижат вправо */
+    min-width: 0;                 /* иначе длинные ники не будут сжиматься */
+}
+
+/* строка списка — без карточки; выбранная — розовая заливка,
+   белые чернила (грамматика активного чипа) */
+.support-chat-list-item {
+    display: flex;
+    flex-direction: row;
     gap: 10px;
-    background:
-        radial-gradient(ellipse at top, rgba(226, 121, 155, 0.04) 0%, transparent 55%),
-        #0e0e10;
-    scroll-behavior: smooth;
+    min-height: 52px;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    justify-content: center;
+    text-align: left;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink);
+    transition: background var(--astra-t-color) var(--astra-ease);
 }
 
-.empty-chat {
-    text-align: center;
-    padding: 32px 20px;
-    margin: auto 0;
-    color: #888;
-    animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease);
+.support-chat-list-item:hover {
+    background: rgba(255, 255, 255, 0.05);
 }
 
-.empty-chat p:first-child {
-    font-size: 18px;
-    margin-bottom: 8px;
-    color: #d8d8d8;
-    font-weight: 600;
+.support-chat-list-item:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
 }
 
-.empty-chat .hint {
+.support-chat-list-title {
+    font-family: var(--astra-body);
     font-size: 14px;
-    color: #666;
-    line-height: 1.5;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
+.support-chat-list-subtitle {
+    font-family: var(--astra-body);
+    font-size: 12px;
+    color: var(--astra-ink-dim);
+}
 
-.input-row textarea {
+.support-chat-list-item.is-active,
+.support-chat-list-item.is-active:hover {
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+}
+
+.support-chat-list-item.is-active .support-chat-list-subtitle {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.support-chat-empty-list {
+    padding: 12px;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+}
+
+/* ---------- шапка 56px ---------- */
+.support-chat .chat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: none;
+    min-height: 56px;
+    padding: 6px 8px 6px 20px;
+    box-sizing: border-box;
+    background: var(--astra-card);
+    border-bottom: 1px solid var(--astra-line);
+}
+
+.support-head-text {
     flex: 1;
-    padding: 14px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    background: #0e0e10;
-    color: #f0f0f0;
-    font-size: 15px;
-    font-family: inherit;
-    line-height: 1.5;
-    min-height: 48px;          /* минимальная высота */
-    max-height: 200px;          /* ограничиваем, чтобы не расползалось */
-    resize: none;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.support-head-title {
+    margin: 0;
+    font-family: var(--astra-heading);
+    font-size: calc((9px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--astra-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.support-head-sub {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--astra-ink-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.support-chat-close-btn {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--astra-ink-dim);
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: var(--astra-r-md);
+  transition: background var(--astra-t-color) var(--astra-ease), color var(--astra-t-color) var(--astra-ease);
+}
+
+.support-chat-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--astra-ink);
+}
+
+.support-chat-close-btn:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 2px;
+}
+
+/* иконочные кнопки шапки — 44px, ясеневые */
+.support-chat-back-btn,
+.support-head-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink-dim);
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+}
+
+.support-chat-back-btn {
+    margin-left: -12px;
+}
+
+.support-chat-back-btn:hover,
+.support-head-action:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--astra-line);
+    color: var(--astra-ink);
+}
+
+.support-chat-back-btn:focus-visible,
+.support-head-action:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+/* ---------- полоса ошибки над лентой ---------- */
+.support-error-strip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: none;
+    padding: 6px 8px 6px 20px;
+    background: rgba(255, 77, 94, 0.08);
+    border-bottom: 1px solid rgba(255, 77, 94, 0.24);
+}
+
+.support-error-strip-text {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    color: #ffc9cf;
+}
+
+.support-error-strip .support-error-strip-btn {
+    min-height: 36px;
+    padding: 0 14px;
+}
+
+/* ---------- лента ---------- */
+.support-chat .chat-messages {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    justify-content: safe flex-end;
+    gap: 6px;
+    padding: 16px 20px;
     overflow-y: auto;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, height 0.1s ease;
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    background: var(--astra-bg);
 }
 
-.input-row textarea:focus {
-    outline: none;
-    border-color: rgba(226, 121, 155, 0.5);
-    box-shadow: 0 0 0 4px rgba(226, 121, 155, 0.1);
+.support-older {
+    display: inline-flex;
+    align-self: center;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: var(--astra-r-md);
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    font-family: var(--astra-body);
+    font-size: 12px;
+    color: var(--astra-ink-dim);
 }
 
-.input-row textarea:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.support-day {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 4px;
+    color: var(--astra-ink-faint);
 }
 
-.input-row textarea::placeholder {
-    color: #777;
-    font-weight: 400;
+.support-day::before,
+.support-day::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--astra-line);
 }
 
-/* для мобильных */
-@media (max-width: 480px) {
-    .input-row textarea {
-        padding: 12px 14px;
-        font-size: 14px;
-        min-height: 40px;
-        max-height: 150px;
-        border-radius: 12px;
+.support-day span {
+    font-family: var(--astra-display);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.support-chat .support-msg {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 3px;
+}
+
+.support-chat .support-msg--own {
+    align-items: flex-end;
+}
+
+.support-chat .support-msg > .chat-message-shell {
+    max-width: min(72%, 560px);
+    margin: 0;
+    animation: none;
+}
+
+.support-chat .support-msg.is-new {
+    animation: support-msg-in var(--astra-t-move) var(--astra-ease) both;
+}
+
+@keyframes support-msg-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
     }
 }
 
-.chat-input-area {
-    padding: 16px 24px 20px;
-    background: #1a1a1c;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* отступ между превью и строкой ввода */
+.support-msg-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 4px;
+    font-family: var(--astra-body);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--astra-ink-dim);
 }
 
-.input-row {
+.support-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    flex: none;
+}
+
+.support-dots i {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.35;
+    animation: support-dot 1.2s var(--astra-ease) infinite;
+}
+
+.support-dots i:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.support-dots i:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes support-dot {
+    0%, 60%, 100% {
+        opacity: 0.3;
+        transform: none;
+    }
+    30% {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+}
+
+/* ---------- пузыри ---------- */
+.support-chat .chat-message {
+    position: relative;
+    padding: 8px 12px 9px;
+    border-radius: var(--astra-r-md);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    box-shadow: none;
+}
+
+/* своё — пепел с розовым подтоном, светлые чернила (13:1) */
+.support-chat .chat-message.own {
+    background: #251A20;
+    color: var(--astra-ink);
+    border: 1px solid rgba(255, 1, 152, 0.22);
+    border-bottom-right-radius: 6px;
+}
+
+.support-chat .chat-message.other {
+    background: var(--astra-card);
+    color: var(--astra-ink);
+    border: 1px solid var(--astra-line);
+    border-bottom-left-radius: 6px;
+}
+
+.support-chat .message-header {
     display: flex;
+    align-items: baseline;
     gap: 10px;
-    align-items: flex-end;
+    margin-bottom: 2px;
+    opacity: 1;
+    font-family: var(--astra-body);
+    font-size: 11px;
 }
 
-.input-row textarea {
-    flex: 1;
-    padding: 12px 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    background: #0e0e10;
-    color: white;
+.support-chat .message-sender {
+    font-weight: 600;
+    color: var(--astra-ink-dim);
+}
+
+.support-chat .message-sender.clickable {
+    cursor: pointer;
+    color: var(--astra-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--astra-line-strong);
+    text-underline-offset: 3px;
+}
+
+.support-chat .message-sender.clickable:hover {
+    text-decoration-color: currentColor;
+}
+
+/* время: ink-dim, не faint — faint на пепле даёт 3.6:1 */
+.support-chat .message-time {
+    margin-left: auto;
+    opacity: 1;
+    font-size: 11px;
+    color: var(--astra-ink-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Без подписи отправителя (клиентская сторона) время не занимает
+   отдельную строку: оно «плавает» в правом верхнем углу, текст
+   обтекает его — пузырь на строку ниже. */
+.support-chat .message-header:not(:has(.message-sender)) {
+    float: right;
+    margin: 3px 0 0 12px;
+}
+
+/* Текст после плавающего времени — строчный: иначе блок не суммирует
+   ширину float в max-content, пузырь сжимается и рвёт короткие
+   строки («#A7 / K-4097»). */
+.support-chat .message-header:not(:has(.message-sender)) + .message-text {
+    display: inline;
+}
+
+.support-chat .message-attachments {
+    clear: both;
+}
+
+.support-chat .message-text {
+    font-family: var(--astra-body);
     font-size: 14px;
-    font-family: inherit;
-    min-height: 72px;
-    max-height: 200px;
-    resize: none;
-    overflow-y: auto;
-    transition:
-        border-color var(--duration-fast, 0.2s) ease,
-        box-shadow var(--duration-fast, 0.2s) ease;
+    line-height: 1.45;
+    white-space: pre-wrap;
 }
 
-.input-row textarea:focus {
-    outline: none;
-    border-color: rgba(226, 121, 155, 0.45);
-    box-shadow: 0 0 0 3px rgba(226, 121, 155, 0.12);
+.support-chat .message-attachments {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
 }
 
-.input-row textarea:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.support-chat .message-attachments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 4px;
+    width: 100%;
 }
 
-.attach-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #0e0e10;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 0 12px;
-    height: 48px; /* подстраиваем под высоту textarea */
-    cursor: pointer;
-    font-size: 20px;
-    color: #ccc;
-    transition: border-color var(--duration-fast, 0.2s) ease, background var(--duration-fast, 0.2s) ease;
-    flex-shrink: 0;
-    width: 48px;
-    box-sizing: border-box;
+/* Одиночные вложения в поддержке — те же 200–260px по высоте,
+   что и в чате заказа. Общее правило `.message-image` приходит
+   из ChatMessage; здесь только уточняем под своим скоупом. */
+.support-chat .message-attachments {
+    max-width: 100%;
 }
 
-.attach-btn:hover:not(:disabled) {
-    border-color: rgba(226, 121, 155, 0.4);
-    background: rgba(226, 121, 155, 0.05);
+.support-chat .message-image {
+    max-height: min(200px, 30vh);
+    max-width: 100%;
 }
 
-.attach-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+.support-chat .message-attachments:has(.message-image:only-child) {
+    max-width: min(320px, 100%);
 }
 
-.send-btn {
-    padding: 12px 22px;
-    background: var(--accent, #e2799b);
-    color: white;
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
-    font-weight: 600;
-    height: 48px; /* чтобы был одинаковой высоты с полем */
-    transition:
-        background var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) var(--ease-spring, ease),
-        box-shadow var(--duration-fast, 0.2s) ease;
-    white-space: nowrap;
-    flex-shrink: 0;
+.support-chat .message-attachments:has(.message-image:only-child) .message-image {
+    max-height: min(260px, 38vh);
+    max-width: 100%;
 }
 
-.chat-input-area {
-    padding: 16px 24px 20px;
-    background: #1a1a1c;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
+.support-chat .message-attachment {
+    border-radius: var(--astra-r-sm);
+    overflow: hidden;
+    background: var(--astra-card-2);
+}
+
+.support-chat .message-attachment.grid-item {
+    aspect-ratio: 1 / 1;
+}
+
+.support-chat .message-attachment:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+.support-chat .message-actions {
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    box-shadow: var(--astra-shadow-sm);
+}
+
+.support-chat .message-action-btn {
+    color: var(--astra-ink-dim);
+    border-radius: var(--astra-r-md);
+}
+
+.support-chat .message-action-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--astra-ink);
+}
+
+.support-chat .message-action-btn:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+.support-chat .message-actions-divider {
+    background: var(--astra-line);
+}
+
+/* ---------- пустая лента / ошибка ---------- */
+.support-chat .empty-chat {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    width: 100%;           /* гарантируем полную ширину */
-    box-sizing: border-box;
+    align-items: center;
+    gap: 6px;
+    margin: auto 0;
+    padding: 24px 16px;
+    text-align: center;
 }
 
-.input-row {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-    width: 100%;           /* строка занимает всю ширину родителя */
-    box-sizing: border-box;
-}
-
-.attach-btn {
+.empty-chat-art {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #0e0e10;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 0;
-    height: 48px;
-    width: 48px;
-    cursor: pointer;
-    font-size: 20px;
-    color: #ccc;
-    flex-shrink: 0;        /* кнопка не сжимается */
-    transition: border-color 0.2s ease, background 0.2s ease;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 6px;
+    border-radius: var(--astra-r-lg);
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    color: var(--astra-ink-dim);
 }
 
-.input-row textarea {
-    flex: 1;               /* занимает всё свободное место */
-    width: 100%;           /* явно задаём ширину */
-    min-width: 0;          /* разрешаем сжиматься при необходимости */
-    padding: 14px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    background: #0e0e10;
-    color: #f0f0f0;
-    font-size: 15px;
-    font-family: inherit;
+.empty-chat-art svg {
+    width: 28px;
+    height: 28px;
+}
+
+.support-state-art {
+    border-color: rgba(255, 77, 94, 0.35);
+    color: #ffc9cf;
+}
+
+.support-chat .empty-chat p {
+    margin: 0;
+    max-width: 40ch;
+}
+
+.support-chat .empty-chat p:first-of-type {
+    font-family: var(--astra-body);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--astra-ink);
+}
+
+.support-chat .empty-chat .hint {
+    font-family: var(--astra-body);
+    font-size: 14px;
     line-height: 1.5;
-    min-height: 48px;
-    max-height: 200px;
-    resize: none;
-    overflow-y: auto;
-    box-sizing: border-box;  /* учитываем padding в ширине */
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    color: var(--astra-ink-dim);
+    overflow-wrap: anywhere;
 }
 
-.input-row textarea:focus {
-    outline: none;
-    border-color: rgba(226, 121, 155, 0.5);
-    box-shadow: 0 0 0 4px rgba(226, 121, 155, 0.1);
+.support-chat .support-state-btn {
+    margin-top: 8px;
+    min-height: 44px;
 }
 
-.send-btn {
-    padding: 12px 22px;
-    background: var(--accent, #e2799b);
-    color: white;
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
-    font-weight: 600;
-    height: 48px;
-    white-space: nowrap;
-    flex-shrink: 0;        /* кнопка не сжимается */
-    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.send-btn:hover:not(:disabled) {
-    background: #eb8fb0;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(226, 121, 155, 0.35);
-}
-
-.send-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.attach-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: #0e0e10;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
-    padding: 0;
-    height: 48px;
-    width: 48px;
-    cursor: pointer;
-    color: #ccc;                /* цвет иконки */
-    flex-shrink: 0;
-    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
-}
-
-.attach-btn:hover:not(:disabled) {
-    border-color: rgba(226, 121, 155, 0.4);
-    background: rgba(226, 121, 155, 0.05);
-    color: #e2799b;             /* подсветка при наведении */
-}
-
-.attach-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.attach-btn svg {
-    width: 22px;
-    height: 22px;
-    display: block;
-}
-
-.send-btn:hover:not(:disabled) {
-    background: #eb8fb0;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px var(--accent-glow, rgba(226, 121, 155, 0.35));
-}
-
-.send-btn:active:not(:disabled) {
-    transform: translateY(0) scale(0.98);
-}
-
-.send-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.support-user-modal {
+/* ---------- композер ---------- */
+.support-chat .chat-input-area {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    color: #ddd;
+    flex: none;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px 12px;
+    background: var(--astra-card);
+    border-top: 1px solid var(--astra-line);
 }
 
-.support-user-orders-title {
-    margin-top: 8px;
+/* док: одна поверхность, три участника */
+.support-chat .support-dock {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    width: 100%;
+    min-height: 52px;
+    box-sizing: border-box;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
+
+.support-chat .support-dock:hover {
+    border-color: var(--astra-line-strong);
+}
+
+/* клик мышью — ничего; клавиатура — ясеневое кольцо на доке */
+:root[data-modality="keyboard"] .support-chat .support-dock:has(textarea:focus) {
+    outline: 1px solid var(--astra-focus-field);
+    outline-offset: 0;
+}
+
+.support-chat .support-dock textarea {
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    min-height: 44px;
+    max-height: 135px;
+    padding: 11px 6px;
+    resize: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-size: 16px;
+    line-height: 1.4;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.support-chat .support-dock textarea::placeholder {
+    color: var(--astra-ink-dim);
+}
+
+.support-chat .support-dock textarea:focus,
+.support-chat .support-dock textarea:focus-visible {
+    outline: none;
+    border: 0;
+    box-shadow: none;
+}
+
+/* скрепка — настоящий input в порядке табуляции, но невидим */
+.support-chat .attach-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    box-sizing: border-box;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink-dim);
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+}
+
+.support-chat .attach-btn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--astra-ink);
+}
+
+/* скрепка чуть наклонена — как лежит на бумаге; угол постоянный,
+   на ховере и нажатии не меняется */
+.support-chat .attach-btn svg {
+    display: block;
+    transform: rotate(32deg);
+}
+
+.support-chat .attach-btn[aria-disabled="true"],
+.support-chat .attach-btn[aria-disabled="true"]:hover {
+    background: transparent;
+    color: var(--astra-ink-faint);
+    cursor: not-allowed;
+}
+
+.support-chat .attach-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    opacity: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.support-chat .attach-btn:has(:focus-visible) {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+/* «отправить» — единственная горячая точка экрана */
+.support-chat .send-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    box-sizing: border-box;
+    padding: 0;
+    cursor: pointer;
+    border: 0;
+    border-radius: var(--astra-r-md);
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+    box-shadow: none;
+    transition: background var(--astra-t-color) var(--astra-ease);
+}
+
+.support-chat .send-btn:hover:not(:disabled) {
+    background: var(--astra-pink-bright);
+}
+
+.support-chat .send-btn:active:not(:disabled) {
+    transform: scale(0.98);
+    transition-duration: 80ms;
+}
+
+.support-chat .send-btn:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+/* пустой композер — смена поверхности, не прозрачность */
+.support-chat .send-btn:disabled {
+    background: var(--astra-card-2);
+    color: var(--astra-ink-faint);
+    cursor: not-allowed;
+}
+
+.support-chat .send-btn[aria-busy="true"] {
+    background: var(--astra-card-2);
+    color: var(--astra-ink-dim);
+}
+
+/* ---------- вложения в черновике ---------- */
+.support-chips {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.support-chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 40px;
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-sm);
+    transition: border-color var(--astra-t-color) var(--astra-ease);
+}
+
+.support-chip:hover {
+    border-color: var(--astra-line-strong);
+}
+
+.support-chip--loading {
+    gap: 8px;
+    padding: 0 12px;
+    color: var(--astra-ink-dim);
+}
+
+.support-chip-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 2px 0 5px;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink);
+    text-align: left;
+}
+
+.support-chip-open:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+.support-chip-thumb {
+    display: block;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--astra-card);
+}
+
+.support-chip-name {
+    min-width: 0;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--astra-body);
+    font-size: 13px;
     font-weight: 600;
 }
 
+.support-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink-dim);
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+}
+
+.support-chip-remove:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--astra-ink);
+}
+
+.support-chip-remove:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+.support-chip-count {
+    margin-left: auto;
+    font-family: var(--astra-display);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--astra-ink-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- загрузка страницы ---------- */
+.support-chat-loading {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+}
+
+.support-skel-head {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--astra-line);
+}
+
+.support-skel-title {
+    display: block;
+    width: 180px;
+    max-width: 60%;
+    height: 18px;
+}
+
+.support-skel-messages {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.support-skel-bubble {
+    display: block;
+    height: 48px;
+    border-radius: var(--astra-r-md);
+}
+
+.support-skel-bubble--own {
+    align-self: flex-end;
+    width: 42%;
+}
+
+.support-skel-bubble--other {
+    align-self: flex-start;
+    width: 58%;
+}
+
+.support-skel-composer {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--astra-line);
+}
+
+.support-skel-field {
+    flex: 1;
+    height: 52px;
+    border-radius: var(--astra-r-md);
+}
+
+.support-skel-send {
+    display: none;
+}
+
+/* ---------- просмотрщик изображений ---------- */
+.support-viewer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46vh;
+    user-select: none;
+}
+
+.support-viewer-image {
+    max-width: 100%;
+    max-height: 68vh;
+    object-fit: contain;
+    border-radius: var(--astra-r-sm);
+}
+
+.support-viewer-caption {
+    margin: 10px 0 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--astra-ink-dim);
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.support-viewer-nav {
+    position: absolute;
+    top: 50%;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    cursor: pointer;
+    transform: translateY(-50%);
+    background: rgba(11, 11, 13, 0.78);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink);
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
+
+.support-viewer-nav:hover {
+    background: rgba(31, 31, 35, 0.92);
+    border-color: rgba(236, 234, 238, 0.3);
+}
+
+.support-viewer-nav:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+.support-viewer-nav--prev {
+    left: 10px;
+}
+
+.support-viewer-nav--next {
+    right: 10px;
+}
+
+.support-viewer-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 6px;
+    transform: translateX(-50%);
+    background: rgba(11, 11, 13, 0.78);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+}
+
+.support-viewer-dot {
+    position: relative;
+    width: 26px;
+    height: 44px;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: var(--astra-r-sm);
+}
+
+.support-viewer-dot::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    transform: translate(-50%, -50%);
+    background: var(--astra-ink-faint);
+    border-radius: 999px;
+    transition:
+        width var(--astra-t-move) var(--astra-ease),
+        background var(--astra-t-color) var(--astra-ease);
+}
+
+.support-viewer-dot:hover::before {
+    background: var(--astra-ink-dim);
+}
+
+.support-viewer-dot.is-active::before {
+    width: 20px;
+    background: var(--astra-ink);
+}
+
+.support-viewer-dot:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+.support-viewer-counter {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 10px;
+    background: rgba(11, 11, 13, 0.78);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-sm);
+    font-family: var(--astra-display);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--astra-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- профиль клиента ---------- */
+.support-user-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    color: var(--astra-ink);
+}
+
+/* факты — двухколоночный список на волосяных линиях */
+.support-user-facts {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    margin: 0;
+    border-top: 1px solid var(--astra-line);
+}
+
+.support-user-facts dt,
+.support-user-facts dd {
+    margin: 0;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--astra-line);
+}
+
+.support-user-facts dt {
+    padding-right: 20px;
+    color: var(--astra-ink-dim);
+}
+
+.support-user-facts dd {
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.support-user-orders-title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--astra-heading);
+    font-size: calc((8px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--astra-ink);
+}
+
+.support-user-orders-title span {
+    font-family: var(--astra-display);
+    font-size: 12px;
+    color: var(--astra-ink-faint);
+}
+
 .support-user-orders {
-    max-height: 240px;
+    max-height: 260px;
     overflow: auto;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-sm);
 }
 
 .support-user-order-row {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 6px 0 12px;
     font-size: 13px;
-    transition: background var(--duration-fast, 0.2s) ease;
+    color: var(--astra-ink-dim);
+    border-bottom: 1px solid var(--astra-line);
+}
+
+.support-user-order-row:last-child {
+    border-bottom: 0;
 }
 
 .support-user-order-row:hover {
     background: rgba(255, 255, 255, 0.03);
 }
 
-.support-user-order-row:last-child {
-    border-bottom: none;
+.support-user-order-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
 }
 
-.support-chat-loading {
+.support-order-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--astra-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--astra-line-strong);
+    text-underline-offset: 3px;
+}
+
+.support-order-link:hover {
+    text-decoration-color: currentColor;
+}
+
+.support-order-link:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+    border-radius: var(--astra-r-sm);
+}
+
+.support-user-order-status {
+    font-size: 12px;
+    color: var(--astra-ink-dim);
+    white-space: nowrap;
+}
+
+.support-order-refunded {
+    font-size: 12px;
+    font-weight: 600;
+    color: #ffc9cf;
+    white-space: nowrap;
+}
+
+.support-refund-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    padding: 0 12px;
+    cursor: pointer;
+    background: rgba(255, 77, 94, 0.1);
+    border: 1px solid rgba(255, 77, 94, 0.3);
+    border-radius: var(--astra-r-sm);
+    color: #ffc9cf;
+    font-family: var(--astra-display);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
+
+.support-refund-btn:hover {
+    background: rgba(255, 77, 94, 0.18);
+    border-color: rgba(255, 77, 94, 0.5);
+}
+
+.support-refund-btn:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+/* ---------- возврат ---------- */
+.support-refund {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: calc(100vh - 120px);
-    gap: 16px;
-    color: #888;
-}
-
-.message-attachments {
-    margin-top: 8px;              /* отступ от текста */
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;                     /* расстояние между картинками */
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.message-image {
-    max-width: 100%;
-    max-height: 260px;
-    width: auto;
-    height: auto;
-    border-radius: 10px;
-    object-fit: contain;          /* сохраняем пропорции, картинка вписывается */
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background: rgba(0, 0, 0, 0.06);
-    display: block;
-}
-
-.message-image:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-/* === Поведение при нескольких изображениях === */
-/* Когда 2 картинки – они занимают по ~50% */
-.message-attachments:has(.message-image:nth-child(2)) .message-image {
-    max-height: 180px;
-    max-width: calc(50% - 3px);
-}
-
-/* Когда 3 картинки – каждая по ~33% */
-.message-attachments:has(.message-image:nth-child(3)) .message-image {
-    max-height: 160px;
-    max-width: calc(33.33% - 4px);
-}
-
-/* Когда 4 и более – по 2 в ряд, каждая ~50% */
-.message-attachments:has(.message-image:nth-child(4)) .message-image {
-    max-height: 140px;
-    max-width: calc(50% - 3px);
-}
-
-/* Если изображение одно – оно крупнее */
-.message-attachments:has(.message-image:only-child) .message-image {
-    max-height: 300px;
-    max-width: 100%;
-}
-
-/* === Стили для сообщений оппонента (other) – тёмный фон === */
-.chat-message.other .message-image {
-    background: rgba(255, 255, 255, 0.04);
-}
-
-.chat-message.other .message-image:hover {
-    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.08);
-}
-
-
-.attachment-previews {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 4px 0;
-    max-width: 100%;
-    justify-content: flex-start;
-    align-self: flex-start;  /* чтобы не растягивалось на всю ширину */
-    width: 100%;             /* или auto */
-}
-
-.attachment-preview {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-start;
-    border-radius: 8px;
-    overflow: hidden;
-    background: rgba(0, 0, 0, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    width: 72px;
-    height: 72px;
-    flex-shrink: 0;
-}
-
-.attachment-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.attachment-preview button {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: none;
-    background: #ff4444;
-    color: #fff;
+    gap: 12px;
+    font-family: var(--astra-body);
     font-size: 14px;
-    line-height: 22px;
-    text-align: center;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    transition: transform 0.15s ease;
+    color: var(--astra-ink);
+}
+
+.support-refund-summary {
+    margin: 0;
+    color: var(--astra-ink-dim);
+}
+
+.support-refund-summary strong {
+    color: var(--astra-ink);
+    font-weight: 600;
+}
+
+.support-refund-field {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.attachment-preview button:hover {
-    transform: scale(1.15);
-}
-
-@media (max-width: 480px) {
-    .attachment-preview {
-        width: 60px;
-        height: 60px;
-    }
-    .attachment-preview button {
-        width: 20px;
-        height: 20px;
-        font-size: 12px;
-        line-height: 20px;
-        top: -4px;
-        right: -4px;
-    }
-}
-
-.uploading-indicator {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 72px;
-    height: 72px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    color: #aaa;
+.support-refund-field > span {
     font-size: 12px;
+    color: var(--astra-ink-dim);
 }
 
-/* === Адаптив для мобильных устройств === */
-@media (max-width: 480px) {
-    .message-image {
-        max-height: 200px;
-    }
+.support-refund-field textarea,
+.support-refund-field input {
+    box-sizing: border-box;
+    min-height: 48px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-size: 16px;
+    line-height: 1.45;
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
 
-    .message-attachments:has(.message-image:nth-child(2)) .message-image {
-        max-height: 140px;
-        max-width: calc(50% - 4px);
-    }
+.support-refund-field textarea {
+    min-height: 88px;
+    resize: vertical;
+}
 
-    .message-attachments:has(.message-image:nth-child(3)) .message-image {
-        max-height: 120px;
-        max-width: calc(33.33% - 4px);
-    }
+.support-refund-field textarea:hover:not(:disabled),
+.support-refund-field input:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--astra-line-strong);
+}
 
-    .message-attachments:has(.message-image:nth-child(4)) .message-image {
-        max-height: 100px;
-        max-width: calc(50% - 4px);
-    }
+.support-refund-field textarea:focus,
+.support-refund-field input:focus {
+    outline: none;
+    border-color: var(--astra-line);
+    box-shadow: none;
+}
 
-    .message-attachments:has(.message-image:only-child) .message-image {
-        max-height: 240px;
+:root[data-modality="keyboard"] .support-refund-field textarea:focus-visible,
+:root[data-modality="keyboard"] .support-refund-field input:focus-visible {
+    outline: 1px solid var(--astra-focus-field);
+    outline-offset: 0;
+}
+
+.support-refund-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.support-refund-submit {
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+}
+
+.support-refund-submit:hover:not(:disabled) {
+    background: var(--astra-pink-bright);
+}
+
+.support-refund-submit:disabled {
+    background: var(--astra-card-2);
+    color: var(--astra-ink-dim);
+    cursor: not-allowed;
+}
+
+/* ---------- адаптив ---------- */
+@media (max-width: 1024px) {
+    .support-chat-sidebar {
+        width: 248px;
     }
 }
 
-
-@media (max-width: 1300px) {
-    .support-chat-main {
-        min-width: 0;
-    }
-}
-
+/* телефон и узкий планшет: экран-«во всю ширину», без рамки */
 @media (max-width: 768px) {
-    .support-chat {
-        height: calc(100vh - 60px);
-        border-radius: 0;
+    .support-chat,
+    .support-chat-loading {
         flex-direction: column;
-        max-width: 100%;
-        margin-top: 0;
-        border: none;
+        max-width: none;
+        height: calc(100dvh - 60px);
+        min-height: 0;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
     }
 
     .support-chat-sidebar {
         width: 100%;
-        border-right: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        max-height: none;
+        flex: 1;
+        border-right: 0;
     }
 
-    .chat-header {
-        padding: 14px 16px;
+    .support-chat .chat-header {
+        padding-left: 16px;
     }
 
-    .chat-messages {
-        padding: 14px 16px;
+    .support-chat .chat-messages {
+        padding: 12px 12px;
     }
 
-    .chat-input-area {
-        padding: 12px 16px 16px;
+    .support-chat .chat-input-area {
+        padding: 8px 8px 10px;
     }
+
+    .support-chat .support-msg > .chat-message-shell {
+        max-width: 86%;
+    }
+}
+
+@media (max-width: 480px) {
+    .support-chat,
+    .support-chat-loading {
+        height: calc(100dvh - 56px);
+    }
+
+    .support-chip-name {
+        max-width: 96px;
+    }
+
+    .support-viewer-nav--prev {
+        left: 4px;
+    }
+
+    .support-viewer-nav--next {
+        right: 4px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .support-chat .chat-messages {
+        scroll-behavior: auto;
+    }
+
+    .support-chat-list-item,
+    .support-chat .support-dock,
+    .support-chat .attach-btn,
+    .support-chat .send-btn,
+    .support-chip,
+    .support-chip-remove,
+    .support-viewer-dot::before,
+    .support-viewer-nav {
+        transition: none;
+    }
+
+    .support-chat .support-msg.is-new,
+    .support-dots i {
+        animation: none;
+    }
+
+    .support-dots i {
+        opacity: 0.7;
+    }
+}
+
+.support-chat-list-badge {
+    /* flex: none;  ← убрать: слот уже non-flex */
+    /* margin-left: 8px; ← убрать: отступ даёт gap родителя */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+    font-family: var(--astra-display);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    vertical-align: middle;
+}
+
+/* инверсия: тёмный на розовом, контраст ≈ 15:1 */
+.support-chat-list-item.is-active .support-chat-list-badge {
+    background: var(--astra-bg);
+    color: var(--astra-ink);
+    box-shadow: 0 0 0 2px var(--astra-pink-fill);  /* «вырезанный» край */
+}
+
+/* слот фиксированной ширины: бейдж всегда центрируется в нём,
+   независимо от того 1 там, 10 или 99+ */
+.support-chat-list-badge-slot {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;              /* хватает и для «99+» (28px + воздух) */
+    min-height: 18px;
 }

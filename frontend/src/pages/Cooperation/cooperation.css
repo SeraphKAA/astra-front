@@ -1,120 +1,92 @@
+/* ============================================================
+   Сотрудничество — v3 «Ash and Signal».
+   Порядок чтения: что это → для кого (3 карточки) → как начать
+   (3 шага) → как связаться → CTA.
+   Появления: reveal-once (.astra-reveal + useRevealOnce), один раз,
+   стаггер 60мс; у наводимых карточек reveal живёт на обёртке
+   .coop-cell, чтобы ховерный transform не спорил с входным.
+   Ховеры только светлеют (card → card-2, line → line-strong),
+   движение ≤2px, РОВНО одна мягкая тень (--astra-shadow-sm).
+   Розовый — только на первичном действии и санкционированных
+   3px-разделителях заголовков; панели и рамки остаются ясеневыми.
+   ============================================================ */
+
 .coop-page {
-  padding: 96px 16px 64px;
-  color: #fff;
-  animation: fadeIn var(--duration-slow, 0.5s) ease;
+  padding: 96px 28px;
+  color: var(--astra-ink);
   overflow-x: clip;
   box-sizing: border-box;
 }
 
+/* Рельса приложения: 1280 с полями 28px, как у шапки и главной */
 .coop-container {
-  max-width: 1100px;
+  max-width: 1280px;
   margin: 0 auto;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
 }
 
+/* ---------- герой: что это ---------- */
 .coop-hero {
   margin-bottom: 28px;
-  animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease);
-}
-
-.coop-eyebrow {
-  margin: 0 0 8px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--accent, #e2799b);
 }
 
 .coop-title {
   margin: 0;
-  font-size: 34px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #fff;
+  font-size: calc((34px) * var(--astra-heading-scale, 1));
+  color: var(--astra-ink);
 }
 
+/* Пилюля legal только у 3px-разделителей заголовков — санкционировано */
 .coop-title-divider {
   width: 52px;
   height: 3px;
   margin: 12px 0 0;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent, #e2799b), transparent);
+  border-radius: var(--astra-r-pill);
+  background: linear-gradient(90deg, var(--astra-pink), transparent);
   opacity: 0.9;
 }
 
 .coop-subtitle {
-  margin: 12px 0 0;
-  max-width: 560px;
+  margin: 14px 0 0;
+  max-width: 640px;
   font-size: 15px;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.58);
+  line-height: 1.55;
+  color: var(--astra-ink-dim);
 }
 
+/* ---------- факты-чипы под героем ---------- */
 .coop-highlights {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 28px;
-}
-
-.coop-highlight-card {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 16px 18px;
-  border-radius: 16px;
-  background: rgba(26, 26, 28, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease) backwards;
-  transition:
-    transform var(--duration-normal) var(--ease-out-smooth, ease),
-    border-color var(--duration-normal) ease,
-    box-shadow var(--duration-normal) ease;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 56px;
+  padding: 0;
+  list-style: none;
 }
 
-.coop-highlight-card:nth-child(1) { animation-delay: 0.05s; }
-.coop-highlight-card:nth-child(2) { animation-delay: 0.1s; }
-.coop-highlight-card:nth-child(3) { animation-delay: 0.15s; }
-
-.coop-highlight-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(226, 121, 155, 0.22);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
-}
-
-.coop-highlight-value {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: #fff;
-}
-
-.coop-highlight-label {
-  font-size: 12px;
+.coop-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 18px;
+  border-radius: var(--astra-r-md);
+  background: var(--astra-card);
+  border: 1px solid var(--astra-line);
+  color: var(--astra-ink-dim);
+  font-size: 13px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.48);
 }
 
+/* ---------- секции: ритм 56px ---------- */
 .coop-section {
-  margin-bottom: 28px;
-  animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease) backwards;
+  margin-bottom: 56px;
 }
-
-.coop-section:nth-of-type(1) { animation-delay: 0.08s; }
-.coop-section:nth-of-type(2) { animation-delay: 0.14s; }
-.coop-section:nth-of-type(3) { animation-delay: 0.2s; }
 
 .coop-section-title {
-  margin: 0 0 16px;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: #fff;
+  margin: 0 0 18px;
+  font-size: calc((20px) * var(--astra-heading-scale, 1));
+  color: var(--astra-ink);
 }
 
 .coop-section-title::after {
@@ -123,187 +95,208 @@
   width: 40px;
   height: 3px;
   margin-top: 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent, #e2799b), transparent);
+  border-radius: var(--astra-r-pill);
+  background: linear-gradient(90deg, var(--astra-pink), transparent);
 }
 
+/* Ячейка-обёртка: несёт .astra-reveal, карточка внутри растягивается */
+.coop-cell {
+  display: flex;
+  min-width: 0;
+}
+
+.coop-cell > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- для кого: 3 карточки ---------- */
 .coop-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 14px;
 }
 
-.coop-card {
-  padding: 20px 18px;
-  border-radius: 18px;
-  background: rgba(26, 26, 28, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+.coop-value-card {
+  padding: 22px 20px;
+  border-radius: var(--astra-r-lg);
+  background: var(--astra-card);
+  border: 1px solid var(--astra-line);
   transition:
-    transform var(--duration-normal) var(--ease-out-smooth, ease),
-    border-color var(--duration-normal) ease,
-    box-shadow var(--duration-normal) ease,
-    background var(--duration-normal) ease;
+    background var(--astra-t-color) var(--astra-ease),
+    border-color var(--astra-t-color) var(--astra-ease),
+    box-shadow var(--astra-t-move) var(--astra-ease),
+    transform var(--astra-t-move) var(--astra-ease);
 }
 
-.coop-card:hover {
-  transform: translateY(-5px);
-  background: rgba(30, 30, 32, 0.98);
-  border-color: rgba(226, 121, 155, 0.22);
-  box-shadow:
-    0 14px 36px rgba(0, 0, 0, 0.32),
-    0 0 0 1px rgba(226, 121, 155, 0.08);
+/* Ховер светлеет и приподнимается не выше 2px; тень одна */
+.coop-value-card:hover {
+  transform: translateY(-2px);
+  background: var(--astra-card-2);
+  border-color: var(--astra-line-strong);
+  box-shadow: var(--astra-shadow-sm);
 }
 
-.coop-card-icon {
+/* 44px при r-md — силуэт поисковой пилюли */
+.coop-value-icon {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
-  margin-bottom: 14px;
-  border-radius: 12px;
-  background: rgba(226, 121, 155, 0.12);
-  border: 1px solid rgba(226, 121, 155, 0.2);
-  color: var(--accent, #e2799b);
+  margin-bottom: 16px;
+  border-radius: var(--astra-r-md);
+  background: rgba(255, 1, 152, 0.12);
+  border: 1px solid rgba(255, 1, 152, 0.2);
+  color: var(--astra-pink);
 }
 
-.coop-card-icon svg {
+.coop-value-icon svg {
   width: 22px;
   height: 22px;
 }
 
-.coop-card h3 {
+/* Заголовочная гарнитура приходит из блока темы (:root .coop-value-card h3) */
+.coop-value-card h3 {
   margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
+  font-size: calc((16px) * var(--astra-heading-scale, 1));
+  color: var(--astra-ink);
 }
 
-.coop-card p {
+.coop-value-card p {
   margin: 0;
   font-size: 14px;
   line-height: 1.55;
-  color: rgba(255, 255, 255, 0.58);
+  color: var(--astra-ink-dim);
 }
 
+/* ---------- как начать: 3 шага ---------- */
 .coop-steps {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  margin: 0;
+  padding: 0;
+  padding-left: 24px;
+  list-style: none;
 }
 
 .coop-step {
   display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 16px;
-  padding: 16px 0;
+  grid-template-columns: 44px 1fr;
+  gap: 18px;
+  padding-bottom: 26px;
+}
+
+.coop-step:last-child {
+  padding-bottom: 0;
 }
 
 .coop-step-marker {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 8px;
 }
 
+/* Номер шага — ясеневый круг, цифры голосом Unbounded; без розового:
+   последовательность — информация, а не действие */
 .coop-step-number {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 44px;
   height: 44px;
-  border-radius: 50%;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: #fff;
-  background: linear-gradient(135deg, rgba(226, 121, 155, 0.35), rgba(226, 121, 155, 0.12));
-  border: 1px solid rgba(226, 121, 155, 0.28);
-  box-shadow: 0 8px 20px rgba(226, 121, 155, 0.12);
+  /* круглое по смыслу — токеном, не литералом */
+  border-radius: var(--astra-r-pill);
+  background: var(--astra-card);
+  border: 1px solid var(--astra-line-strong);
+  font-family: var(--astra-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--astra-ink);
 }
 
 .coop-step-line {
   flex: 1;
-  width: 2px;
-  min-height: 24px;
-  margin-top: 8px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(226, 121, 155, 0.45), rgba(226, 121, 155, 0.08));
+  width: 1px;
+  min-height: 16px;
+  background: var(--astra-line-strong);
 }
 
 .coop-step-body {
-  padding: 8px 18px 12px;
-  border-radius: 16px;
-  background: rgba(26, 26, 28, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition:
-    transform var(--duration-normal) var(--ease-out-smooth, ease),
-    border-color var(--duration-normal) ease,
-    box-shadow var(--duration-normal) ease;
+  padding-top: 9px;
+  min-width: 0;
 }
 
-.coop-step:hover .coop-step-body {
-  transform: translateX(4px);
-  border-color: rgba(226, 121, 155, 0.18);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
-}
-
+/* Заголовочный голос (Mon Trappist, прописные) приходит из блока заголовков
+   в astra-theme.css — сюда добавлена строка :root .coop-step-body h3.
+   Равные по рангу h3 на одной странице обязаны звучать одинаково:
+   карточки «С кем мы работаем» уже говорят заголовочным голосом. */
 .coop-step-body h3 {
   margin: 0 0 6px;
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
+  font-size: calc((16px) * var(--astra-heading-scale, 1));
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--astra-ink);
 }
 
 .coop-step-body p {
   margin: 0;
+  max-width: 62ch;
   font-size: 14px;
   line-height: 1.55;
-  color: rgba(255, 255, 255, 0.58);
+  color: var(--astra-ink-dim);
 }
 
+/* ---------- контакты ---------- */
 .coop-contact-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .coop-contact-card {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 18px;
-  border-radius: 16px;
-  background: rgba(26, 26, 28, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition:
-    transform var(--duration-normal) var(--ease-out-smooth, ease),
-    border-color var(--duration-normal) ease,
-    box-shadow var(--duration-normal) ease;
+  padding: 20px 18px;
+  border-radius: var(--astra-r-lg);
+  background: var(--astra-card);
+  border: 1px solid var(--astra-line);
+  box-sizing: border-box;
 }
 
-.coop-contact-card-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.coop-contact-card-button {
+/* Интерактивные карточки (кнопка-копия, ссылка на Telegram) */
+.coop-contact-action {
+  margin: 0;
   width: 100%;
   text-align: left;
   cursor: pointer;
   font: inherit;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    background var(--astra-t-color) var(--astra-ease),
+    border-color var(--astra-t-color) var(--astra-ease),
+    box-shadow var(--astra-t-move) var(--astra-ease),
+    transform var(--astra-t-move) var(--astra-ease);
 }
 
-.coop-contact-hint {
-  font-size: 12px;
-  line-height: 1.4;
-  color: rgba(226, 121, 155, 0.75);
+.coop-contact-action:hover {
+  transform: translateY(-2px);
+  background: var(--astra-card-2);
+  border-color: var(--astra-line-strong);
+  box-shadow: var(--astra-shadow-sm);
 }
 
-.coop-contact-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(226, 121, 155, 0.22);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+.coop-contact-action:active {
+  transform: scale(0.985);
+  transition-duration: 80ms;
+}
+
+.coop-contact-action:focus-visible {
+  outline: 2px solid var(--astra-pink);
+  outline-offset: 3px;
 }
 
 .coop-contact-icon {
@@ -311,12 +304,12 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: rgba(226, 121, 155, 0.1);
-  border: 1px solid rgba(226, 121, 155, 0.18);
-  color: var(--accent, #e2799b);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--astra-r-md);
+  background: rgba(255, 1, 152, 0.12);
+  border: 1px solid rgba(255, 1, 152, 0.2);
+  color: var(--astra-pink);
 }
 
 .coop-contact-icon svg {
@@ -332,146 +325,94 @@
 }
 
 .coop-contact-label {
+  font-family: var(--astra-display);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--astra-ink-dim);
 }
 
 .coop-contact-value {
   font-size: 14px;
   line-height: 1.45;
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--astra-ink);
   word-break: break-word;
 }
 
-.coop-cta {
-  animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease) 0.24s backwards;
+.coop-contact-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--astra-ink-dim);
 }
 
+.coop-contact-hint svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* ---------- CTA: ясеневая панель, розовый только на действии ---------- */
 .coop-cta-inner {
-  padding: 28px 24px;
-  border-radius: 20px;
+  padding: 36px 28px;
+  border-radius: var(--astra-r-xl);
   text-align: center;
-  background:
-    linear-gradient(135deg, rgba(226, 121, 155, 0.14), rgba(26, 26, 28, 0.95)),
-    rgba(26, 26, 28, 0.95);
-  border: 1px solid rgba(226, 121, 155, 0.22);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
+  background: var(--astra-card);
+  border: 1px solid var(--astra-line);
   box-sizing: border-box;
 }
 
 .coop-cta-inner h2 {
-  margin: 0 0 8px;
-  font-size: 22px;
-  font-weight: 800;
-  color: #fff;
+  margin: 0 0 10px;
+  font-size: calc((22px) * var(--astra-heading-scale, 1));
+  color: var(--astra-ink);
 }
 
 .coop-cta-inner p {
-  margin: 0 0 18px;
+  margin: 0 0 22px;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--astra-ink-dim);
 }
 
+/* Кнопки — .astra-btn / .astra-btn-ghost из темы; здесь только раскладка */
 .coop-cta-actions {
   display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 12px;
   justify-content: center;
-  align-items: stretch;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
+  align-items: center;
 }
 
 .coop-cta-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
   box-sizing: border-box;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  font-family: inherit;
-  white-space: normal;
-  text-align: center;
-  line-height: 1.35;
-  transition:
-    transform var(--duration-fast, 0.2s) var(--ease-spring, ease),
-    box-shadow var(--duration-normal) ease,
-    background var(--duration-normal) ease,
-    border-color var(--duration-normal) ease;
 }
 
-.coop-cta-btn-primary {
-  color: #fff;
-  background: linear-gradient(135deg, #e2799b, #c95f84);
-  box-shadow: 0 8px 24px rgba(226, 121, 155, 0.28);
+.coop-btn-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
-.coop-cta-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(226, 121, 155, 0.36);
-}
-
-.coop-cta-btn-secondary {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-.coop-cta-btn-secondary:hover {
-  transform: translateY(-2px);
-  border-color: rgba(226, 121, 155, 0.28);
-  background: rgba(226, 121, 155, 0.08);
-}
-
-.coop-cta-btn:active {
-  transform: translateY(0) scale(0.98);
-}
-
-@media (min-width: 769px) {
-  .coop-cta-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .coop-cta-btn {
-    width: auto;
-    max-width: none;
-    flex: 0 1 auto;
-    padding: 12px 20px;
-    white-space: nowrap;
-  }
-}
-
+/* ---------- адаптация ---------- */
 @media (max-width: 768px) {
   .coop-page {
-    padding: 88px 12px 48px;
+    padding: 88px 16px 64px;
   }
 
   .coop-title {
-    font-size: 28px;
+    font-size: calc((21px) * var(--astra-heading-scale, 1));
   }
 
   .coop-highlights {
-    grid-template-columns: 1fr;
+    margin-bottom: 40px;
+  }
+
+  .coop-section {
+    margin-bottom: 40px;
   }
 
   .coop-grid,
@@ -480,39 +421,89 @@
   }
 
   .coop-step {
-    grid-template-columns: 48px 1fr;
-    gap: 12px;
+    grid-template-columns: 40px 1fr;
+    gap: 14px;
   }
 
   .coop-step-number {
     width: 40px;
     height: 40px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .coop-step-body {
-    padding: 10px 14px;
+    padding-top: 7px;
   }
 
   .coop-cta-inner {
-    padding: 22px 16px;
+    padding: 28px 18px;
+  }
+
+  .coop-cta-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
+/* Глобальный reduce-блок гасит длительности; здесь снимаем только
+   ховерные сдвиги, чтобы карточки не прыгали мгновенно */
 @media (prefers-reduced-motion: reduce) {
-  .coop-page,
-  .coop-hero,
-  .coop-highlight-card,
-  .coop-section,
-  .coop-cta {
-    animation: none;
-  }
-
-  .coop-highlight-card:hover,
-  .coop-card:hover,
-  .coop-step:hover .coop-step-body,
-  .coop-contact-card:hover,
-  .coop-cta-btn:hover {
+  .coop-value-card:hover,
+  .coop-contact-action:hover {
     transform: none;
   }
+}
+
+/* Контейнер заголовка с иконкой */
+.coop-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+/* Сброс отступа у заголовка, чтобы не было двойного */
+.coop-section-header .coop-section-title {
+  margin: 0;
+  line-height: 1.2;         /* компактная высота строки */
+}
+
+/* Иконка: размер = размеру текста заголовка */
+.chain-icon {
+  display: block;           /* убирает влияние baseline */
+  width: 64px;              /* или 1.6em, если хотите масштабировать от шрифта */
+  height: 64px;
+  flex-shrink: 0;
+  color: var(--astra-pink);
+  transform: translateY(-8px); 
+}
+
+.badge-check-icon {
+  display: block;           /* убирает влияние baseline */
+  width: 64px;              /* или 1.6em, если хотите масштабировать от шрифта */
+  height: 64px;
+  flex-shrink: 0;
+  color: var(--astra-pink);
+  transform: translate(10px, 1px); 
+}
+
+/* Иконка: размер = размеру текста заголовка */
+.backpack-icon {
+    display: block;
+    width: 40px;              /* или 1.6em, если хотите масштабировать от шрифта */
+    height: 40px;
+    flex-shrink: 0;
+    color: var(--astra-pink);
+    transform: translateY(-6px); 
+}
+
+/* Сохраняем розовую линию под заголовком (::after) */
+.coop-section-header .coop-section-title::after {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 3px;
+  margin-top: 10px;
+  border-radius: var(--astra-r-pill);
+  background: linear-gradient(90deg, var(--astra-pink), transparent);
 }

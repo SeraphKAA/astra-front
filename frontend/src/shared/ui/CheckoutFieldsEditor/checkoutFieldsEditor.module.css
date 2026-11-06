@@ -18,11 +18,13 @@
   gap: 8px;
 }
 
+/* #595959 на тёмной карточке давал 2.70:1 — подпись поля была нечитаема.
+   --astra-ink-dim (#A5A2AB) держит 7.5:1. */
 .label {
   font-family: "Roboto", sans-serif;
   font-size: 14px;
   font-weight: 400;
-  color: #595959;
+  color: var(--astra-ink-dim);
 }
 
 .select {
@@ -36,7 +38,7 @@
   color: #fff;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23595959' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23A5A2AB' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 12px center;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -46,10 +48,16 @@
   border-color: #3a3a3e;
 }
 
+/* Клик мышью поле не подсвечивает; ясеневый контур — только для клавиатуры
+   (комментарий раунда 5 «индикатор не снимается» отменён раундом 6). */
 .select:focus {
   outline: none;
-  border-color: #e2799b;
-  box-shadow: 0 0 0 2px rgba(226, 121, 155, 0.2);
+  box-shadow: none;
+}
+
+:root[data-modality="keyboard"] .select:focus {
+  outline: 1px solid var(--astra-focus-field);
+  outline-offset: 0;
 }
 
 .select option {

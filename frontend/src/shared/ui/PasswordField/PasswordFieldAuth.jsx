@@ -36,12 +36,15 @@ export const PasswordFieldAuth = ({
                 autoComplete={autoComplete}
                 required={required}
             />
+            {/* Клавиатура должна доставать переключатель: tabIndex={-1} убран,
+                фокус виден через :focus-visible (passwordFieldAuth.css) */}
             <button
                 type="button"
                 className="password-field-auth-toggle"
                 onClick={() => setVisible((v) => !v)}
                 disabled={disabled}
-                tabIndex={-1}
+                aria-pressed={visible}
+                aria-controls={id}
                 aria-label={visible ? "Скрыть пароль" : "Показать пароль"}
             >
                 {visible ? (

@@ -1,95 +1,138 @@
+/* ============================================================
+   Общая кнопка (admin, checkout, профиль) — токены v3.
+
+   Раунд 5: заливка --astra-pink-fill (#DD0184) под БЕЛЫЕ чернила
+   --astra-on-pink (4.74:1); ховер — только смена заливки, без
+   подскока и без ореола; пресс — scale(.985); скругления по
+   лестнице 6/8/10/12.
+   ============================================================ */
+
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   border: none;
-  border-radius: 8px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
+  border-radius: var(--astra-r-md, 22px);
+  /* Кнопочный голос ЕДИН для всех вариантов (закон темы: кнопки различаются
+     заливкой, не шрифтом). Раньше базой был текстовый Golos и только .primary
+     переопределял — «Отмена» рядом с «Сохранить» говорила чужим голосом. */
+  font-family: var(--astra-display, "Unbounded", sans-serif);
+  font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: all 0.2s ease;
   white-space: nowrap;
+  transition:
+    background var(--astra-t-color, 150ms) var(--astra-ease, ease),
+    border-color var(--astra-t-color, 150ms) var(--astra-ease, ease),
+    color var(--astra-t-color, 150ms) var(--astra-ease, ease);
 }
 
+.button:active:not(:disabled) {
+  transform: scale(0.985);
+  transition-duration: 80ms;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--astra-ink, #eceaee);
+  outline-offset: 3px;
+}
+
+/* Гасим поверхностью, а не прозрачностью: 50% на розовой заливке давало
+   ~2.5:1 и «Оплатить» превращалась в пятно. Тот же приём, что в чате и
+   на страницах входа. */
 .button:disabled {
-  opacity: 0.5;
+  opacity: 1;
+  background: var(--astra-card-2, #1f1f23);
+  color: var(--astra-ink-dim, #a5a2ab);
+  border-color: var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+  box-shadow: none;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* Variants */
 .primary {
-  background: #E2799B;
-  color: white;
+  background: var(--astra-pink-fill, #dd0184);
+  color: var(--astra-on-pink, #ffffff);
 }
 
 .primary:hover:not(:disabled) {
-  background: #d45e84;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(226, 121, 155, 0.3);
+  background: var(--astra-pink-bright, #e30189);
 }
 
+/* вторичная и контурная — ясеневая гамма, без розовых рамок */
 .secondary {
-  background: #202022;
-  color: #E2799B;
-  border: 1px solid #E2799B;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--astra-ink, #eceaee);
+  border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
 }
 
 .secondary:hover:not(:disabled) {
-  background: #2a2a2e;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(236, 234, 238, 0.3);
 }
 
 .danger {
-  background: #dc2626;
-  color: white;
+  background: var(--astra-err, #ff4d5e);
+  color: #2a0206;
 }
 
 .danger:hover:not(:disabled) {
-  background: #b91c1c;
-  transform: translateY(-1px);
+  background: #ff6a78;
 }
 
+/* тёмные чернила: белое на #3DDC97 даёт 2.6:1 */
 .success {
-  background: #10b981;
-  color: white;
+  background: var(--astra-ok, #3ddc97);
+  color: var(--astra-bg, #0b0b0d);
 }
 
 .success:hover:not(:disabled) {
-  background: #059669;
-  transform: translateY(-1px);
+  background: #59e6a9;
 }
 
 .outline {
   background: transparent;
-  color: #E2799B;
-  border: 1px solid #E2799B;
+  color: var(--astra-ink, #eceaee);
+  border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
 }
 
 .outline:hover:not(:disabled) {
-  background: rgba(226, 121, 155, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(236, 234, 238, 0.3);
 }
 
 /* Sizes */
 .small {
   padding: 6px 12px;
-  font-size: 12px;
-  height: 32px;
+  font-size: 13px;
+  height: 34px;
 }
 
 .medium {
   padding: 10px 20px;
   font-size: 14px;
-  height: 40px;
+  height: 44px;
 }
 
 .large {
   padding: 12px 24px;
-  font-size: 16px;
+  font-size: 15px;
   height: 48px;
 }
 
 /* Full width */
 .fullWidth {
   width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+
+  .button:active:not(:disabled) {
+    transform: none;
+  }
 }

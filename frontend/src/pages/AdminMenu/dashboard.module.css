@@ -16,7 +16,7 @@
 .errorBox {
   flex-direction: column;
   gap: 14px;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--astra-ink-dim);
 }
 
 .hero {
@@ -25,11 +25,9 @@
   justify-content: space-between;
   gap: 16px;
   padding: 22px 24px;
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at top right, rgba(226, 121, 155, 0.18), transparent 42%),
-    linear-gradient(135deg, rgba(32, 32, 34, 0.98), rgba(24, 24, 26, 0.98));
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--astra-r-xl);
+  background: var(--astra-card);
+  border: 1px solid var(--astra-line);
 }
 
 .eyebrow {
@@ -38,50 +36,61 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(226, 121, 155, 0.85);
+  color: var(--astra-pink);
 }
 
 .title {
   margin: 0;
-  font-family: "Nunito", sans-serif;
+  font-family: var(--astra-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
   font-size: clamp(28px, 4vw, 36px);
   font-weight: 800;
-  color: #fff;
+  color: var(--astra-ink);
 }
 
 .subtitle {
   margin: 8px 0 0;
   max-width: 640px;
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--astra-ink-dim);
   font-size: 14px;
   line-height: 1.5;
 }
 
 .refreshBtn,
 .exportBtn {
-  border: 1px solid rgba(226, 121, 155, 0.35);
-  background: rgba(226, 121, 155, 0.12);
-  color: #f3b4c8;
-  border-radius: 12px;
+  border: 1px solid var(--astra-line-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--astra-ink);
+  border-radius: var(--astra-r-md);
   padding: 10px 16px;
+  /* кнопочный голос — как у всех кнопок сайта */
+  font-family: var(--astra-display);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition:
-    background 0.18s ease,
-    transform 0.18s ease,
-    border-color 0.18s ease;
+    background var(--astra-t-color) var(--astra-ease),
+    border-color var(--astra-t-color) var(--astra-ease);
 }
 
 .refreshBtn:hover:not(:disabled),
 .exportBtn:hover:not(:disabled) {
-  background: rgba(226, 121, 155, 0.22);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(236, 234, 238, 0.3);
+}
+
+.refreshBtn:focus-visible,
+.exportBtn:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 2px;
 }
 
 .refreshBtn:disabled,
 .exportBtn:disabled {
-  opacity: 0.6;
+  background: var(--astra-card-2);
+  border-color: transparent;
+  color: var(--astra-ink-dim);
   cursor: not-allowed;
 }
 
@@ -90,10 +99,10 @@
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
-  border-radius: 16px;
-  background: rgba(255, 193, 7, 0.08);
-  border: 1px solid rgba(255, 193, 7, 0.22);
-  color: #ffe08a;
+  border-radius: var(--astra-r-lg);
+  background: rgba(255, 193, 77, 0.08);
+  border: 1px solid rgba(255, 193, 77, 0.22);
+  color: var(--astra-warn);
 }
 
 .alertCard svg {
@@ -105,7 +114,7 @@
 
 .alertCard p {
   margin: 4px 0 0;
-  color: rgba(255, 255, 255, 0.68);
+  color: var(--astra-ink-dim);
   font-size: 13px;
 }
 
@@ -119,21 +128,21 @@
   display: flex;
   gap: 14px;
   padding: 18px;
-  border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(32, 32, 34, 0.92);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  border-radius: var(--astra-r-lg);
+  border: 1px solid var(--astra-line);
+  background: var(--astra-card-2);
+  transition: transform var(--astra-t-color) var(--astra-ease), box-shadow var(--astra-t-color) var(--astra-ease);
 }
 
 .kpiCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  box-shadow: var(--astra-shadow-sm);
 }
 
 .kpiIcon {
   width: 44px;
   height: 44px;
-  border-radius: 14px;
+  border-radius: var(--astra-r-sm);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -154,39 +163,39 @@
 
 .kpiTitle {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.52);
+  color: var(--astra-ink-dim);
 }
 
 .kpiValue {
-  font-family: "Nunito", sans-serif;
+  font-family: var(--astra-display);
   font-size: 24px;
   font-weight: 800;
-  color: #fff;
+  color: var(--astra-ink);
   line-height: 1.1;
 }
 
 .kpiHint {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--astra-ink-faint);
 }
 
 .kpiPink .kpiIcon {
-  background: rgba(226, 121, 155, 0.16);
-  color: #f0a8c0;
+  background: rgba(255, 1, 152, 0.14);
+  color: var(--astra-soft);
 }
 
 .kpiBlue .kpiIcon {
-  background: rgba(74, 158, 255, 0.16);
-  color: #9ec5ff;
+  background: var(--astra-violet-wash);
+  color: #B9A3F5;
 }
 
 .kpiGreen .kpiIcon {
-  background: rgba(129, 199, 132, 0.16);
-  color: #b8e6ba;
+  background: rgba(61, 220, 151, 0.14);
+  color: var(--astra-ok);
 }
 
 .kpiPurple .kpiIcon {
-  background: rgba(171, 130, 255, 0.16);
+  background: rgba(122, 59, 214, 0.18);
   color: #d4b8ff;
 }
 
@@ -198,15 +207,15 @@
 
 .periodCard {
   padding: 16px 18px;
-  border-radius: 16px;
+  border-radius: var(--astra-r-lg);
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--astra-line);
 }
 
 .periodCard h3 {
   margin: 0 0 12px;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--astra-ink-dim);
 }
 
 .periodStats {
@@ -218,13 +227,13 @@
 .periodStats span {
   display: block;
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--astra-ink-faint);
   margin-bottom: 4px;
 }
 
 .periodStats strong {
   font-size: 15px;
-  color: #fff;
+  color: var(--astra-ink);
 }
 
 .mainGrid {
@@ -235,9 +244,9 @@
 
 .panel {
   padding: 18px;
-  border-radius: 18px;
-  background: rgba(26, 26, 28, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--astra-r-lg);
+  background: var(--astra-card);
+  border: 1px solid var(--astra-line);
 }
 
 .panelHead {
@@ -251,12 +260,12 @@
 .panelHead h2 {
   margin: 0;
   font-size: 16px;
-  color: #fff;
+  color: var(--astra-ink);
 }
 
 .panelHead span {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.42);
+  color: var(--astra-ink-faint);
 }
 
 .chart {
@@ -284,10 +293,9 @@
 .chartBar {
   width: 100%;
   max-width: 28px;
-  border-radius: 8px 8px 4px 4px;
-  background: linear-gradient(180deg, #f0a8c0 0%, #e2799b 100%);
-  box-shadow: 0 8px 18px rgba(226, 121, 155, 0.22);
-  transition: transform 0.18s ease;
+  border-radius: var(--astra-r-sm) var(--astra-r-sm) 4px 4px;
+  background: var(--astra-pink-fill);
+  transition: transform var(--astra-t-color) var(--astra-ease);
 }
 
 .chartBarWrap:hover .chartBar {
@@ -296,7 +304,7 @@
 
 .chartLabel {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.42);
+  color: var(--astra-ink-faint);
   text-align: center;
   white-space: nowrap;
 }
@@ -323,7 +331,7 @@
 
 .statusCount {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--astra-ink-dim);
 }
 
 .statusTrack {
@@ -343,50 +351,50 @@
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius: var(--astra-r-sm);
   font-size: 12px;
   font-weight: 600;
 }
 
 .statusCreated {
   background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--astra-ink-dim);
 }
 
 .statusPaid {
-  background: rgba(74, 158, 255, 0.14);
-  color: #9ec5ff;
+  background: rgba(140, 97, 236, 0.14);
+  color: #B9A3F5;
 }
 
 .statusProcessing {
-  background: rgba(255, 193, 7, 0.14);
-  color: #ffd56a;
+  background: rgba(255, 193, 77, 0.14);
+  color: var(--astra-warn);
 }
 
 .statusCompleted {
-  background: rgba(129, 199, 132, 0.14);
-  color: #b8e6ba;
+  background: rgba(61, 220, 151, 0.14);
+  color: var(--astra-ok);
 }
 
 .statusCanceled {
-  background: rgba(239, 68, 68, 0.14);
-  color: #ff9a9a;
+  background: rgba(255, 77, 94, 0.14);
+  color: #ffc9cf;
 }
 
 .statusPaid.statusFill {
-  background: #4a9eff;
+  background: var(--astra-violet);
 }
 
 .statusProcessing.statusFill {
-  background: #ffc107;
+  background: var(--astra-warn);
 }
 
 .statusCompleted.statusFill {
-  background: #81c784;
+  background: var(--astra-ok);
 }
 
 .statusCanceled.statusFill {
-  background: #ef4444;
+  background: var(--astra-err);
 }
 
 .statusCreated.statusFill {
@@ -398,18 +406,18 @@
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: var(--astra-r-sm);
   background: rgba(255, 255, 255, 0.03);
 }
 
 .topRank {
   width: 28px;
   height: 28px;
-  border-radius: 10px;
+  border-radius: var(--astra-r-sm);
   display: grid;
   place-items: center;
-  background: rgba(226, 121, 155, 0.14);
-  color: #f0a8c0;
+  background: rgba(255, 1, 152, 0.14);
+  color: var(--astra-soft);
   font-size: 13px;
   font-weight: 800;
   flex-shrink: 0;
@@ -424,7 +432,7 @@
 
 .topInfo strong {
   font-size: 14px;
-  color: #fff;
+  color: var(--astra-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -432,7 +440,7 @@
 
 .topInfo span {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.48);
+  color: var(--astra-ink-faint);
 }
 
 .catalogStats {
@@ -443,20 +451,20 @@
 
 .catalogStats div {
   padding: 12px;
-  border-radius: 12px;
+  border-radius: var(--astra-r-sm);
   background: rgba(255, 255, 255, 0.03);
 }
 
 .catalogStats span {
   display: block;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--astra-ink-faint);
   margin-bottom: 6px;
 }
 
 .catalogStats strong {
   font-size: 18px;
-  color: #fff;
+  color: var(--astra-ink);
 }
 
 .tableWrap {
@@ -472,25 +480,25 @@
 .table td {
   padding: 12px 10px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--astra-line);
   font-size: 13px;
 }
 
 .table th {
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--astra-ink-faint);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .table td {
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--astra-ink);
 }
 
 .emptyCell,
 .emptyText {
   text-align: center;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--astra-ink-faint);
   padding: 24px 12px;
 }
 
@@ -500,21 +508,21 @@
   justify-content: space-between;
   gap: 18px;
   padding: 18px 20px;
-  border-radius: 18px;
-  background: rgba(32, 32, 34, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--astra-r-lg);
+  background: var(--astra-card-2);
+  border: 1px solid var(--astra-line);
 }
 
 .exportCard h2 {
   margin: 0 0 6px;
   font-size: 16px;
-  color: #fff;
+  color: var(--astra-ink);
 }
 
 .exportCard p {
   margin: 0;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.52);
+  color: var(--astra-ink-dim);
 }
 
 .exportForm {
@@ -532,21 +540,23 @@
 .exportForm span {
   font-size: 12px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--astra-ink-dim);
 }
 
 .exportForm input {
   padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--astra-r-md);
+  border: 1px solid var(--astra-line-strong);
   background: rgba(255, 255, 255, 0.04);
-  color: #fff;
+  color: var(--astra-ink);
   font-size: 14px;
   outline: none;
 }
 
-.exportForm input:focus {
-  border-color: rgba(226, 121, 155, 0.45);
+/* Клик мышью поле не подсвечивает; контур — только для клавиатуры */
+:root[data-modality="keyboard"] .exportForm input:focus {
+  outline: 1px solid var(--astra-focus-field, rgba(236, 234, 238, 0.55));
+  outline-offset: 0;
 }
 
 @media (max-width: 1100px) {

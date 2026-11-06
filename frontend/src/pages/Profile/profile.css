@@ -1,183 +1,224 @@
+/* ============================================================
+   Профиль — v3 «Ash and Signal», режим Operate.
+   Иерархия чтения: шапка (титул → подзаголовок → баланс с действием
+   «Пополнить»), затем две рельсы карточек по убыванию важности:
+   слева «аккаунт» (основные данные → безопасность и почта),
+   справа «имущество» (аватары → данные для заказов → рефералка).
+   На узких экранах рельсы схлопываются (display: contents), и DOM-порядок
+   1-2-3-4-5 остаётся и визуальным, и фокусным.
+
+   Хром спокойный: пепельные панели, волосяные рамки, БЕЗ теней и
+   подскоков — розовый только там, где пользователь действует
+   («Пополнить», «Сохранить изменения», выбранный аватар).
+   Появления: fadeInUp с лесенкой задержек (грамматика orders.css),
+   один раз на маунт; смена режима редактирования, CRUD аватаров и
+   профилей заказов карточки НЕ перемонтируют — входы не реиграют.
+   Фокус текстовых полей — только с клавиатуры (data-modality).
+   ============================================================ */
+
 .profile-page {
-  display: flex;
-  justify-content: center;
-  padding: 28px 16px 100px;
-  animation: fadeIn var(--duration-slow, 0.5s) ease;
+  padding: 28px 28px 96px;
+  color: var(--astra-ink);
+  box-sizing: border-box;
+  /* одна кривая на всё приложение */
+  animation: fadeIn var(--duration-slow, 0.8s) var(--ease-out-smooth, ease);
 }
 
+/* Рельса приложения: 1280 с полями 28px, как у шапки, главной и коопа */
 .profile-container {
+  max-width: 1280px;
+  margin: 0 auto;
   width: 100%;
-  max-width: 1100px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
+/* ---------- шапка страницы ---------- */
 .profile-hero {
-  margin-bottom: 20px;
-  animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease);
+  margin-bottom: 28px;
+  animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease) backwards;
 }
 
+/* Заголовочный голос (Mon Trappist, прописные) приходит из блока темы
+   (:root .profile-title); здесь только кегль — базу множит один токен. */
 .profile-title {
   margin: 0;
-  color: #ffffff;
-  font-size: 30px;
+  color: var(--astra-ink);
+  font-size: calc((30px) * var(--astra-heading-scale, 1));
   font-weight: 800;
-  letter-spacing: -0.02em;
 }
 
+/* Пилюля legal только у санкционированных 3px-разделителей заголовков */
 .profile-title-divider {
   width: 52px;
   height: 3px;
-  margin: 10px 0 12px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent, #e2799b), transparent);
+  margin: 10px 0 0;
+  border-radius: var(--astra-r-pill);
+  background: linear-gradient(90deg, var(--astra-pink), transparent);
   opacity: 0.9;
 }
 
 .profile-subtitle {
-  margin: 0;
+  margin: 14px 0 0;
   max-width: 640px;
-  color: rgba(255, 255, 255, 0.62);
+  color: var(--astra-ink-dim);
   font-size: 15px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
+/* Баланс: пепельная карточка, деньги — голосом Unbounded 700 в мягком
+   розовом; розовая ЗАЛИВКА только на действии «Пополнить». */
 .profile-balance-card {
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  margin-top: 18px;
-  padding: 14px 18px;
-  border-radius: 16px;
-  background: rgba(226, 121, 155, 0.1);
-  border: 1px solid rgba(226, 121, 155, 0.22);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  transition:
-    border-color var(--duration-fast, 0.2s) ease,
-    box-shadow var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) var(--ease-spring, ease);
+  margin-top: 20px;
+  border-radius: var(--astra-r-lg);
+  background: var(--astra-card);
+  border: 1px solid var(--astra-line);
+  /* курсор и клик живут на настоящей кнопке внутри, не на обёртке */
+  transition: border-color var(--astra-t-color, 150ms) var(--astra-ease, ease);
 }
 
+/* Ховер только светлеет: рамка ярче, CTA ярче — без подскока и тени */
 .profile-balance-card:hover {
-  border-color: rgba(226, 121, 155, 0.35);
-  box-shadow: 0 10px 28px rgba(226, 121, 155, 0.12);
-  transform: translateY(-1px);
-}
-
-.profile-balance-label {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.55);
+  border-color: var(--astra-line-strong);
 }
 
 .profile-balance-btn {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 14px 16px 14px 20px;
+  margin: 0;
   border: none;
   background: transparent;
-  padding: 0;
-  margin: 0;
-  color: #fff;
+  color: inherit;
   font: inherit;
+  text-align: left;
   cursor: pointer;
+}
+
+.profile-balance-btn:active {
+  transform: scale(0.985);
+  transition-duration: 80ms;
+}
+
+.profile-balance-btn:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 3px;
+  border-radius: var(--astra-r-sm);
+}
+
+.profile-balance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-balance-label {
+  font-family: var(--astra-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--astra-ink-dim);
+}
+
+.profile-balance-amount {
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
-  transition: transform var(--duration-fast, 0.2s) ease;
 }
 
-.profile-balance-btn strong {
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--accent, #e2799b);
+.profile-balance-amount strong {
+  font-family: var(--astra-display);
+  font-weight: 700;
+  font-size: 26px;
   line-height: 1.1;
+  color: var(--astra-soft);
 }
 
 .profile-balance-currency {
-  font-size: 18px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.75);
+  font-family: var(--astra-display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--astra-ink-dim);
 }
 
-.profile-balance-btn:hover {
-  transform: scale(1.02);
-}
-
-.profile-balance-hint {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.profile-alert {
-  margin-top: 14px;
-  padding: 12px 14px;
-  border-radius: 12px;
+.profile-balance-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 20px;
+  border-radius: var(--astra-r-md);
+  background: var(--astra-pink-fill);
+  color: var(--astra-on-pink);
+  font-family: var(--astra-display);
   font-weight: 600;
   font-size: 14px;
-  border: 1px solid transparent;
-  animation: fadeInUp 0.3s var(--ease-out-smooth, ease);
+  transition: background var(--astra-t-color, 150ms) var(--astra-ease, ease);
 }
 
-.profile-alert-error {
-  background: rgba(244, 67, 54, 0.12);
-  color: #ffb4b4;
-  border-color: rgba(244, 67, 54, 0.28);
+.profile-balance-btn:hover .profile-balance-cta {
+  background: var(--astra-pink-bright);
 }
 
-.profile-alert-success {
-  background: rgba(76, 175, 80, 0.12);
-  color: #bff3c6;
-  border-color: rgba(76, 175, 80, 0.28);
-}
-
+/* ---------- сетка: две рельсы, порядок DOM = порядок важности ---------- */
 .profile-grid {
-  margin-top: 8px;
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
 }
 
+.profile-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Панель раздела: пепельная карточка без тени и без ховера — она не
+   интерактивна, спокойствие важнее отклика. Вход один раз, backwards. */
 .profile-card {
-  background: rgba(26, 26, 28, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
-  padding: 18px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+  background: var(--astra-card);
+  border: 1px solid var(--astra-line);
+  border-radius: var(--astra-r-xl);
+  padding: 22px;
+  min-width: 0;
+  box-sizing: border-box;
   animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease) backwards;
-  transition:
-    border-color var(--duration-fast, 0.2s) ease,
-    box-shadow var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) var(--ease-out-smooth, ease);
 }
 
-.profile-grid > .profile-card:nth-child(1) { animation-delay: 0.04s; }
-.profile-grid > .profile-card:nth-child(2) { animation-delay: 0.08s; }
-.profile-grid > .profile-card:nth-child(3) { animation-delay: 0.12s; }
-.profile-grid > .profile-card:nth-child(4) { animation-delay: 0.16s; }
+/* Лесенка появлений: слева-направо, сверху-вниз; nth-child переживает
+   display: contents на мобильном — родитель в DOM остаётся. */
+.profile-col--account > .profile-card:nth-child(1) { animation-delay: 0.05s; }
+.profile-col--account > .profile-card:nth-child(2) { animation-delay: 0.11s; }
+.profile-col--extras > .profile-card:nth-child(1) { animation-delay: 0.08s; }
+.profile-col--extras > .profile-card:nth-child(2) { animation-delay: 0.14s; }
+.profile-col--extras > .profile-card:nth-child(3) { animation-delay: 0.17s; }
 
-.profile-card:hover {
-  border-color: rgba(226, 121, 155, 0.15);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
-}
-
+/* Заголовочный голос приходит из темы (:root .profile-card h2 и родня) */
 .profile-card h2 {
-  margin: 0 0 12px;
-  color: #f5f5f5;
-  font-size: 18px;
+  margin: 0 0 14px;
+  color: var(--astra-ink);
+  font-size: calc((18px) * var(--astra-heading-scale, 1));
   font-weight: 700;
+  line-height: 1.15;
 }
 
 .profile-card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 14px;
   flex-wrap: wrap;
 }
 
 .profile-card-head h2 {
   margin: 0;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -188,13 +229,14 @@
   flex-shrink: 0;
 }
 
+/* Иконка-кнопка (карандаш/крестик): призрачная грань, 44px */
 .profile-edit-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 44px;
+  height: 44px;
+  border-radius: var(--astra-r-md);
+  border: 1px solid var(--astra-line-strong);
   background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--astra-ink-dim);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -203,174 +245,436 @@
   font-size: 20px;
   line-height: 1;
   transition:
-    background var(--duration-fast, 0.2s) ease,
-    border-color var(--duration-fast, 0.2s) ease,
-    color var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) var(--ease-spring, ease);
+    background var(--astra-t-color, 150ms) var(--astra-ease, ease),
+    border-color var(--astra-t-color, 150ms) var(--astra-ease, ease),
+    color var(--astra-t-color, 150ms) var(--astra-ease, ease);
 }
 
 .profile-edit-btn:hover {
-  background: rgba(226, 121, 155, 0.14);
-  border-color: rgba(226, 121, 155, 0.3);
-  color: #f5d4e0;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(236, 234, 238, 0.3);
+  color: var(--astra-ink);
 }
 
 .profile-edit-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.985);
+  transition-duration: 80ms;
 }
 
-.profile-form input:disabled,
-.profile-form textarea:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
+.profile-edit-btn:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 3px;
+}
+
+/* ---------- поля: подпись → колодец → подсказка ---------- */
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.profile-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--astra-ink-dim);
+}
+
+.profile-field-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--astra-ink-dim);
+}
+
+/* 16px — закон iOS: мельче — зум-скачок по фокусу */
+.profile-field input:not([type="checkbox"]),
+.profile-field textarea,
+.profile-field select,
+.profile-checkout-field input,
+.profile-checkout-field select {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1px solid var(--astra-line);
+  border-radius: var(--astra-r-md);
+  background: var(--astra-bg-elev);
+  color: var(--astra-ink);
+  font-family: var(--astra-body);
+  font-size: 16px;
+  line-height: 1.4;
+  box-sizing: border-box;
+  transition:
+    border-color var(--astra-t-color, 150ms) var(--astra-ease, ease),
+    background var(--astra-t-color, 150ms) var(--astra-ease, ease);
+}
+
+.profile-field input:not([type="checkbox"]):hover:not(:disabled),
+.profile-field textarea:hover:not(:disabled),
+.profile-field select:hover:not(:disabled),
+.profile-checkout-field input:hover,
+.profile-checkout-field select:hover {
+  border-color: var(--astra-line-strong);
+}
+
+.profile-field input::placeholder,
+.profile-field textarea::placeholder,
+.profile-checkout-field input::placeholder {
+  color: var(--astra-ink-dim);
+  text-transform: lowercase;
+}
+
+/* Режим чтения: выключенное поле не «гаснет» в 65% — значение по-прежнему
+   читают. Колодец становится прозрачным, чернила остаются полными. */
+.profile-field input:not([type="checkbox"]):disabled,
+.profile-field textarea:disabled {
+  background: transparent;
+  border-color: var(--astra-line);
+  color: var(--astra-ink);
+  opacity: 1;
+  cursor: default;
+}
+
+/* Клик мышью поле НЕ подсвечивает — ни рамкой, ни фоном (мандат владельца).
+   Ясеневый контур --astra-focus-field остаётся только для клавиатуры. */
+.profile-field input:not([type="checkbox"]):focus,
+.profile-field textarea:focus,
+.profile-field select:focus,
+.profile-checkout-field input:focus,
+.profile-checkout-field select:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+:root[data-modality="keyboard"] .profile-field input:not([type="checkbox"]):focus,
+:root[data-modality="keyboard"] .profile-field textarea:focus,
+:root[data-modality="keyboard"] .profile-field select:focus,
+:root[data-modality="keyboard"] .profile-checkout-field input:focus,
+:root[data-modality="keyboard"] .profile-checkout-field select:focus {
+  outline: 1px solid var(--astra-focus-field);
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+.profile-field textarea {
+  resize: vertical;
+  min-height: 110px;
+  max-height: 220px;
+  line-height: 1.45;
 }
 
 .profile-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.profile-form label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.profile-form input:not([type="checkbox"]),
-.profile-form textarea {
-  width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 11px 14px;
-  outline: none;
-  font-size: 14px;
-  transition:
-    border-color var(--duration-fast, 0.2s) ease,
-    box-shadow var(--duration-fast, 0.2s) ease,
-    background var(--duration-fast, 0.2s) ease;
-  box-sizing: border-box;
-  background: #121214;
-  color: #f0f0f0;
-}
-
-.profile-form input:focus,
-.profile-form textarea:focus {
-  border-color: rgba(226, 121, 155, 0.5);
-  box-shadow: 0 0 0 3px rgba(226, 121, 155, 0.1);
-  background: #161618;
-}
-
-.profile-form textarea {
-  resize: vertical;
-  min-height: 100px;
-  max-height: 220px;
-  line-height: 1.45;
-}
-
-.profile-password-modal .password-field-modal-wrap {
-  width: 100%;
-}
-
-.profile-password-modal .password-field-modal-input {
-  width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 11px 14px;
-  padding-right: 48px;
-  outline: none;
-  font-size: 14px;
-  box-sizing: border-box;
-  background: #121214;
-  color: #f0f0f0;
-  transition: border-color var(--duration-fast, 0.2s) ease;
-}
-
-.profile-password-modal .password-field-modal-input:focus {
-  border-color: rgba(226, 121, 155, 0.5);
-  box-shadow: 0 0 0 3px rgba(226, 121, 155, 0.1);
-}
-
-.profile-password-modal .profile-password-field-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.profile-two-cols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 14px;
 }
 
 .profile-checkbox-row {
-  display: flex !important;
-  flex-direction: row !important;
+  display: flex;
   align-items: center;
-  margin-top: 4px;
-  gap: 10px !important;
+  gap: 10px;
+  min-height: 44px;
   cursor: pointer;
 }
 
 .profile-checkbox-row input[type="checkbox"] {
   width: 20px;
-  min-width: 20px;
-  max-width: 20px;
+  height: 20px;
   flex: 0 0 20px;
   margin: 0;
   padding: 0;
+  accent-color: var(--astra-pink-fill);
   cursor: pointer;
+}
+
+.profile-checkbox-row input[type="checkbox"]:disabled {
+  cursor: default;
 }
 
 .profile-checkbox-row span {
+  font-size: 14px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--astra-ink);
 }
 
+.profile-form-actions {
+  display: flex;
+  margin-top: 6px;
+}
+
+/* Первичное действие — тема (.astra-btn): плоский розовый, БЕЛЫЙ текст */
 .profile-save-btn {
-  border: none;
-  border-radius: 14px;
-  padding: 13px 18px;
-  background: linear-gradient(135deg, #e2799b 0%, #d0688a 100%);
-  color: #fff;
-  font-weight: 700;
+  min-height: 48px;
+}
+
+/* ---------- компактные вторичные кнопки (грань .astra-btn-ghost) ----------
+   Форма и голос ЕДИНЫ с первичной: r-md + Unbounded 600 14px; отличается
+   только заливка. 44px — минимальная цель попадания. */
+.profile-inline-btn {
+  min-height: 44px;
+  padding: 10px 18px;
+  box-sizing: border-box;
+}
+
+/* Выключено = смена поверхности (card-2 + приглушённые чернила), не opacity */
+.profile-inline-btn:disabled {
+  background: var(--astra-card-2);
+  border-color: var(--astra-line);
+  color: var(--astra-ink-dim);
+  cursor: not-allowed;
+}
+
+.profile-field > .profile-inline-btn {
+  align-self: flex-start;
+}
+
+/* ---------- безопасность и почта ---------- */
+.profile-security {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-security-divider {
+  height: 1px;
+  background: var(--astra-line);
+}
+
+/* Статус «Подтверждена» — информационная метка в голосе бейджа */
+.profile-email-ok {
+  align-self: center;
+  flex: 0 0 auto;
+  font-family: var(--astra-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #A7ECC9;
+  background: rgba(61, 220, 151, 0.12);
+  border: 1px solid rgba(61, 220, 151, 0.3);
+  padding: 6px 10px;
+  border-radius: var(--astra-r-sm);
+  white-space: nowrap;
+}
+
+/* ---------- ряды «поле + кнопка» (почта, рефералка) ---------- */
+.profile-ref-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  min-width: 0;
+}
+
+.profile-ref-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-ref-row .profile-inline-btn {
+  flex: 0 0 auto;
+  align-self: center;
+  white-space: nowrap;
+}
+
+.profile-ref-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.profile-ref-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Ссылки — вторичные данные: приглушённые чернила */
+.profile-ref-links input[readonly] {
+  color: var(--astra-ink-dim);
+}
+
+/* Закреплённый реферал — заметка: фиолетовый информирует, розовый действует */
+.profile-ref-info {
+  border-radius: var(--astra-r-sm);
+  background: var(--astra-violet-wash);
+  border: 1px solid rgba(140, 97, 236, 0.35);
+  color: #B9A3F5;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* ---------- аватары ---------- */
+.profile-avatars-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.profile-avatars-head h2 {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.profile-avatar-limit {
+  color: var(--astra-ink-dim);
+  font-size: 12px;
+  margin-left: auto;
+}
+
+/* Кнопка-«лейбл» загрузки: грань темы + скрытый файловый вход, доступный
+   с клавиатуры (input спрятан визуально, а не display:none) */
+.profile-upload-btn {
+  position: relative;
+  cursor: pointer;
+}
+
+.profile-upload-btn input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Кольцо — грамматика .astra-ring: базовый :focus-within как фолбэк, а где
+   есть :has() — только клавиатурный фокус. Клик по ярлыку фокусирует скрытый
+   input, и без :has кольцо вспыхивало бы от каждого выбора файла мышью. */
+.profile-upload-btn:focus-within {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 3px;
+}
+
+@supports selector(:has(*)) {
+  .profile-upload-btn:focus-within {
+    outline: none;
+  }
+
+  .profile-upload-btn:has(:focus-visible) {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 3px;
+  }
+}
+
+.profile-avatars-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 18px 14px;
+}
+
+/* Аватар — по-настоящему круглый: r-pill законен именно здесь */
+.profile-avatar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.profile-avatar-preview {
+  width: 104px;
+  height: 104px;
+  flex: 0 0 auto;
+  border-radius: var(--astra-r-pill);
+  overflow: hidden;
+  border: 2px solid var(--astra-line-strong);
+  background: var(--astra-bg-elev);
+  box-sizing: border-box;
+  transition: border-color var(--astra-t-color, 150ms) var(--astra-ease, ease);
+}
+
+/* Выбранное состояние — санкционированный розовый выбора */
+.profile-avatar-preview.is-active {
+  border-color: var(--astra-pink);
+}
+
+.profile-avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.profile-avatar-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Мини-кнопки аватаров и профилей заказов: та же кнопочная грамматика */
+.profile-avatar-action,
+.profile-checkout-item-actions button {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: var(--astra-r-md);
+  border: 1px solid var(--astra-line-strong);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--astra-ink);
+  font-family: var(--astra-display);
+  font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  margin-top: 4px;
-  box-shadow: 0 6px 18px var(--accent-glow, rgba(226, 121, 155, 0.32));
   transition:
-    background var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) var(--ease-spring, ease),
-    box-shadow var(--duration-fast, 0.2s) ease;
+    background var(--astra-t-color, 150ms) var(--astra-ease, ease),
+    border-color var(--astra-t-color, 150ms) var(--astra-ease, ease),
+    color var(--astra-t-color, 150ms) var(--astra-ease, ease);
 }
 
-.profile-save-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #eb8fb0 0%, #e2799b 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px var(--accent-glow, rgba(226, 121, 155, 0.4));
+.profile-avatar-action:hover:not(:disabled),
+.profile-checkout-item-actions button:hover {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(236, 234, 238, 0.3);
 }
 
-.profile-save-btn:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+.profile-avatar-action:active:not(:disabled),
+.profile-checkout-item-actions button:active {
+  transform: scale(0.985);
+  transition-duration: 80ms;
 }
 
-.profile-save-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+.profile-avatar-action:focus-visible,
+.profile-checkout-item-actions button:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 3px;
 }
 
+/* Текущий аватар: статусная зелень, курсор спокойный */
+.profile-avatar-action.is-active {
+  background: rgba(61, 220, 151, 0.12);
+  color: #A7ECC9;
+  border-color: rgba(61, 220, 151, 0.3);
+  cursor: default;
+}
+
+/* Разрушительное действие: статусный красный со светлыми чернилами,
+   форма и голос — те же, что у остальных кнопок */
+.profile-avatar-action.danger,
+.profile-checkout-item-actions button.danger {
+  background: rgba(255, 77, 94, 0.1);
+  color: #FFC9CF;
+  border-color: rgba(255, 77, 94, 0.28);
+}
+
+.profile-avatar-action.danger:hover,
+.profile-checkout-item-actions button.danger:hover {
+  background: rgba(255, 77, 94, 0.16);
+  border-color: rgba(255, 77, 94, 0.45);
+}
+
+/* ---------- данные для заказов ---------- */
 .profile-checkout-hint {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.58);
+  color: var(--astra-ink-dim);
   margin: 0 0 14px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .profile-checkout-list {
@@ -378,48 +682,43 @@
   gap: 10px;
 }
 
+/* Запись — колодец на тон глубже карточки; не интерактивна, без ховера */
 .profile-checkout-item {
-  padding: 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.15);
-  transition:
-    border-color var(--duration-fast, 0.2s) ease,
-    background var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) ease;
-}
-
-.profile-checkout-item:hover {
-  border-color: rgba(226, 121, 155, 0.2);
-  background: rgba(226, 121, 155, 0.04);
-  transform: translateX(2px);
+  padding: 14px 16px;
+  border-radius: var(--astra-r-lg);
+  border: 1px solid var(--astra-line);
+  background: var(--astra-bg-elev);
+  min-width: 0;
 }
 
 .profile-checkout-item-head {
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .profile-checkout-item-icon {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: var(--astra-r-sm);
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--astra-line);
+  flex: 0 0 auto;
 }
 
 .profile-checkout-item-title {
   font-weight: 700;
-  color: #f5f5f5;
+  font-size: 14px;
+  color: var(--astra-ink);
 }
 
 .profile-checkout-item-meta {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--astra-ink-dim);
   margin-top: 4px;
   word-break: break-word;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .profile-checkout-item-actions {
@@ -429,388 +728,194 @@
   flex-wrap: wrap;
 }
 
-.profile-checkout-item-actions button {
-  padding: 8px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.88);
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  transition:
-    background var(--duration-fast, 0.2s) ease,
-    border-color var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) ease;
-}
-
-.profile-checkout-item-actions button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-1px);
-}
-
-.profile-checkout-item-actions button.danger {
-  border-color: rgba(226, 121, 155, 0.35);
-  color: #f0a8c0;
-  background: rgba(226, 121, 155, 0.08);
-}
-
-.profile-checkout-item-actions button.danger:hover {
-  background: rgba(226, 121, 155, 0.16);
-}
-
 .profile-checkout-field {
   display: grid;
-  gap: 6px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 12px;
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--astra-ink-dim);
 }
 
-.profile-checkout-field input,
-.profile-checkout-field select {
-  padding: 11px 14px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #121214;
-  color: #f0f0f0;
-  font: inherit;
-  transition: border-color var(--duration-fast, 0.2s) ease;
-}
-
-.profile-checkout-field input:focus,
-.profile-checkout-field select:focus {
-  outline: none;
-  border-color: rgba(226, 121, 155, 0.45);
-}
-
-.profile-avatars-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-
-.profile-avatars-head h2 {
-  margin: 0;
-}
-
-.profile-avatar-limit {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
-  margin-left: auto;
-}
-
-.profile-upload-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  padding: 10px 16px;
-  background: rgba(226, 121, 155, 0.12);
-  color: #f5d4e0;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  border: 1px solid rgba(226, 121, 155, 0.28);
-  transition:
-    background var(--duration-fast, 0.2s) ease,
-    border-color var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) ease;
-}
-
-.profile-upload-btn:hover {
-  background: rgba(226, 121, 155, 0.2);
-  border-color: rgba(226, 121, 155, 0.4);
-  transform: translateY(-1px);
-}
-
-.profile-upload-btn input {
-  display: none;
-}
-
-.profile-avatars-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.profile-avatar-card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  overflow: hidden;
-  background: #141416;
-  transition:
-    border-color var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) var(--ease-out-smooth, ease),
-    box-shadow var(--duration-fast, 0.2s) ease;
-}
-
-.profile-avatar-card:hover {
-  border-color: rgba(226, 121, 155, 0.22);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
-}
-
-.profile-avatar-preview {
-  width: 100%;
-  height: 160px;
-  background: #0e0e10;
-  overflow: hidden;
-}
-
-.profile-avatar-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform var(--duration-slow, 0.5s) var(--ease-out-smooth, ease);
-}
-
-.profile-avatar-card:hover .profile-avatar-preview img {
-  transform: scale(1.04);
-}
-
-.profile-avatar-actions {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.profile-avatar-action {
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition:
-    background var(--duration-fast, 0.2s) ease,
-    border-color var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) ease;
-}
-
-.profile-avatar-action:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
-}
-
-.profile-avatar-action.is-active {
-  background: rgba(76, 175, 80, 0.14);
-  color: #9dffb8;
-  border-color: rgba(76, 175, 80, 0.3);
-  cursor: default;
-}
-
-.profile-avatar-action.danger {
-  background: rgba(244, 67, 54, 0.1);
-  color: #ffb4b4;
-  border-color: rgba(244, 67, 54, 0.25);
-}
-
-.profile-avatar-action.danger:hover {
-  background: rgba(244, 67, 54, 0.18);
-}
-
+/* ---------- служебные состояния ---------- */
 .profile-loading,
 .profile-empty,
 .profile-not-auth {
-  color: rgba(255, 255, 255, 0.65);
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
-  padding: 20px 16px;
+  color: var(--astra-ink-dim);
+  background: var(--astra-bg-elev);
+  border: 1px solid var(--astra-line);
+  border-radius: var(--astra-r-lg);
+  padding: 22px 18px;
   text-align: center;
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
-.profile-ref-box {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.profile-ref-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.profile-ref-row,
-.profile-ref-link-row {
-  display: flex;
-  align-items: stretch;
-  gap: 10px;
-  min-width: 0;
-}
-
-.profile-ref-row input,
-.profile-ref-link-row input {
-  flex: 1 1 0;
-  width: auto;
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 10px 12px;
-  font-size: 12px;
-  background: #121214;
-  color: rgba(255, 255, 255, 0.88);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  transition: border-color var(--duration-fast, 0.2s) ease;
-}
-
-.profile-ref-link-row input {
-  padding: 9px 12px;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.profile-ref-row input:focus,
-.profile-ref-link-row input:focus {
-  outline: none;
-  border-color: rgba(226, 121, 155, 0.4);
-}
-
-.profile-ref-row button,
-.profile-ref-link-row button {
-  flex: 0 0 auto;
-  align-self: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  min-width: 108px;
-  transition:
-    background var(--duration-fast, 0.2s) ease,
-    border-color var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) ease;
-}
-
-.profile-ref-link-row button {
-  padding: 9px 12px;
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.profile-ref-row button:hover:not(:disabled),
-.profile-ref-link-row button:hover {
-  background: rgba(226, 121, 155, 0.12);
-  border-color: rgba(226, 121, 155, 0.28);
-  transform: translateY(-1px);
-}
-
-.profile-ref-row button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.profile-form .profile-ref-row input:not([type="checkbox"]) {
-  width: auto;
-  min-width: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-  padding: 10px 12px;
-  font-size: 12px;
-  background: #121214;
-  box-shadow: none;
-}
-
-.profile-ref-info {
-  border-radius: 12px;
-  background: rgba(74, 158, 255, 0.08);
-  border: 1px solid rgba(74, 158, 255, 0.2);
-  color: rgba(255, 255, 255, 0.85);
+/* Ошибка на тонированной панели — светлые чернила #FFC9CF (закон статусов) */
+.profile-alert {
+  margin-top: 12px;
   padding: 12px 14px;
+  border-radius: var(--astra-r-sm);
+  font-weight: 600;
   font-size: 13px;
-}
-
-.profile-ref-links {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.profile-card,
-.profile-ref-box {
-  min-width: 0;
-}
-
-.profile-ref-hint {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 12px;
   line-height: 1.45;
+  border: 1px solid transparent;
+  animation: fadeInUp var(--astra-t-move, 300ms) var(--astra-ease, ease);
 }
 
-.profile-email-bind {
+.profile-alert-error {
+  background: rgba(255, 77, 94, 0.12);
+  color: #FFC9CF;
+  border-color: rgba(255, 77, 94, 0.28);
+}
+
+.profile-alert-success {
+  background: rgba(61, 220, 151, 0.12);
+  color: #A7ECC9;
+  border-color: rgba(61, 220, 151, 0.3);
+}
+
+/* ---------- содержимое модалок ---------- */
+.profile-modal-text {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--astra-ink);
+}
+
+.profile-modal-hint {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--astra-ink-dim);
+}
+
+.profile-otp-wrap {
+  margin-top: 4px;
+}
+
+.profile-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.profile-password-modal .password-field-modal-wrap {
+  width: 100%;
+}
+
+/* Фокус PasswordField страница НЕ переопределяет: контур описан в самом
+   компоненте (passwordFieldModal.css) и уже привязан к клавиатуре. */
+.profile-password-modal .password-field-modal-input {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--astra-line);
+  border-radius: var(--astra-r-md);
+  padding: 12px 48px 12px 16px;
+  font-size: 16px;
+  box-sizing: border-box;
+  background: var(--astra-bg-elev);
+  color: var(--astra-ink);
+  transition: border-color var(--astra-t-color, 150ms) var(--astra-ease, ease);
+}
+
+.profile-password-field-stack {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  margin-top: 2px;
 }
 
+/* ---------- адаптация ---------- */
 @media (max-width: 920px) {
+  /* Рельсы схлопываются в один столбец; contents сохраняет DOM-порядок
+     1-2-3-4-5 и для глаз, и для клавиатуры */
   .profile-grid {
     grid-template-columns: 1fr;
+  }
+
+  .profile-col {
+    display: contents;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-page {
+    padding: 20px 16px 80px;
   }
 }
 
 @media (max-width: 640px) {
-  .profile-page {
-    padding: 20px 12px 90px;
-  }
-
   .profile-title {
-    font-size: 24px;
-  }
-
-  .profile-balance-btn strong {
-    font-size: 24px;
+    font-size: calc((24px) * var(--astra-heading-scale, 1));
   }
 
   .profile-balance-card {
     width: 100%;
-    box-sizing: border-box;
   }
 
-  .profile-two-cols {
-    grid-template-columns: 1fr;
+  .profile-balance-btn {
+    width: 100%;
+    justify-content: space-between;
+    gap: 16px;
   }
 
-  .profile-checkbox-row {
-    margin-top: 0;
+  .profile-card {
+    padding: 18px 16px;
   }
 
-  .profile-avatars-grid {
-    grid-template-columns: 1fr;
+  .profile-save-btn {
+    width: 100%;
   }
 
-  .profile-avatar-preview {
-    height: 200px;
-  }
-
-  .profile-ref-row,
-  .profile-ref-link-row {
+  .profile-ref-row {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .profile-ref-row button,
-  .profile-ref-link-row button {
+  .profile-ref-row .profile-inline-btn {
     width: 100%;
-    min-width: 0;
+    white-space: normal;
   }
+
+  .profile-email-ok {
+    align-self: flex-start;
+  }
+
+  .profile-avatars-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}
+
+/* Группа уведомлений */
+.profile-notifications-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.profile-notifications-channels {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 30px; /* Отступ под главным чекбоксом */
+  border-left: 2px solid var(--astra-line);
+  margin-left: 10px;
+}
+
+.profile-notifications-channels .profile-checkbox-row {
+  min-height: 32px; /* Чуть компактнее для вложенных */
+}
+
+.profile-notifications-channels .profile-checkbox-row span {
+  font-size: 13px;
+  color: var(--astra-ink-dim);
+}
+
+.profile-notifications-channels .profile-checkbox-row input:disabled + span {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

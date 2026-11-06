@@ -14,12 +14,13 @@ import {
   uploadAvatar,
 } from "../../entities/files/api/fileApi";
 import { setMyReferralCode } from "../../entities/user/api/userApi";
-import { PencilIcon, LockIcon } from "../../shared/svgIcons";
+import { PencilIcon } from "../../shared/svgIcons";
 import { PasswordFieldModal } from "../../shared/ui/PasswordField";
-import { initBalanceTopupPayment } from "../../entities/payment/api/paymentApi";
+import { openPayment, PaymentHistory } from "../../widgets/PaymentDialog";
 import { normalizeMediaUrl } from "../../shared/commonApi";
 import { validateNickname, validateNoSqlInjection } from "../../shared/validation";
 import { ProfileCheckoutProfiles } from "./ProfileCheckoutProfiles";
+import { telegramLinkStart, telegramLinkStatus } from "../../entities/auth/api/authApi";
 
 const getDeviceTimezone = () => {
   try {
@@ -34,6 +35,8 @@ const normalizeForm = (user, deviceTimezone) => ({
   bio: user?.bio || "",
   timezone: user?.timezone || deviceTimezone || "Europe/Moscow",
   notifications_enabled: Boolean(user?.notifications_enabled),
+  notifications_email: Boolean(user?.notifications_enabled && user?.notifications_email),
+  notifications_telegram: Boolean(user?.notifications_enabled && user?.notifications_telegram),
 });
 
 const Profile = () => {
@@ -63,19 +66,118 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [setPasswordLoading, setSetPasswordLoading] = useState(false);
-  const [isTopupOpen, setIsTopupOpen] = useState(false);
-  const [topupAmount, setTopupAmount] = useState("");
-  const [topupError, setTopupError] = useState("");
-  const [isTopupLoading, setIsTopupLoading] = useState(false);
   const frontendBaseUrl = window.location.origin;
-  const tgBotUsername = import.meta.env.VITE_TG_BOT_USERNAME || "<bot_username>";
-  const tgAppShortName = import.meta.env.VITE_TG_APP_SHORT_NAME || "<app_short_name>";
   const referralWebLink = user?.ref_code
     ? `${frontendBaseUrl}/sign_up?ref=${encodeURIComponent(user.ref_code)}`
     : "";
-  const referralTelegramLink = user?.ref_code
-    ? `https://t.me/${tgBotUsername}/${tgAppShortName}?startapp=ref_${encodeURIComponent(user.ref_code)}`
-    : "";
+  const [tgLinkCode, setTgLinkCode] = useState(null);
+  const [tgLinkStatus, setTgLinkStatus] = useState("idle");
+  const confirmedRef = useRef(false);
+  const botUsername = process.env.REACT_APP_TG_BOT_USERNAME || "astra_auth_bot";
+  const buildTgUrl = (startParam) =>
+    botUsername ? `https://t.me/${botUsername}?start=${encodeURIComponent(startParam)}` : "";
+
+
+  const onStartTelegramLink = async () => {
+    confirmedRef.current = false;
+    try {
+      setTgLinkStatus("waiting");
+      const res = await telegramLinkStart();
+      setTgLinkCode(res.code);
+      const url = buildTgUrl(res.start_param);
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+        pushToast({
+          type: "info",
+          message: "Откройте бота в Telegram и нажмите «Старт» — привязка подтвердится автоматически.",
+        });
+      } else {
+        setTgLinkStatus("idle");
+        pushToast({ type: "error", message: "Не задан REACT_APP_TG_BOT_USERNAME" });
+      }
+    } catch (e) {
+      setTgLinkStatus("idle");
+      pushToast({ type: "error", message: e?.message || "Не удалось начать привязку" });
+    }
+  };
+
+  const FIRST_CHECK_DELAY_MS = 20000;   // первый запрос к /link/status — через 20с
+  const POLL_INTERVAL_MS = 2000;         // последующие — каждые 2с
+  const MAX_ATTEMPTS = 150;              // ~5 минут общего ожидания
+
+  useEffect(() => {
+    if (tgLinkStatus !== "waiting" || !tgLinkCode) return;
+
+    let cancelled = false;
+    let timer = null;
+    let attempts = 0;
+    let notifiedPending = false;
+
+    const finish = (status, toast) => {
+      if (toast) pushToast(toast);
+      setTgLinkStatus(status);            // "idle" → кнопка снова активна
+      setTgLinkCode(null);                // эффект self-cancel через deps
+      confirmedRef.current = status === "idle" ? confirmedRef.current : false;
+    };
+
+    const check = async () => {
+      if (cancelled) return;
+
+      if (++attempts > MAX_ATTEMPTS) {
+        finish("idle", { type: "error", message: "Время ожидания истекло — попробуйте снова" });
+        return;
+      }
+
+      let res;
+      try {
+        res = await telegramLinkStatus({ code: tgLinkCode });
+      } catch {
+        if (!cancelled) timer = window.setTimeout(check, POLL_INTERVAL_MS);
+        return;
+      }
+      if (cancelled) return;
+
+      // 1. Успех
+      if (res?.status === "confirmed") {
+        confirmedRef.current = true;
+        try { await loadUserProfile(); } catch { /* noop */ }
+        finish("idle", { type: "success", message: "Telegram привязан" });
+        return;
+      }
+
+      if (confirmedRef.current) return;
+
+      // 2. Явные ошибки
+      if (res?.status === "error") {
+        finish("idle", { type: "error", message: "Этот Telegram уже привязан к другому аккаунту" });
+        return;
+      }
+      if (res?.status === "expired") {
+        finish("idle", { type: "error", message: "Ссылка истекла — попробуйте ещё раз" });
+        return;
+      }
+
+      // 3. Pending. На первой итерации (уже после 20с ожидания) один раз
+      //    напомним пользователю, что нужно нажать «Старт» в боте.
+      if (!notifiedPending) {
+        notifiedPending = true;
+        pushToast({
+          type: "info",
+          message: "Telegram пока не подтверждён. Откройте бота и нажмите «Старт».",
+        });
+      }
+
+      timer = window.setTimeout(check, POLL_INTERVAL_MS);
+    };
+
+    // ⬇ Первый и единственный запрос уходит РОВНО через 20 секунд
+    timer = window.setTimeout(check, FIRST_CHECK_DELAY_MS);
+
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [tgLinkCode, tgLinkStatus, loadUserProfile, pushToast]);
 
   useEffect(() => {
     setTimezoneTouched(false);
@@ -170,6 +272,8 @@ const Profile = () => {
         bio: form.bio?.trim() ? form.bio.trim() : "",
         timezone: form.timezone?.trim() ? form.timezone.trim() : form.timezone,
         notifications_enabled: form.notifications_enabled,
+        notifications_email: form.notifications_enabled ? form.notifications_email : false,
+        notifications_telegram: form.notifications_enabled ? form.notifications_telegram : false,
       };
       await updateMyProfile(payload);
       await loadUserProfile();
@@ -194,6 +298,17 @@ const Profile = () => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+
+    /* Лимит проверяем ДО отправки: подпись «До N МБ» — обещание, а не
+       декорация, и гонять мегабайты ради серверного отказа незачем.
+       Тот же приём, что в чатах (SupportChat/OrderChat). */
+    if (avatarMaxMb && file.size > avatarMaxMb * 1024 * 1024) {
+      pushToast({
+        type: "error",
+        message: `Файл больше ${avatarMaxMb} МБ — выберите файл поменьше`,
+      });
+      return;
+    }
 
     setIsUploadingAvatar(true);
     try {
@@ -257,19 +372,24 @@ const Profile = () => {
     pushToast({ type: "success", message: "Реферальная ссылка скопирована" });
   };
 
+  /* Возвращает true только при УСПЕШНОЙ отправке: повторная отправка в
+     модалке заводит 60-секундный отсчёт лишь по этому признаку — сбой сети
+     не должен запирать пользователя на минуту без письма. */
   const onSendBindCode = async () => {
     const email = bindEmail?.trim();
     if (!email) {
       pushToast({ type: "error", message: "Введите email" });
-      return;
+      return false;
     }
     setSendBindLoading(true);
     try {
       await sendBindEmailCode(email);
       pushToast({ type: "success", message: "Код отправлен на почту" });
       setIsBindCodeModalOpen(true);
+      return true;
     } catch (err) {
       pushToast({ type: "error", message: err?.message || "Не удалось отправить код" });
+      return false;
     } finally {
       setSendBindLoading(false);
     }
@@ -392,70 +512,7 @@ const Profile = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bindCode, isBindCodeModalOpen, verifyBindLoading]);
 
-  const openTopup = () => {
-    setTopupError("");
-    setTopupAmount("");
-    setIsTopupOpen(true);
-  };
-
-  const closeTopup = () => {
-    if (isTopupLoading) return;
-    setIsTopupOpen(false);
-    setTopupError("");
-  };
-
-  const normalizeMoneyInput = (v) => {
-    const s = String(v ?? "");
-    const cleaned = s.replace(",", ".").replace(/[^\d.]/g, "");
-    const parts = cleaned.split(".");
-    if (parts.length <= 1) return cleaned;
-    return `${parts[0]}.${parts.slice(1).join("").slice(0, 2)}`;
-  };
-
-  const submitRobokassaForm = (actionUrl) => {
-    const formEl = document.createElement("form");
-    formEl.method = "POST";
-    formEl.action = actionUrl;
-    formEl.style.display = "none";
-    formEl.target = "_blank";
-
-    document.body.appendChild(formEl);
-    formEl.submit();
-    window.setTimeout(() => {
-      try {
-        document.body.removeChild(formEl);
-      } catch { }
-    }, 1000);
-  };
-
-  const onTopup = async (e) => {
-    e?.preventDefault?.();
-    setTopupError("");
-    const amountStr = normalizeMoneyInput(topupAmount).trim();
-    const amount = Number(amountStr);
-    if (!amountStr || Number.isNaN(amount) || amount <= 0) {
-      setTopupError("Введите корректную сумму");
-      return;
-    }
-    if (amount > 1000000) {
-      setTopupError("Сумма слишком большая");
-      return;
-    }
-
-    setIsTopupLoading(true);
-    try {
-      const res = await initBalanceTopupPayment({ amount: amountStr });
-      if (!res?.payment_action_url) {
-        throw new Error("Не удалось создать платеж");
-      }
-      closeTopup();
-      submitRobokassaForm(res.payment_action_url);
-    } catch (err) {
-      setTopupError(err?.message || "Не удалось создать платеж");
-    } finally {
-      setIsTopupLoading(false);
-    }
-  };
+  const openTopup = () => openPayment({ purpose: "balance" });
 
   if (!isAuthenticated) {
     return (
@@ -478,10 +535,11 @@ const Profile = () => {
           <h1 className="profile-title">Профиль</h1>
           <div className="profile-title-divider" aria-hidden />
           <p className="profile-subtitle">
-            Редактируйте данные аккаунта, управляйте аватарами и персональными настройками.
+            Личные данные, почта и пароль, аватары и данные для заказов.
           </p>
-          <div className="profile-balance-card" onClick={openTopup}>
-            <span className="profile-balance-label">Баланс</span>
+          {/* обработчик один — на настоящей кнопке; div-обёртка без onClick,
+              иначе каждый клик всплывал и вызывал openTopup дважды */}
+          <div className="profile-balance-card">
             <button
               type="button"
               className="profile-balance-btn"
@@ -489,268 +547,426 @@ const Profile = () => {
               aria-label="Пополнить баланс"
               title="Нажмите, чтобы пополнить баланс"
             >
-              <strong>{user?.balance ?? "-"}</strong>
-              <span className="profile-balance-currency">₽</span>
+              <span className="profile-balance-info">
+                <span className="profile-balance-label">Баланс</span>
+                <span className="profile-balance-amount">
+                  <strong>{user?.balance ?? "-"}</strong>
+                  <span className="profile-balance-currency">₽</span>
+                </span>
+              </span>
+              <span className="profile-balance-cta" aria-hidden>
+                Пополнить
+              </span>
             </button>
-            <span className="profile-balance-hint">Нажмите, чтобы пополнить</span>
           </div>
         </header>
 
         <div className="profile-grid">
-          <section className="profile-card">
-            <div className="profile-card-head">
-              <h2>Основные данные</h2>
-              <div className="profile-card-head-actions">
-                {!isEditMode ? (
-                  <button
-                    type="button"
-                    className="profile-edit-btn"
-                    onClick={() => setIsEditMode(true)}
-                    aria-label="Редактировать профиль"
-                    title="Редактировать"
-                  >
-                    <PencilIcon />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="profile-edit-btn"
-                    onClick={onCancelEdit}
-                    aria-label="Отменить редактирование"
-                    title="Отмена"
-                  >
-                    ×
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="profile-edit-btn"
-                  onClick={onOpenSetPassword}
-                  aria-label={user?.has_password ? "Сменить пароль" : "Установить пароль"}
-                  title={user?.has_password ? "Сменить пароль" : "Установить пароль"}
-                >
-                  <LockIcon />
-                </button>
-              </div>
-            </div>
-            <form onSubmit={onSaveProfile} className="profile-form">
-              <label>
-                Никнейм
-                <input
-                  type="text"
-                  value={form.nickname}
-                  onChange={(e) => onFormFieldChange("nickname", e.target.value)}
-                  minLength={2}
-                  maxLength={30}
-                  required
-                  disabled={!isEditMode}
-                />
-              </label>
-
-              {user?.is_email_verified ? (
-                <label>
-                  Email
-                  <input type="email" readOnly value={user?.email || ""} />
-                </label>
-              ) : (
-                <div className="profile-email-bind">
-                  <div className="profile-ref-label">Email (подтверждение по коду)</div>
-                  <div className="profile-ref-row">
-                    <input
-                      type="email"
-                      placeholder="you@example.com"
-                      value={bindEmail}
-                      onChange={(e) => setBindEmail(e.target.value)}
-                      disabled={!isEditMode}
-                    />
-                    {bindEmail.trim() ? (
-                      <button
-                        type="button"
-                        onClick={onSendBindCode}
-                        disabled={!isEditMode || sendBindLoading}
-                      >
-                        {sendBindLoading ? "Отправка..." : "Отправить код"}
-                      </button>
-                    ) : null}
-                  </div>
-                  <div className="profile-ref-hint" style={{ marginTop: 8 }}>
-                    После отправки кода откроется окно для ввода.
-                  </div>
+          {/* Левая рельса — аккаунт: кто вы и как входите */}
+          <div className="profile-col profile-col--account">
+            <section className="profile-card">
+              <div className="profile-card-head">
+                <h2>Основные данные</h2>
+                <div className="profile-card-head-actions">
+                  {!isEditMode ? (
+                    <button
+                      type="button"
+                      className="profile-edit-btn"
+                      onClick={() => setIsEditMode(true)}
+                      aria-label="Редактировать профиль"
+                      title="Редактировать"
+                    >
+                      <PencilIcon />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="profile-edit-btn"
+                      onClick={onCancelEdit}
+                      aria-label="Отменить редактирование"
+                      title="Отмена"
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
-              )}
-
-              <label>
-                Био
-                <textarea
-                  value={form.bio}
-                  onChange={(e) => onFormFieldChange("bio", e.target.value)}
-                  maxLength={500}
-                  rows={4}
-                  disabled={!isEditMode}
-                />
-              </label>
-
-              <div className="profile-two-cols">
-                {/* <label>
-                  Часовой пояс
+              </div>
+              <form onSubmit={onSaveProfile} className="profile-form">
+                <div className="profile-field">
+                  <label className="profile-field-label" htmlFor="profile-nickname">
+                    Никнейм
+                  </label>
                   <input
+                    id="profile-nickname"
+                    type="text"
+                    value={form.nickname}
+                    onChange={(e) => onFormFieldChange("nickname", e.target.value)}
+                    minLength={2}
+                    maxLength={30}
+                    required
+                    disabled={!isEditMode}
+                    aria-describedby={isEditMode ? "profile-nickname-hint" : undefined}
+                  />
+                  {isEditMode && (
+                    <span className="profile-field-hint" id="profile-nickname-hint">
+                      От 2 до 30 символов: латиница, цифры и «_».
+                    </span>
+                  )}
+                </div>
+
+                <div className="profile-field">
+                  <label className="profile-field-label" htmlFor="profile-bio">
+                    О себе
+                  </label>
+                  <textarea
+                    id="profile-bio"
+                    value={form.bio}
+                    onChange={(e) => onFormFieldChange("bio", e.target.value)}
+                    maxLength={500}
+                    rows={4}
+                    disabled={!isEditMode}
+                  />
+                </div>
+
+                {/* <div className="profile-field">
+                  <label className="profile-field-label" htmlFor="profile-timezone">
+                    Часовой пояс
+                  </label>
+                  <input
+                    id="profile-timezone"
                     type="text"
                     value={form.timezone}
                     onChange={(e) => onFormFieldChange("timezone", e.target.value)}
                     disabled={!isEditMode}
                   />
-                </label> */}
-              </div>
+                  {isEditMode && (
+                    <p className="profile-field-hint">
+                      Определился автоматически — поправьте, если не совпадает.
+                    </p>
+                  )}
+                </div> */}
 
-              <div className="profile-two-cols">
-                <label className="profile-checkbox-row">
+                <div className="profile-notifications-group">
+                  <label className="profile-checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={form.notifications_enabled}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setForm((prev) => ({
+                          ...prev,
+                          notifications_enabled: checked,
+                          // При выключении главного — выключаем и каналы
+                          notifications_email: checked ? prev.notifications_email : false,
+                          notifications_telegram: checked ? prev.notifications_telegram : false,
+                        }));
+                      }}
+                      disabled={!isEditMode}
+                    />
+                    <span>Получать уведомления в чатах</span>
+                  </label>
+
+                  {form.notifications_enabled && (
+                    <div className="profile-notifications-channels">
+                      <label className="profile-checkbox-row">
+                        <input
+                          type="checkbox"
+                          checked={form.notifications_email}
+                          onChange={(e) => onFormFieldChange("notifications_email", e.target.checked)}
+                          // Если почта не подтверждена — не даем включить (или можно дать, но с подсказкой)
+                          disabled={!isEditMode || !user?.email}
+                        />
+                        <span>По электронной почте {(!user?.email) && "(не привязана)"}</span>
+                      </label>
+                      
+                      <label className="profile-checkbox-row">
+                        <input
+                          type="checkbox"
+                          checked={form.notifications_telegram}
+                          onChange={(e) => onFormFieldChange("notifications_telegram", e.target.checked)}
+                          // Если телеграм не привязан — не даем включить
+                          disabled={!isEditMode || !user?.telegram_id}
+                        />
+                        <span>В Telegram {(!user?.telegram_id) && "(не привязан)"}</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                {isEditMode && (
+                  <div className="profile-form-actions">
+                    <button
+                      type="submit"
+                      disabled={isSavingProfile}
+                      className="astra-btn profile-save-btn"
+                    >
+                      {isSavingProfile ? "Сохранение..." : "Сохранить изменения"}
+                    </button>
+                  </div>
+                )}
+              </form>
+            </section>
+
+            <section className="profile-card">
+              <h2>Безопасность и почта</h2>
+              <div className="profile-security">
+                <div className="profile-field">
+                  <label className="profile-field-label" htmlFor="profile-email">
+                    Почта
+                  </label>
+                  {user?.is_email_verified ? (
+                    <div className="profile-ref-row">
+                      <input id="profile-email" type="email" readOnly value={user?.email || ""} />
+                      <span className="profile-email-ok">Подтверждена</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="profile-ref-row">
+                        <input
+                          id="profile-email"
+                          type="email"
+                          placeholder="you@example.com"
+                          value={bindEmail}
+                          onChange={(e) => setBindEmail(e.target.value)}
+                          disabled={sendBindLoading}
+                        />
+                        {bindEmail.trim() ? (
+                          <button
+                            type="button"
+                            className="astra-btn-ghost profile-inline-btn"
+                            onClick={onSendBindCode}
+                            disabled={sendBindLoading}
+                          >
+                            {sendBindLoading ? "Отправка..." : "Отправить код"}
+                          </button>
+                        ) : null}
+                      </div>
+                      <span className="profile-field-hint">
+                        Отправим код подтверждения — введёте его в открывшемся окне.
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                <div className="profile-security-divider" aria-hidden />
+
+                <div className="profile-field">
+                  <span className="profile-field-label">Telegram</span>
+                  <span className="profile-field-hint" style={{ marginBottom: 15 }}>
+                    {user?.telegram_id
+                      ? `Привязан: ${user.telegram_username ? `@${user.telegram_username}` : user.telegram_id}`
+                      : "Привяжите Telegram — сможете входить через бота."}
+                  </span>
+                  {!user?.telegram_id ? (
+                    <button
+                      type="button"
+                      className="astra-btn-ghost profile-inline-btn"
+                      onClick={onStartTelegramLink}
+                      disabled={tgLinkStatus === "waiting"}
+                    >
+                      {tgLinkStatus === "waiting" ? "Ожидаем подтверждения…" : "Привязать Telegram"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="astra-btn-ghost profile-inline-btn"
+                      onClick={onStartTelegramLink}
+                      disabled={tgLinkStatus === "waiting"}
+                      title="Заменить привязанный Telegram"
+                    >
+                      {tgLinkStatus === "waiting" ? "Ожидаем подтверждения…" : "Перепривязать"}
+                    </button>
+                  )}
+                </div>
+
+
+                <div className="profile-security-divider" aria-hidden />
+
+                <div className="profile-field">
+                  <span className="profile-field-label">Пароль</span>
+                  <span className="profile-field-hint" style={{marginBottom: 15}}>
+                    {user?.has_password
+                      ? "Пароль установлен. Вход по почте и паролю доступен."
+                      : "Нужен для входа по почте и паролю."}
+                  </span>
+                  <button
+                    type="button"
+                    className="astra-btn-ghost profile-inline-btn"
+                    onClick={onOpenSetPassword}
+                    aria-label={user?.has_password ? "Сменить пароль" : "Установить пароль"}
+                    title={user?.has_password ? "Сменить пароль" : "Установить пароль"}
+                  >
+                    {user?.has_password ? "Сменить пароль" : "Установить пароль"}
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* Правая рельса — имущество: аватары, данные для заказов, рефералка */}
+          <div className="profile-col profile-col--extras">
+            <section className="profile-card">
+              <div className="profile-avatars-head">
+                <h2>Аватары</h2>
+                {typeof avatarMaxMb === "number" && (
+                  <div className="profile-avatar-limit">До {avatarMaxMb} МБ</div>
+                )}
+                <label className="astra-btn-ghost profile-inline-btn profile-upload-btn">
+                  {isUploadingAvatar ? "Загрузка..." : "Загрузить"}
+                  {/* disabled на время отправки: иначе «Загрузка…» — только
+                      надпись, а второй файл уходит параллельно первому */}
                   <input
-                    type="checkbox"
-                    checked={form.notifications_enabled}
-                    onChange={(e) =>
-                      onFormFieldChange("notifications_enabled", e.target.checked)
-                    }
-                    disabled={!isEditMode}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={onUploadAvatar}
+                    disabled={isUploadingAvatar}
                   />
-                  <span>Получать уведомления</span>
                 </label>
               </div>
 
-              {isEditMode && (
-                <button type="submit" disabled={isSavingProfile} className="profile-save-btn">
-                  {isSavingProfile ? "Сохранение..." : "Сохранить изменения"}
-                </button>
-              )}
-            </form>
-          </section>
-
-          <section className="profile-card">
-            <h2>Реферальная система</h2>
-            <div className="profile-ref-box">
-              <div className="profile-ref-label">Ваш реферальный код</div>
-              <div className="profile-ref-row">
-                <input type="text" readOnly value={user?.ref_code || ""} />
-                <button type="button" onClick={onCopyRefCode}>
-                  Скопировать
-                </button>
-              </div>
-              <div className="profile-ref-links">
-                <div className="profile-ref-link-row">
-                  <input type="text" readOnly value={referralWebLink} />
-                  <button type="button" onClick={() => onCopyReferralLink(referralWebLink)}>
-                    Копировать web
-                  </button>
-                </div>
-                <div className="profile-ref-link-row">
-                  <input type="text" readOnly value={referralTelegramLink} />
-                  <button type="button" onClick={() => onCopyReferralLink(referralTelegramLink)}>
-                    Копировать TG
-                  </button>
-                </div>
-                <div className="profile-ref-hint">
-                  Переходите по ссылке с `ref`/`startapp=ref_...` — код применится автоматически после регистрации.
-                </div>
-              </div>
-              {!user?.referred_by ? (
-                <div className="profile-ref-row">
-                  <input
-                    type="text"
-                    placeholder="Введите реферальный код"
-                    value={refCodeInput}
-                    onChange={(e) => setRefCodeInput(e.target.value)}
-                  />
-                  <button type="button" onClick={onSaveReferralCode} disabled={isSavingRefCode}>
-                    {isSavingRefCode ? "Сохранение..." : "Применить"}
-                  </button>
-                </div>
+              {isLoadingAvatars ? (
+                <div className="profile-loading">Загружаем аватары...</div>
+              ) : avatars.length === 0 ? (
+                <div className="profile-empty">Пока нет аватаров — загрузите первое изображение.</div>
               ) : (
-                <div className="profile-ref-info">Реферал закреплен: пользователь {user.ref_name}</div>
-              )}
-            </div>
-          </section>
-
-          <ProfileCheckoutProfiles />
-
-          <section className="profile-card">
-            <div className="profile-avatars-head">
-              <h2>Аватары</h2>
-              {typeof avatarMaxMb === "number" && (
-                <div className="profile-avatar-limit">Макс. размер: {avatarMaxMb}MB</div>
-              )}
-              <label className="profile-upload-btn">
-                {isUploadingAvatar ? "Загрузка..." : "Загрузить"}
-                <input type="file" accept="image/*" onChange={onUploadAvatar} />
-              </label>
-            </div>
-
-            {isLoadingAvatars ? (
-              <div className="profile-loading">Загрузка аватаров...</div>
-            ) : avatars.length === 0 ? (
-              <div className="profile-empty">У вас пока нет загруженных аватаров.</div>
-            ) : (
-              <div className="profile-avatars-grid">
-                {avatars.map((avatar) => {
-                  const isActive = avatar.id === activeAvatarId;
-                  return (
-                    <div className="profile-avatar-card" key={avatar.id}>
-                      <div className="profile-avatar-preview">
-                        <img src={normalizeMediaUrl(avatar.url)} alt="avatar" />
+                <div className="profile-avatars-grid">
+                  {avatars.map((avatar) => {
+                    const isActive = avatar.id === activeAvatarId;
+                    return (
+                      <div className="profile-avatar-card" key={avatar.id}>
+                        <div className={`profile-avatar-preview${isActive ? " is-active" : ""}`}>
+                          <img src={normalizeMediaUrl(avatar.url)} alt="Аватар" />
+                        </div>
+                        <div className="profile-avatar-actions">
+                          <button
+                            type="button"
+                            className={`profile-avatar-action ${isActive ? "is-active" : ""}`}
+                            onClick={() => onSetActiveAvatar(avatar.id)}
+                            disabled={isActive}
+                          >
+                            {isActive ? "Активный" : "Выбрать"}
+                          </button>
+                          <button
+                            type="button"
+                            className="profile-avatar-action danger"
+                            onClick={() => onDeleteAvatar(avatar.id)}
+                          >
+                            Удалить
+                          </button>
+                        </div>
                       </div>
-                      <div className="profile-avatar-actions">
-                        <button
-                          type="button"
-                          className={`profile-avatar-action ${isActive ? "is-active" : ""}`}
-                          onClick={() => onSetActiveAvatar(avatar.id)}
-                          disabled={isActive}
-                        >
-                          {isActive ? "Активный" : "Сделать активным"}
-                        </button>
-                        <button
-                          type="button"
-                          className="profile-avatar-action danger"
-                          onClick={() => onDeleteAvatar(avatar.id)}
-                        >
-                          Удалить
-                        </button>
-                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            <ProfileCheckoutProfiles />
+
+            <section className="profile-card">
+              <h2>Реферальная программа</h2>
+              <div className="profile-ref-box">
+                <div className="profile-field">
+                  <label className="profile-field-label" htmlFor="profile-ref-code">
+                    Ваш реферальный код
+                  </label>
+                  <div className="profile-ref-row">
+                    <input id="profile-ref-code" type="text" readOnly value={user?.ref_code || ""} />
+                    <button
+                      type="button"
+                      className="astra-btn-ghost profile-inline-btn"
+                      onClick={onCopyRefCode}
+                      aria-label="Скопировать реферальный код"
+                    >
+                      Скопировать
+                    </button>
+                  </div>
+                </div>
+
+                <div className="profile-ref-links">
+                  <div className="profile-field">
+                    <label className="profile-field-label" htmlFor="profile-ref-web">
+                      Ссылка для сайта
+                    </label>
+                    <div className="profile-ref-row">
+                      <input id="profile-ref-web" type="text" readOnly value={referralWebLink} />
+                      <button
+                        type="button"
+                        className="astra-btn-ghost profile-inline-btn"
+                        onClick={() => onCopyReferralLink(referralWebLink)}
+                        aria-label="Скопировать ссылку для сайта"
+                      >
+                        Скопировать
+                      </button>
                     </div>
-                  );
-                })}
+                  </div>
+                  <span className="profile-field-hint">
+                    Поделитесь ссылкой — после регистрации по ней код применится автоматически.
+                  </span>
+                </div>
+
+                {!user?.referred_by ? (
+                  <div className="profile-field">
+                    <label className="profile-field-label" htmlFor="profile-ref-input">
+                      Код приглашения
+                    </label>
+                    <div className="profile-ref-row">
+                      <input
+                        id="profile-ref-input"
+                        type="text"
+                        placeholder="Введите код"
+                        value={refCodeInput}
+                        onChange={(e) => setRefCodeInput(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="astra-btn-ghost profile-inline-btn"
+                        onClick={onSaveReferralCode}
+                        disabled={isSavingRefCode}
+                      >
+                        {isSavingRefCode ? "Сохранение..." : "Применить"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="profile-ref-info">Вас пригласил пользователь {user.ref_name}</div>
+                )}
               </div>
-            )}
-          </section>
+            </section>
+          </div>
         </div>
       </div>
 
-      <Modal isOpen={isBindCodeModalOpen} onClose={onCloseBindModal} title="Подтверждение email">
-        <div className="profile-ref-label" style={{ marginBottom: 8 }}>
-          Код отправлен на <strong>{bindEmail?.trim() || "email"}</strong>
-        </div>
+      <Modal isOpen={isBindCodeModalOpen} onClose={onCloseBindModal} title="Подтверждение почты">
+        <p className="profile-modal-text">
+          Код отправлен на <strong>{bindEmail?.trim() || "почту"}</strong>
+        </p>
 
-        <div style={{ marginTop: 6 }}>
+        <div className="profile-otp-wrap">
           <OtpInput
             value={bindCode}
             onChange={(v) => setBindCode(normalizeOtp(v))}
             length={6}
             autoFocus
-            disabled={!isEditMode || verifyBindLoading}
+            disabled={verifyBindLoading}
             name="bind_code"
           />
         </div>
 
-        <div className="profile-ref-hint" style={{ marginTop: 10 }}>
-          Не пришёл код? Проверьте спам или отправьте ещё раз.
-        </div>
+        <p className="profile-modal-hint" style={{ marginTop: 10, marginBottom: 0 }}>
+          Не пришёл код? Проверьте папку «Спам» или отправьте ещё раз.
+        </p>
 
-        <div className="profile-ref-row" style={{ marginTop: 10 }}>
-          <div />
+        <div className="profile-modal-actions">
           <button
             type="button"
+            className="astra-btn-ghost profile-inline-btn"
             onClick={async () => {
-              await onSendBindCode();
-              setBindResendLeft(60);
+              /* отсчёт — только если письмо реально ушло */
+              const sent = await onSendBindCode();
+              if (sent) setBindResendLeft(60);
             }}
-            disabled={!isEditMode || sendBindLoading || bindResendLeft > 0}
+            disabled={sendBindLoading || bindResendLeft > 0}
           >
             {bindResendLeft > 0
               ? `Отправить ещё раз (${bindResendLeft}с)`
@@ -765,11 +981,11 @@ const Profile = () => {
         isOpen={isSetPasswordOpen}
         onClose={onCloseSetPassword}
         title={user?.has_password ? "Сменить пароль" : "Установить пароль"}
+        closeDisabled={setPasswordLoading}
+        closeDisabledLabel="Сохраняем пароль — закрыть нельзя"
       >
         <form className="profile-password-modal" onSubmit={onSetPassword}>
-          <div className="profile-ref-hint" style={{ marginBottom: 10 }}>
-            Пароль нужен для входа по почте+паролю и дополнительных настроек безопасности.
-          </div>
+          <p className="profile-modal-hint">Пароль нужен для входа по почте и паролю.</p>
 
           <div className="profile-password-field-stack">
             {user?.has_password ? (
@@ -800,47 +1016,15 @@ const Profile = () => {
             />
           </div>
 
-          <div className="profile-ref-row" style={{ marginTop: 12 }}>
-            <div />
-            <button type="submit" disabled={setPasswordLoading}>
+          <div className="profile-modal-actions">
+            <button type="submit" className="astra-btn" disabled={setPasswordLoading}>
               {setPasswordLoading ? "Сохранение..." : user?.has_password ? "Сохранить" : "Установить"}
             </button>
           </div>
         </form>
       </Modal>
 
-      <Modal isOpen={isTopupOpen} onClose={closeTopup} title="Пополнение баланса">
-        <form className="profile-form" onSubmit={onTopup}>
-          <div className="profile-ref-hint" style={{ marginBottom: 10 }}>
-            Введите сумму в рублях — после оплаты через Robokassa средства начислятся на ваш баланс.
-          </div>
-
-          <label>
-            Сумма (₽)
-            <input
-              type="text"
-              inputMode="decimal"
-              value={topupAmount}
-              onChange={(e) => setTopupAmount(normalizeMoneyInput(e.target.value))}
-              placeholder="Например: 500"
-              disabled={isTopupLoading}
-            />
-          </label>
-
-          {topupError ? (
-            <div className="profile-alert profile-alert-error" style={{ marginTop: 10 }}>
-              {topupError}
-            </div>
-          ) : null}
-
-          <div className="profile-ref-row" style={{ marginTop: 12 }}>
-            <div />
-            <button type="submit" disabled={isTopupLoading}>
-              {isTopupLoading ? "Подготовка..." : "Перейти к оплате"}
-            </button>
-          </div>
-        </form>
-      </Modal>
+      <PaymentHistory />
     </div>
   );
 };

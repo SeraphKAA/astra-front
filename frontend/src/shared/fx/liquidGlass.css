@@ -1,0 +1,50 @@
+/* Liquid glass v3.
+   Базовый слой — надёжное стекло (blur + saturate) на самом элементе.
+   Линза — прогрессивное улучшение: ::after с backdrop-filter: url(#astra-lens)
+   преломляет фон по кромке; там, где url()-фильтры в backdrop-filter не
+   поддерживаются, псевдоэлемент просто не даёт эффекта. Спекулярная кромка —
+   световая волосяная линия сверху, как блик на стекле. */
+
+.fx-lens-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+.astra-liquid {
+    position: relative;
+    background:
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0) 34%),
+        var(--astra-glass);
+    -webkit-backdrop-filter: blur(16px) saturate(1.45);
+    backdrop-filter: blur(16px) saturate(1.45);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 10px 30px -18px rgba(0, 0, 0, 0.7);
+}
+
+.astra-liquid::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    -webkit-backdrop-filter: url(#astra-lens);
+    backdrop-filter: url(#astra-lens);
+    /* показываем преломление только у кромок — центр остаётся чистым */
+    -webkit-mask-image: linear-gradient(to bottom, black 0, transparent 18px, transparent calc(100% - 18px), black 100%),
+        linear-gradient(to right, black 0, transparent 18px, transparent calc(100% - 18px), black 100%);
+    mask-image: linear-gradient(to bottom, black 0, transparent 18px, transparent calc(100% - 18px), black 100%),
+        linear-gradient(to right, black 0, transparent 18px, transparent calc(100% - 18px), black 100%);
+    -webkit-mask-composite: source-over;
+    mask-composite: add;
+}
+
+/* Плотный вариант для диалогов */
+.astra-liquid--deep {
+    background:
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 30%),
+        var(--astra-glass-strong);
+}

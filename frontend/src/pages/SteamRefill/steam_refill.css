@@ -10,7 +10,7 @@
 
 .steam-refill-hero h1 {
   margin: 0 0 8px;
-  font-size: 1.75rem;
+  font-size: calc((1.75rem) * var(--astra-heading-scale, 1));
 }
 
 .steam-refill-hero p {
@@ -24,7 +24,7 @@
   flex-direction: column;
   gap: 16px;
   padding: 20px;
-  border-radius: 16px;
+  border-radius: var(--astra-r-xl);
   background: var(--card-bg, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   min-width: 0;
@@ -50,20 +50,32 @@
   color: var(--text-muted, #aaa);
 }
 
+/* Тихая подсказка-раскрытие. Вертикальные отступы растят зону нажатия до
+   44px, не сдвигая текст: отрицательные margin возвращают строку на место. */
 .steam-refill-micro-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   background: none;
   border: none;
-  padding: 0;
+  padding: 0 4px;
+  margin: -10px -4px;
   font-size: 0.8rem;
-  color: rgba(226, 121, 155, 0.85);
+  color: var(--astra-soft);
   cursor: pointer;
   white-space: nowrap;
-  transition: color 0.15s ease;
+  transition: color var(--astra-t-color) var(--astra-ease);
 }
 
 .steam-refill-micro-link:hover {
-  color: #e2799b;
+  color: #ffb6e6;
   text-decoration: underline;
+}
+
+.steam-refill-micro-link:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 2px;
+  border-radius: var(--astra-r-sm);
 }
 
 .steam-refill-field input {
@@ -73,24 +85,36 @@
   background: rgba(0, 0, 0, 0.22);
   color: inherit;
   font-size: 1rem;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color var(--astra-t-color) var(--astra-ease);
 }
 
+/* Поле, в которое печатают, НЕ подсвечивается: клик мышью не меняет ни рамку,
+   ни фон. Индикатор остаётся только для клавиатуры — один тонкий ясеневый
+   контур (грамматика .astra-field). */
 .steam-refill-field input:focus {
   outline: none;
-  border-color: rgba(226, 121, 155, 0.45);
-  background: rgba(0, 0, 0, 0.28);
+  box-shadow: none;
+}
+
+:root[data-modality="keyboard"] .steam-refill-field input:focus-visible {
+  outline: 1px solid var(--astra-focus-field);
+  outline-offset: 0;
+  box-shadow: none;
 }
 
 .steam-refill-amount-panel {
   display: flex;
   flex-direction: column;
-  border-radius: 14px;
+  border-radius: var(--astra-r-xl);
   background: rgba(0, 0, 0, 0.22);
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* Оболочка на фокус НЕ реагирует: подсветка целой панели от клика мышью —
+   именно то, что владелец убрал. Индикатор рисует само поле, и только при
+   обходе с клавиатуры (см. .steam-refill-amount-panel-input:focus-visible). */
 .steam-refill-amount-panel-head {
   display: flex;
   align-items: center;
@@ -115,6 +139,7 @@
 }
 
 .steam-refill-currency-switch-btn {
+  position: relative;
   width: 32px;
   height: 32px;
   border: none;
@@ -130,19 +155,39 @@
     box-shadow 0.18s ease;
 }
 
+/* Кружок валюты остаётся 32px визуально, но палец ловит 44px по вертикали:
+   шаг между кнопками 36px, поэтому расширять по горизонтали нельзя —
+   соседние зоны нажатия начали бы перекрываться. */
+.steam-refill-currency-switch-btn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 44px;
+  transform: translateY(-50%);
+}
+
 .steam-refill-currency-switch-btn:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.06);
 }
 
+/* выбранная валюта — плоская розовая заливка, БЕЛЫЙ текст (4.74:1),
+   без розового ореола */
 .steam-refill-currency-switch-btn.is-active {
-  color: #fff;
-  background: linear-gradient(135deg, #e2799b 0%, #c95f84 100%);
-  box-shadow: 0 2px 10px rgba(226, 121, 155, 0.35);
+  color: var(--astra-on-pink);
+  background: var(--astra-pink-fill);
+  box-shadow: none;
+}
+
+.steam-refill-currency-switch-btn.is-active:hover {
+  color: var(--astra-on-pink);
+  background: var(--astra-pink-bright);
 }
 
 .steam-refill-currency-switch-btn:focus-visible {
-  outline: 2px solid rgba(226, 121, 155, 0.55);
+  outline: 2px solid var(--astra-ink);
   outline-offset: 1px;
 }
 
@@ -188,8 +233,17 @@
   color: rgba(255, 255, 255, 0.22);
 }
 
+/* Ввод суммы не подсвечивается от клика; клавиатурный обход получает тонкий
+   ясеневый контур прямо на поле — оно безрамочное, контур виден. */
 .steam-refill-amount-panel-input:focus {
   outline: none;
+  box-shadow: none;
+}
+
+:root[data-modality="keyboard"] .steam-refill-amount-panel-input:focus-visible {
+  outline: 1px solid var(--astra-focus-field);
+  outline-offset: 2px;
+  border-radius: var(--astra-r-sm);
 }
 
 .steam-refill-amount-panel-foot {
@@ -208,7 +262,6 @@
 
 .steam-refill-amount-panel-foot .steam-refill-micro-link {
   line-height: 1.3;
-  transform: translateY(-2px);
 }
 
 .steam-refill-hint {
@@ -264,26 +317,47 @@
   color: inherit;
   font-size: 0.95rem;
   box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Ввод не подсвечивается; клавиатура получает тонкий ясеневый контур */
+.steam-refill-promo input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+:root[data-modality="keyboard"] .steam-refill-promo input:focus-visible {
+  outline: 1px solid var(--astra-focus-field);
+  outline-offset: 0;
+  box-shadow: none;
 }
 
 .steam-refill-promo button {
   flex: 0 0 auto;
+  min-height: 44px;
   padding: 10px 16px;
   border-radius: 10px;
   border: none;
-  background: rgba(226, 121, 155, 0.18);
-  color: #e8a8be;
+  background: rgba(255, 1, 152, 0.18);
+  color: var(--astra-soft);
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
   box-sizing: border-box;
-  transition: background 0.15s ease;
+  transition:
+    background var(--astra-t-color) var(--astra-ease),
+    color var(--astra-t-color) var(--astra-ease);
+}
+
+.steam-refill-promo button:focus-visible {
+  outline: 2px solid rgba(255, 1, 152, 0.28);
+  outline-offset: 2px;
 }
 
 .steam-refill-promo button:hover:not(:disabled) {
-  background: rgba(226, 121, 155, 0.28);
-  color: #f0c0d0;
+  background: rgba(255, 1, 152, 0.28);
+  color: #ffb6e6;
 }
 
 .steam-refill-promo button:disabled {
@@ -291,13 +365,16 @@
   cursor: not-allowed;
 }
 
+/* Скидка носит СВОЙ цвет — пурпур семейства --astra-drop, а не зелёный
+   и не розовый действия. Сам --astra-drop (#7A3BD6) на тёмной подложке
+   даёт лишь 3.05:1, поэтому берём его светлый тон: #B98CF2 = 7.2:1. */
 .steam-refill-promo-applied {
   font-size: 0.9rem;
-  color: #81c784;
+  color: #b98cf2;
 }
 
 .steam-refill-discount strong {
-  color: #81c784;
+  color: #b98cf2;
 }
 
 .steam-refill-breakdown {
@@ -321,7 +398,7 @@
 }
 
 .steam-refill-regional strong {
-  color: #e2799b;
+  color: var(--astra-soft);
 }
 
 .steam-refill-breakdown-total {
@@ -343,14 +420,14 @@
 .steam-refill-info-block {
   margin-top: 20px;
   padding: 20px;
-  border-radius: 16px;
+  border-radius: var(--astra-r-xl);
   background: var(--card-bg, rgba(255, 255, 255, 0.04));
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
 }
 
 .steam-refill-info-title {
   margin: 0 0 16px;
-  font-size: 1.35rem;
+  font-size: calc((1.35rem) * var(--astra-heading-scale, 1));
   font-weight: 700;
 }
 
@@ -382,54 +459,133 @@
   text-decoration: underline;
 }
 
-.steam-refill-info-modal {
+/* ============================================================
+   «Как работает валюта при пополнении» — раскрывающаяся справка.
+   Раньше объяснение появлялось и исчезало мгновенно; теперь
+   контейнер растёт и схлопывается по высоте с сопутствующим
+   fade: 300мс (--astra-t-move), общая кривая --astra-ease.
+   .is-animating живёт только на время перехода, поэтому в покое
+   ничего не обрезается (кольца фокуса внутри остаются видимыми).
+   Пустой контейнер сохраняется в DOM ради aria-controls и
+   выключается правилом :empty, чтобы не съедать gap карточки.
+   ============================================================ */
+
+.steam-refill-disclosure {
+  min-width: 0;
+}
+
+.steam-refill-disclosure:empty {
+  display: none;
+}
+
+.steam-refill-disclosure.is-animating {
+  overflow: hidden;
+  transition:
+    height var(--astra-t-move) var(--astra-ease),
+    opacity var(--astra-t-move) var(--astra-ease);
+}
+
+.steam-refill-disclosure-inner {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  color: #ddd;
-  line-height: 1.55;
+  padding: 16px;
+  box-sizing: border-box;
+  border-radius: var(--astra-r-xl);
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.steam-refill-disclosure-title {
+  margin: 0;
+  font-family: var(--astra-display);
   font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--astra-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .steam-refill-disclosure.is-animating {
+    transition: none;
+  }
+}
+
+.steam-refill-info-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--astra-ink-dim, #a3a0aa);
+}
+
+.steam-refill-info-modal p {
+  margin: 0;
 }
 
 .steam-refill-info-modal a {
-  color: #6eb5ff;
+  padding: 8px 2px;
+  margin: -8px -2px;
+  color: var(--astra-ink, #eceaee);
   text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
+}
+.steam-refill-info-modal a:hover {
+  color: var(--astra-pink, #ff0198);
+}
+.steam-refill-info-modal a:focus-visible {
+  outline: 2px solid var(--astra-pink, #ff0198);
+  outline-offset: 2px;
+  border-radius: var(--astra-r-sm, 6px);
 }
 
-.steam-refill-info-modal-note {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--text-muted, #aaa);
+.steam-refill-info-modal-note strong {
+  color: var(--astra-ink, #eceaee);
+  font-weight: 600;
 }
 
 .steam-refill-info-modal-warning {
   margin: 0;
-  padding: 12px;
-  border-radius: 10px;
-  background: rgba(244, 67, 54, 0.1);
-  color: #ef9a9a;
+  padding: 12px 14px;
+  border-radius: var(--astra-r-sm, 6px);
+  background: rgba(244, 67, 54, 0.10);
+  color: var(--astra-err, #ff4d5e);
 }
 
 .steam-refill-info-modal-img {
-  width: 100%;
+  display: block;
+  margin: 0 auto;   
+  width: 80%;
+  max-width: 640px; 
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .steam-refill-info-modal-btn {
   align-self: flex-start;
-  margin-top: 4px;
-  padding: 10px 18px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.06);
-  color: inherit;
+  min-height: 44px;
+  padding: 10px 22px;
+  border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+  border-radius: var(--astra-r-md, 8px);
+  background: transparent;
+  color: var(--astra-ink, #eceaee);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
-  font-size: 0.95rem;
+  transition: background var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1)),
+              border-color var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
 }
-
 .steam-refill-info-modal-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(236, 234, 238, 0.3);
+}
+.steam-refill-info-modal-btn:focus-visible {
+  outline: 2px solid var(--astra-ink, #eceaee);
+  outline-offset: 2px;
 }
 
 @media (max-width: 768px) {
@@ -493,22 +649,37 @@
   }
 
   .steam-refill-info-title {
-    font-size: 1.2rem;
+    font-size: calc((1.2rem) * var(--astra-heading-scale, 1));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .steam-refill-currency-switch-btn {
+  .steam-refill-currency-switch-btn,
+  .steam-refill-micro-link,
+  .steam-refill-field input,
+  .steam-refill-promo input,
+  .steam-refill-promo button,
+  .steam-refill-amount-panel {
     transition: none;
   }
 }
 
+/* строчная кнопка-ссылка: вертикальный паддинг растит зону нажатия,
+   отрицательный margin не даёт ей разъехаться по строке */
 .steam-refill-link {
   background: none;
   border: none;
-  padding: 0;
-  color: #e2799b;
+  padding: 12px 2px;
+  margin: -12px -2px;
+  color: var(--astra-soft);
   cursor: pointer;
   text-decoration: underline;
+  text-underline-offset: 3px;
   font: inherit;
+}
+
+.steam-refill-link:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 2px;
+  border-radius: var(--astra-r-sm);
 }

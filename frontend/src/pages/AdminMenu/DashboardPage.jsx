@@ -409,7 +409,7 @@ export const DashboardPage = () => {
               ) : (
                 data.recent_orders.map((order) => (
                   <tr key={order.public_id}>
-                    <td>{order.public_id}</td>
+                    <td className="text-none">{order.public_id}</td>
                     <td>{order.product_name || "—"}</td>
                     <td>{order.user_nickname || "—"}</td>
                     <td>{formatMoney(order.total_price)}</td>

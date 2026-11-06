@@ -39,7 +39,7 @@
 .linkBtn {
   border: none;
   background: transparent;
-  color: var(--accent, #e2799b);
+  color: var(--astra-soft);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -67,8 +67,8 @@
 }
 
 .checkboxItem:has(input[type="checkbox"]:checked) {
-  background: rgba(226, 121, 155, 0.12);
-  border-color: rgba(226, 121, 155, 0.35);
+  background: rgba(255, 1, 152, 0.12);
+  border-color: rgba(255, 1, 152, 0.35);
 }
 
 .search {
@@ -79,12 +79,21 @@
   color: #fff;
   font-size: 14px;
   outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* outline снят — индикатор фокуса обязателен: нейтральное ясеневое
+   кольцо (--astra-focus-field), розовая подсветка ввода запрещена */
+.search:focus {
+  outline: none;
+  border-color: var(--astra-focus-field);
+  box-shadow: 0 0 0 1px var(--astra-focus-field);
 }
 
 .targetList {
   max-height: 260px;
   overflow: auto;
-  border-radius: 14px;
+  border-radius: var(--astra-r-xl);
   border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.02);
 }
@@ -100,7 +109,7 @@
 }
 
 .targetItem:has(input[type="checkbox"]:checked) {
-  background: rgba(226, 121, 155, 0.1);
+  background: rgba(255, 1, 152, 0.1);
 }
 
 .targetItem:last-child {
@@ -133,8 +142,8 @@
 .resultBox {
   padding: 12px 14px;
   border-radius: 12px;
-  background: rgba(226, 121, 155, 0.08);
-  border: 1px solid rgba(226, 121, 155, 0.2);
+  background: rgba(255, 1, 152, 0.08);
+  border: 1px solid rgba(255, 1, 152, 0.22);
   font-size: 13px;
   color: rgba(255, 255, 255, 0.82);
 }
@@ -149,4 +158,41 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.filterSelect,
+.filterInput {
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  background: var(--astra-bg-elev);
+  border: 1px solid var(--astra-line);
+  font-family: var(--astra-body);
+  color: var(--astra-ink);
+}
+
+.filterInput {
+  max-width: 110px;
+}
+
+/* тот же нейтральный фокус-индикатор, что у .search выше */
+.filterSelect:focus,
+.filterInput:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+:root[data-modality="keyboard"] .filterSelect:focus,
+:root[data-modality="keyboard"] .filterInput:focus {
+    outline: 1px solid var(--astra-focus-field, rgba(236, 234, 238, 0.55));
+    outline-offset: 0;
 }

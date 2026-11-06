@@ -183,7 +183,23 @@ export const PromocodesPage = () => {
         </table>
       </div>
 
-      <Modal isOpen={modalOpen} onClose={() => { setModalOpen(false); resetForm(); }} title={editingPromocode ? 'Редактировать промокод' : 'Добавить промокод'}>
+      <Modal 
+        isOpen={modalOpen} 
+        onClose={() => { setModalOpen(false); resetForm(); }} 
+        title={
+          <div>
+            {editingPromocode ? 'Редактировать промокод' : 'Добавить промокод'}
+            <button
+              type="button"
+              className={styles.modalCloseBtn}
+              onClick={() => { setModalOpen(false); resetForm(); }}
+              aria-label="Закрыть"
+            >
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+        }
+      >
         <form onSubmit={handleSubmit} className={styles.form}>
           <Input
             label="Код промокода"

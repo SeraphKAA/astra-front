@@ -1,0 +1,361 @@
+/* ============================================================
+   Модалка оплаты — современный и чистый дизайн
+   ============================================================ */
+
+.payment-dialog { 
+  display: grid; 
+  gap: 24px; 
+  color: var(--astra-ink); 
+}
+
+.payment-dialog form { 
+  display: grid; 
+  gap: 20px; 
+}
+
+/* ----- Текстовые подсказки ----- */
+.payment-hint { 
+  margin: 0; 
+  color: var(--astra-ink-dim); 
+  font-size: 14px; 
+  line-height: 1.5; 
+}
+
+/* ----- Сетка методов оплаты ----- */
+.payment-methods { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); 
+  gap: 12px; 
+}
+
+.payment-method { 
+  position: relative;
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 10px; 
+  min-height: 110px; 
+  padding: 16px 12px; 
+  border: 2px solid var(--astra-line); 
+  border-radius: var(--astra-r-lg); 
+  background: var(--astra-card); 
+  color: var(--astra-ink-dim); 
+  font: inherit; 
+  font-size: 13px; 
+  font-weight: 500;
+  cursor: pointer; 
+  transition: all 0.2s ease;
+}
+
+.payment-method:hover:not(:disabled) {
+  background: var(--astra-card-2);
+  border-color: var(--astra-line-strong);
+  color: var(--astra-ink);
+}
+
+.payment-method.is-active { 
+  border-color: var(--astra-pink); 
+  background: rgba(237, 0, 140, .05); 
+  color: var(--astra-ink);
+  box-shadow: 0 4px 16px rgba(237, 0, 140, 0.08);
+}
+
+.payment-method.is-active::after {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--astra-pink);
+}
+
+.payment-method:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.payment-method > span { 
+  font-size: 28px; 
+  line-height: 1; 
+}
+
+.payment-method small { 
+  color: var(--astra-ink-faint); 
+  font-size: 11px; 
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 4px;
+}
+
+/* ----- Поля ввода (сумма и т.д.) ----- */
+.payment-field { 
+  display: grid; 
+  gap: 8px; 
+  font-size: 14px; 
+  font-weight: 600;
+  color: var(--astra-ink-dim);
+  min-width: 0; 
+}
+
+.payment-field .astra-field { 
+  width: 100%; 
+  min-width: 0; 
+  box-sizing: border-box; 
+  min-height: 48px; 
+  padding: 12px 16px; 
+  border: 1px solid var(--astra-line-strong); 
+  border-radius: var(--astra-r-md); 
+  background: var(--astra-bg-elev); 
+  color: var(--astra-ink); 
+  font: inherit; 
+  font-size: 16px;
+  font-weight: 400;
+  transition: border-color 0.2s ease;
+}
+
+.payment-field .astra-field:focus {
+  border-color: var(--astra-pink);
+  outline: none;
+}
+
+/* ----- Чекбокс "Использовать баланс" ----- */
+.payment-checkbox { 
+  display: flex; 
+  align-items: center;
+  gap: 12px; 
+  font-size: 14px; 
+  font-weight: 500;
+  color: var(--astra-ink);
+  cursor: pointer;
+  padding: 12px 0;
+}
+
+.payment-checkbox input { 
+  accent-color: var(--astra-pink); 
+  width: 20px; 
+  height: 20px; 
+  cursor: pointer;
+}
+
+/* ----- Сводка (Чек) ----- */
+.payment-summary { 
+  display: flex;
+  flex-direction: column;
+  background: var(--astra-card-2);
+  border: 1px solid var(--astra-line);
+  border-radius: var(--astra-r-md);
+  padding: 16px;
+  gap: 12px;
+}
+
+.payment-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: var(--astra-ink-dim);
+}
+
+.payment-summary-row strong {
+  color: var(--astra-ink);
+  font-weight: 600;
+}
+
+.payment-summary-row--muted {
+  font-size: 13px;
+  color: var(--astra-ok);
+}
+
+.payment-summary-row--total {
+  border-top: 1px dashed var(--astra-line-strong);
+  padding-top: 12px;
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--astra-ink);
+}
+
+.payment-summary-amount {
+  font-family: var(--astra-display);
+  font-size: 22px;
+  color: var(--astra-soft);
+}
+
+.payment-summary-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--astra-ink-faint);
+}
+
+.payment-summary-hint a {
+  color: var(--astra-ink-dim);
+  text-decoration: underline;
+}
+
+/* ----- Таймер ----- */
+.payment-timer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 193, 77, 0.1);
+  border: 1px solid rgba(255, 193, 77, 0.2);
+  padding: 12px 16px;
+  border-radius: var(--astra-r-md);
+  margin-bottom: 8px;
+}
+
+.payment-timer-label {
+  font-size: 14px;
+  color: var(--astra-warn);
+  font-weight: 500;
+}
+
+.payment-timer-value {
+  font-family: var(--astra-display);
+  font-size: 18px;
+  color: var(--astra-warn);
+  letter-spacing: 1px;
+}
+
+/* ----- Блок реквизитов (CopyField) ----- */
+.payment-copy-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.payment-copy-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--astra-ink-dim);
+}
+
+.payment-copy { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 12px 16px; 
+  border: 1px solid var(--astra-line-strong); 
+  border-radius: var(--astra-r-md); 
+  background: var(--astra-bg-elev);
+}
+
+.payment-copy output { 
+  flex: 1; 
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--astra-ink);
+  overflow-wrap: anywhere; 
+  min-width: 0; 
+}
+
+.payment-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px; 
+  padding: 8px 12px; 
+  flex-shrink: 0;
+  border-radius: var(--astra-r-sm);
+  background: var(--astra-card);
+  transition: all 0.2s ease;
+}
+
+.payment-copy-btn:hover {
+  background: var(--astra-card-2);
+}
+
+.payment-copy-btn.is-copied {
+  color: var(--astra-ok);
+  background: rgba(61, 220, 151, 0.1);
+}
+
+/* ----- Ошибки и ID заявки ----- */
+.payment-error { 
+  color: #ffc9cf; 
+  background: rgba(255, 77, 94, 0.1);
+  border: 1px solid rgba(255, 77, 94, 0.2);
+  padding: 12px;
+  border-radius: var(--astra-r-md);
+  font-size: 14px; 
+  line-height: 1.5; 
+  margin: 0; 
+}
+
+.payment-id { 
+  color: var(--astra-ink-faint); 
+  overflow-wrap: anywhere; 
+  font-family: monospace;
+  font-size: 12px;
+}
+
+/* ----- Кнопка "Я оплатил" ----- */
+.payment-dialog .astra-btn {
+  width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+  margin-top: 8px;
+}
+
+/* ----- История платежей ----- */
+.payment-history { 
+  margin: 32px 0; 
+}
+
+.payment-history h2 { 
+  font-size: 20px; 
+  margin-bottom: 16px;
+}
+
+.payment-history > button { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
+  gap: 12px; 
+  text-align: left; 
+  width: 100%; 
+  margin-bottom: 8px; 
+  padding: 16px; 
+  border: 1px solid var(--astra-line); 
+  border-radius: var(--astra-r-lg); 
+  color: var(--astra-ink); 
+  background: var(--astra-card); 
+  cursor: pointer; 
+  font: inherit; 
+  font-size: 14px; 
+  transition: background 0.2s ease;
+}
+
+.payment-history > button:hover {
+  background: var(--astra-card-2);
+}
+
+/* ----- Адаптивность ----- */
+@media (max-width: 480px) { 
+  .payment-method { 
+    font-size: 12px; 
+    border-radius: var(--astra-r-md); 
+    min-height: 96px;
+    padding: 12px 8px;
+  } 
+  .payment-method > span {
+    font-size: 24px;
+  }
+  .payment-history > button { 
+    flex-direction: column; 
+    align-items: flex-start;
+  } 
+  .payment-copy {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .payment-copy-btn {
+    justify-content: center;
+  }
+}

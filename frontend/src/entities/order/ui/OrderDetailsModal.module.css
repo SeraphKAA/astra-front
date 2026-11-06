@@ -1,0 +1,414 @@
+/* ---------- состояния ---------- */
+.state {
+  padding: 32px 12px;
+  text-align: center;
+  font-family: var(--astra-body);
+  font-size: 14px;
+  color: var(--astra-ink-dim);
+}
+
+.stateError {
+  color: #ffc9cf;
+}
+
+/* ---------- корень ---------- */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-family: var(--astra-body);
+  font-size: 14px;
+  color: var(--astra-ink);
+  text-transform: none;
+}
+
+/* ---------- шапка ---------- */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--astra-line);
+}
+
+.headType {
+  font-family: var(--astra-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--astra-ink-dim);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: var(--astra-r-md);
+  border: 1px solid transparent;
+  font-family: var(--astra-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.badge_neutral {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--astra-line-strong);
+  color: var(--astra-ink);
+}
+
+.badge_info {
+  background: rgba(140, 97, 236, 0.14);
+  border-color: rgba(140, 97, 236, 0.32);
+  color: #d6c8ff;
+}
+
+.badge_ok {
+  background: rgba(61, 220, 151, 0.12);
+  border-color: rgba(61, 220, 151, 0.3);
+  color: var(--astra-ok);
+}
+
+.badge_danger {
+  background: rgba(255, 77, 94, 0.12);
+  border-color: rgba(255, 77, 94, 0.32);
+  color: #ffc9cf;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: var(--astra-r-pill);
+  font-family: var(--astra-body);
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.pill_ok {
+  background: rgba(61, 220, 151, 0.1);
+  border-color: rgba(61, 220, 151, 0.24);
+  color: var(--astra-ok);
+}
+
+.pill_warn {
+  background: rgba(255, 193, 77, 0.12);
+  border-color: rgba(255, 193, 77, 0.3);
+  color: var(--astra-warn);
+}
+
+.pill_info {
+  background: rgba(255, 1, 152, 0.1);
+  border-color: rgba(255, 1, 152, 0.28);
+  color: var(--astra-soft);
+}
+
+.orderDetailCloseBtn {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--astra-ink-dim);
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: var(--astra-r-md);
+  transition: background var(--astra-t-color) var(--astra-ease), color var(--astra-t-color) var(--astra-ease);
+}
+
+.orderDetailCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--astra-ink);
+}
+
+.orderDetailCloseBtn:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 2px;
+}
+
+/* ---------- секции ---------- */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--astra-card);
+  border: 1px solid var(--astra-line);
+  border-radius: var(--astra-r-md);
+}
+
+.section_danger {
+  background: rgba(255, 77, 94, 0.06);
+  border-color: rgba(255, 77, 94, 0.28);
+}
+
+.section_muted {
+  background: var(--astra-card-2);
+}
+
+.sectionTitle {
+  margin: 0 0 8px;
+  font-family: var(--astra-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--astra-ink-dim);
+}
+
+.sectionBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ---------- строки ---------- */
+.row {
+  display: grid;
+  grid-template-columns: 168px 1fr;
+  gap: 12px;
+  align-items: baseline;
+  padding: 3px 0;
+}
+
+.rowLabel {
+  font-size: 12px;
+  color: var(--astra-ink-dim);
+}
+
+.rowValue {
+  font-size: 14px;
+  color: var(--astra-ink);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+}
+
+.strong {
+  font-family: var(--astra-display);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* ---------- JSON ---------- */
+.json {
+  margin: 0;
+  padding: 10px 12px;
+  max-height: 260px;
+  overflow: auto;
+  background: rgba(11, 11, 13, 0.55);
+  border: 1px solid var(--astra-line);
+  border-radius: var(--astra-r-sm);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--astra-ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------- футер ---------- */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--astra-line);
+}
+
+.footerItem {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.footerLabel {
+  color: var(--astra-ink-dim);
+}
+
+.footerValue {
+  color: var(--astra-ink);
+  font-weight: 600;
+}
+
+@media (max-width: 520px) {
+  .row {
+    grid-template-columns: 128px 1fr;
+    gap: 8px;
+  }
+}
+
+/* ---------- Возврат средств ---------- */
+.refundIntro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.refundHint {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--astra-ink-dim, #A5A2AB);
+}
+
+.refundBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 20px;
+  border: 1px solid rgba(255, 77, 94, 0.3);
+  border-radius: var(--astra-r-md, 8px);
+  background: rgba(255, 77, 94, 0.1);
+  color: #ffc9cf;
+  font-family: var(--astra-display, "Unbounded", sans-serif);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.refundBtn:hover {
+  background: rgba(255, 77, 94, 0.18);
+  border-color: rgba(255, 77, 94, 0.5);
+}
+
+.refundBtn:focus-visible {
+  outline: 2px solid var(--astra-pink, #FF0198);
+  outline-offset: 3px;
+}
+
+.refundForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.refundField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.refundLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--astra-ink-dim, #A5A2AB);
+}
+
+.refundInput {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+  border-radius: var(--astra-r-sm, 10px);
+  background: var(--astra-bg-elev, #121214);
+  color: var(--astra-ink, #ECEAEE);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 15px;
+  line-height: 1.45;
+  transition: border-color 150ms ease;
+}
+
+textarea.refundInput {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.refundInput:hover:not(:disabled) {
+  border-color: rgba(236, 234, 238, 0.3);
+}
+
+.refundInput:focus {
+  outline: none;
+  border-color: var(--astra-pink, #FF0198);
+}
+
+.refundInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.refundActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.refundCancel,
+.refundSubmit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 20px;
+  border-radius: var(--astra-r-md, 8px);
+  font-family: var(--astra-display, "Unbounded", sans-serif);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.refundCancel {
+  border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--astra-ink, #ECEAEE);
+}
+
+.refundCancel:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(236, 234, 238, 0.3);
+}
+
+.refundCancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refundSubmit {
+  border: 1px solid rgba(255, 77, 94, 0.3);
+  background: rgba(255, 77, 94, 0.14);
+  color: #ffc9cf;
+}
+
+.refundSubmit:hover:not(:disabled) {
+  background: rgba(255, 77, 94, 0.22);
+  border-color: rgba(255, 77, 94, 0.5);
+}
+
+.refundSubmit:disabled {
+  background: rgba(255, 77, 94, 0.08);
+  border-color: rgba(255, 77, 94, 0.2);
+  color: rgba(255, 201, 207, 0.5);
+  cursor: not-allowed;
+}
+
+.refundCancel:focus-visible,
+.refundSubmit:focus-visible {
+  outline: 2px solid var(--astra-pink, #FF0198);
+  outline-offset: 3px;
+}

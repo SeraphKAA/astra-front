@@ -1,12 +1,4 @@
 import { apiRequest } from "../../../shared/commonApi";
-import { LS } from "../../../utilities/utilLocalStorage";
-
-const storeTokensIfPresent = async (data) => {
-  if (data?.access_token && data?.refresh_token) {
-    await LS.set("access_token", data.access_token);
-    await LS.set("refresh_token", data.refresh_token);
-  }
-};
 
 export const emailRegister = async ({ email, password, refCode, acceptTerms }) => {
   return apiRequest({
@@ -29,7 +21,7 @@ export const emailVerify = async ({ email, code }) => {
     authorized: false,
     body: { email, code },
   });
-  await storeTokensIfPresent(data);
+
   return data;
 };
 
@@ -49,29 +41,57 @@ export const emailLogin = async ({ email, password }) => {
     authorized: false,
     body: { email, password },
   });
-  await storeTokensIfPresent(data);
+
   return data;
 };
 
-export const telegramWebAppLogin = async ({ initData, refCode }) => {
-  const data = await apiRequest({
-    url: "/auth/telegram/webapp",
+
+export const requestPasswordResetApi = (body) =>
+  apiRequest({
+    url: "/auth/password-reset/request",
+    method: "POST",
+    body,
+  });
+
+export const verifyPasswordResetCodeApi = (body) =>
+  apiRequest({
+    url: "/auth/password-reset/verify",
+    method: "POST",
+    body,
+  });
+
+export const resetPasswordApi = ({ email, code, newPassword }) =>
+  apiRequest({
+    url: "/auth/password-reset/reset",
+    method: "POST",
+    body: { email, code, new_password: newPassword },
+  });
+
+export const telegramBotStart = ({ refCode } = {}) =>
+  apiRequest({
+    url: "/auth/telegram/bot/start",
     method: "POST",
     authorized: false,
-    body: { initData, ref_code: refCode || undefined },
+    body: { ref_code: refCode || undefined },
   });
-  await storeTokensIfPresent(data);
-  return data;
-};
 
-export const telegramWidgetLogin = async ({ payload, refCode }) => {
-  const data = await apiRequest({
-    url: "/auth/telegram/widget",
-    method: "POST",
+export const telegramBotStatus = ({ code }) =>
+  apiRequest({
+    url: `/auth/telegram/bot/status?code=${encodeURIComponent(code)}`,
+    method: "GET",
     authorized: false,
-    body: { ...(payload || {}), ref_code: refCode || undefined },
   });
-  await storeTokensIfPresent(data);
-  return data;
-};
 
+export const telegramLinkStart = () =>
+  apiRequest({
+    url: "/auth/telegram/bot/link/start",
+    method: "POST",
+    authorized: true,
+  });
+
+export const telegramLinkStatus = ({ code }) =>
+  apiRequest({
+    url: `/auth/telegram/bot/link/status?code=${encodeURIComponent(code)}`,
+    method: "GET",
+    authorized: true,
+  });

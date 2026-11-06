@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { SignInSvg } from "../../shared/svgIcons";
-import { Label, Input } from "../../shared/FieldAuthReg/textfield";
-import logo from "../../shared/ASTRA Shop.png";
+import { AuthAlert } from "../../shared/FieldAuthReg/textfield";
+import AstraMark from "../../shared/brand/AstraMark";
+import AstraWordmark from "../../shared/brand/AstraWordmark";
+import { useRevealOnce, revealDelay } from "../../shared/fx/motionUtils";
 import { useAuth } from "../../app/auth/AuthContext";
 import { resendEmailCode, verifyEmailCode } from "../../entities/auth/model/authFlows";
 import { OtpInput } from "../../shared/ui/OtpInput/OtpInput";
@@ -26,12 +27,15 @@ const SignInCode = () => {
   const [resendLeft, setResendLeft] = useState(0);
   const submitTimerRef = useRef(null);
   const lastSubmittedCodeRef = useRef("");
+  /* Появление один раз: карточка поднимается, строки входят стаггером
+     (60мс на шаг, кап 6 — бюджет моторики) */
+  const cardRef = useRevealOnce();
 
   const normalizeOtp = (v) => String(v || "").replace(/\D/g, "").slice(0, 6);
 
   const checkProfileAndGo = async () => {
     await loadUserProfile();
-    navigate("/menu");
+    navigate("/main");
   };
 
   const onResend = async () => {
@@ -94,22 +98,42 @@ const SignInCode = () => {
   }
 
   return (
-    <>
-      <div className="body-wrapper-log">
-        <div className="div_for_login_ auth-code-card">
-          <img src={logo} alt="ASTRA SHOP" className="logo" />
+    <div className="astra-auth">
+      <div className="astra-auth-wash" aria-hidden="true" />
 
-          <h1 className="auth-page-title">Ввод кода</h1>
-          <div className="auth-subtitle-divider" aria-hidden />
-          <p className="auth-hint">
-            Мы отправили код на <strong>{email}</strong>. Введите его ниже.
-          </p>
+      <div className="astra-auth-card astra-reveal" ref={cardRef}>
+        <div className="astra-auth-brand-row">
+          <Link to="/main" className="astra-auth-brand" aria-label="ASTRA — на главную">
+            <AstraMark className="astra-auth-mark" aria-hidden="true" focusable="false" />
+            <AstraWordmark
+              className="astra-auth-word"
+              role="presentation"
+              aria-hidden="true"
+              focusable="false"
+            />
+          </Link>
+        </div>
 
-          <form onSubmit={(e) => e.preventDefault()}>
-            <div className="form-group">
-              <Label htmlFor="code" required>
-                Код из письма:
-              </Label>
+        <h1 className="astra-auth-title">Ввод кода</h1>
+        <p className="astra-auth-sub">
+          Мы отправили код на <strong>{email}</strong>. Введите его ниже.
+        </p>
+
+        {/* key по тексту: новое сообщение — новый узел, значит вход
+            (fade + 2px) играет и при смене текста */}
+        {info && <AuthAlert key={info} tone="info">{info}</AuthAlert>}
+        {error && (
+          <AuthAlert key={error} tone="error" fix="Проверьте цифры из письма или запросите новый код.">
+            {error}
+          </AuthAlert>
+        )}
+
+        <form className="astra-auth-form" onSubmit={(e) => e.preventDefault()}>
+          <div className="astra-auth-field astra-auth-rise" style={revealDelay(0)}>
+            {/* Подпись группы: у OtpInput нет одного управляемого поля,
+                поэтому это заголовок, а не <label for> */}
+            <div className="astra-auth-label">Код из письма:</div>
+            <div className="astra-auth-otp">
               <OtpInput
                 value={code}
                 onChange={(v) => setCode(normalizeOtp(v))}
@@ -119,35 +143,41 @@ const SignInCode = () => {
                 name="code"
               />
             </div>
+          </div>
 
-            <div className="wrap" style={{ marginTop: 10 }}>
-              <button
-                type="button"
-                className="login-button"
-                onClick={onResend}
-                disabled={isSubmitting || resendLeft > 0}
-              >
-                {resendLeft > 0 ? `Отправить ещё раз (${resendLeft}с)` : "Отправить код ещё раз"}
-                <SignInSvg />
-              </button>
-            </div>
-          </form>
+          {isSubmitting && (
+            <p className="astra-auth-status" role="status">
+              <span className="astra-auth-spin" aria-hidden="true" />
+              Проверяем код…
+            </p>
+          )}
 
-          {info && <div className="auth-alert auth-alert--info">{info}</div>}
-          {error && <div className="auth-alert auth-alert--error">{error}</div>}
+          {/* Код уходит на проверку сам, как только набраны 6 цифр —
+              единственное ручное действие здесь и есть повтор отправки */}
+          <span className="astra-ring astra-auth-cta-ring astra-auth-rise" style={revealDelay(1)}>
+            <button
+              type="button"
+              className="astra-btn astra-auth-cta"
+              onClick={onResend}
+              disabled={isSubmitting || resendLeft > 0}
+            >
+              {resendLeft > 0 ? `Отправить ещё раз (${resendLeft}с)` : "Отправить код ещё раз"}
+            </button>
+          </span>
+        </form>
 
-          <p className="text-login">
-            Ошибся с почтой? <br />
-            <Link to="/sign_in" className="login-href">
-              Вернуться назад
-            </Link>
-          </p>
-        </div>
+        <div className="astra-auth-rule" aria-hidden="true" />
+
+        <p className="astra-auth-foot">
+          Ошибся с почтой?
+          <br />
+          <Link to="/sign_in" className="astra-auth-link">
+            Вернуться назад
+          </Link>
+        </p>
       </div>
-
-    </>
+    </div>
   );
 };
 
 export default SignInCode;
-

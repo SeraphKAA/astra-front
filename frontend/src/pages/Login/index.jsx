@@ -1,29 +1,125 @@
-import { React, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 // import { User } from "../../features/auth/user";
-import { SignInSvg } from "../../shared/svgIcons";
-import { Label, Input } from "../../shared/FieldAuthReg/textfield";
+import { Label, Input, AuthAlert } from "../../shared/FieldAuthReg/textfield";
+import { AuthTabs } from "../../shared/FieldAuthReg/AuthTabs";
 import { PasswordFieldAuth } from "../../shared/ui/PasswordField";
-import logo from "../../shared/ASTRA Shop.png";
+import AstraMark from "../../shared/brand/AstraMark";
+import AstraWordmark from "../../shared/brand/AstraWordmark";
+import { useRevealOnce, revealDelay } from "../../shared/fx/motionUtils";
 import { useAuth } from "../../app/auth/AuthContext";
 import { resendEmailCode } from "../../entities/auth/model/authFlows";
 import { isEmailLike, trimAndLimit } from "../../shared/validation";
 import { getApiErrorMessage } from "../../shared/commonApi";
 import { useToast } from "../../shared/ui/Toast/ToastProvider";
-
+import { Modal } from "../../shared/ui/Modal/Modal";
 import "./login.css";
 
 
+/* Порядок вкладок задаёт направление проезда панели: вправо или влево */
+const METHODS = ["password", "code", "telegram"];
+
+const METHOD_TABS = [
+  { value: "password", label: "Почта / Пароль" },
+  { value: "code", label: "Почта / Код" },
+  { value: "telegram", label: "Telegram" },
+];
+
 const Login = ({ setIsLogged }) => {
-  const { loginWithEmail, loginWithTelegramWebApp, loginWithTelegramWidget, user, loadUserProfile } = useAuth();
+  const { loginWithEmail, startTelegramBotLogin, pollTelegramBotLogin, loadUserProfile } = useAuth();
   const { pushToast } = useToast();
   const [email, setLogin] = useState("");
   const [error, setError] = useState("");
   const [password, setPassword] = useState("");
-  const [method, setMethod] = useState("password"); // password | code | telegram_widget
+  const [method, setMethod] = useState("password"); // password | code | telegram
+  /* 0 — вкладку ещё не переключали: играет стаггер строк, а не проезд */
+  const [dir, setDir] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const widgetContainerRef = useRef(null);
   const navigate = useNavigate();
+  /* Появление один раз: карточка поднимается, строки входят стаггером */
+  const cardRef = useRevealOnce();
+  const stagger = dir === 0;
+  const [tgLogin, setTgLogin] = useState(null);   // { code, bot_url }
+  const [tgStatus, setTgStatus] = useState("idle"); // idle | waiting | confirmed | error
+
+  const handleTelegramStart = async () => {
+    setError("");
+    setTgStatus("waiting");
+    try {
+      const res = await startTelegramBotLogin();
+      if (!res?.bot_url) throw new Error("REACT_APP_TG_BOT_USERNAME  не задан");
+      setTgLogin(res);
+      window.open(res.bot_url, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      setTgStatus("error");
+      setError(getApiErrorMessage(e, "Не удалось начать вход через Telegram"));
+    }
+  };
+
+  useEffect(() => {
+    if (tgStatus !== "waiting" || !tgLogin?.code) return;
+
+    let cancelled = false;
+    let timer = null;
+    let confirmed = false;
+
+    const tick = async () => {
+      let res;
+      try {
+        res = await pollTelegramBotLogin(tgLogin.code);
+      } catch {
+        if (!cancelled) timer = window.setTimeout(tick, 3000);
+        return;
+      }
+      if (cancelled) return;
+
+      if (res?.status === "confirmed") {
+        confirmed = true;
+        setTgStatus("confirmed");
+        try {
+          await loadUserProfile();
+        } catch {
+          // cookies могли не прижиться — повторим один раз позже
+        }
+        navigate("/main", { replace: true });
+        return;
+      }
+
+      // жёсткий барьер: после confirmed никакой expired/error не важен
+      if (confirmed) return;
+
+      if (res?.status === "expired" || res?.status === "error") {
+        setTgStatus("error");
+        setError("Ссылка истекла. Попробуйте ещё раз.");
+        return;
+      }
+
+      timer = window.setTimeout(tick, 2000);
+    };
+
+    // ⬇ первый запрос уходит не синхронно, а на следующем тике —
+    //    в StrictMode первый прогон эффекта успеет отмениться
+    timer = window.setTimeout(tick, 0);
+
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [tgLogin, tgStatus, pollTelegramBotLogin, loadUserProfile, navigate]);
+
+  const switchMethod = (next) => {
+    if (next === method) return;
+    setError("");
+    setDir(METHODS.indexOf(next) > METHODS.indexOf(method) ? 1 : -1);
+    setMethod(next);
+  };
+
+  /* Класс строки формы: стаггер вешаем только на первой отрисовке,
+     чтобы переключение вкладок его не переигрывало */
+  const rowProps = (index) =>
+    stagger
+      ? { className: "astra-auth-field astra-auth-rise", style: revealDelay(index) }
+      : { className: "astra-auth-field" };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -42,11 +138,15 @@ const Login = ({ setIsLogged }) => {
         setIsSubmitting(true);
         await loginWithEmail({ email, password });
         await loadUserProfile();
-        navigate("/menu", { replace: true });
+        navigate("/main", { replace: true });
       } else if (method === "code") {
         const emailClean = trimAndLimit(email, 255);
         if (!isEmailLike(emailClean)) {
           setError("Введите корректный email");
+          return;
+        }
+        if (email === "") {
+          setError("Введите email");
           return;
         }
         await resendEmailCode({ email });
@@ -65,138 +165,62 @@ const Login = ({ setIsLogged }) => {
     }
   };
 
-  const canUseTelegram = useMemo(() => {
-    return Boolean(window?.Telegram?.WebApp?.initData);
-  }, []);
 
-  const tgBotUsername = import.meta.env.VITE_TG_BOT_USERNAME || "";
-
-  useEffect(() => {
-    // Telegram Login Widget calls global function specified in data-onauth
-    window.onTelegramAuth = async (tgUser) => {
-      try {
-        setError("");
-        await loginWithTelegramWidget(tgUser);
-        await loadUserProfile();
-        navigate("/menu", { replace: true });
-      } catch (e) {
-        const msg = getApiErrorMessage(e, "Ошибка входа через Telegram");
-        setError(msg);
-        try {
-          pushToast({ type: "error", message: msg });
-        } catch (toastErr) {
-          console.warn("pushToast failed", toastErr);
-        }
-      }
-    };
-
-    return () => {
-      try {
-        delete window.onTelegramAuth;
-      } catch (e) {
-        // ignore
-      }
-    };
-  }, [loadUserProfile, loginWithTelegramWidget, navigate, pushToast]);
-
-  useEffect(() => {
-    if (method !== "telegram_widget") return;
-    if (!tgBotUsername) return;
-    if (!widgetContainerRef.current) return;
-
-    // Recreate widget script each time we enter the tab to ensure it renders.
-    widgetContainerRef.current.innerHTML = "";
-
-    const s = document.createElement("script");
-    s.async = true;
-    s.src = "https://telegram.org/js/telegram-widget.js?22";
-    s.setAttribute("data-telegram-login", tgBotUsername);
-    s.setAttribute("data-size", "large");
-    s.setAttribute("data-onauth", "onTelegramAuth(user)");
-    s.setAttribute("data-request-access", "write");
-    s.setAttribute("data-userpic", "false");
-    s.onerror = () => setError("Не удалось загрузить Telegram Login Widget");
-
-    widgetContainerRef.current.appendChild(s);
-  }, [method, tgBotUsername]);
-
-  const handleTelegram = async () => {
-    try {
-      setError("");
-      await loginWithTelegramWebApp();
-      await loadUserProfile();
-      navigate("/menu", { replace: true });
-    } catch (e) {
-      const msg = getApiErrorMessage(e, "Ошибка входа через Telegram");
-      setError(msg);
-      try {
-        pushToast({ type: "error", message: msg });
-      } catch (toastErr) {
-        console.warn("pushToast failed", toastErr);
-      }
-    }
-  };
-
+  const methodHint =
+    method === "password"
+      ? "Введите почту и пароль от аккаунта ASTRA."
+      : method === "code"
+        ? "Пришлём разовый код на почту — пароль не понадобится."
+        : "Подтвердите вход в Telegram.";
 
   return (
-    <>
-      <div className="body-wrapper-log">
-        <div className="div_for_login_">
+    <div className="astra-auth">
+      <div className="astra-auth-wash" aria-hidden="true" />
 
-          <img src={logo} alt="ASTRA SHOP" className="logo" />
-          <h1 className="auth-page-title">Вход в аккаунт</h1>
-          <div className="auth-subtitle-divider" aria-hidden />
+      <div className="astra-auth-card astra-reveal" ref={cardRef}>
+        <div className="astra-auth-brand-row">
+          <Link to="/main" className="astra-auth-brand" aria-label="ASTRA — на главную">
+            <AstraMark className="astra-auth-mark" aria-hidden="true" focusable="false" />
+            <AstraWordmark
+              className="astra-auth-word"
+              role="presentation"
+              aria-hidden="true"
+              focusable="false"
+            />
+          </Link>
+        </div>
 
-          {error && <div className="auth-alert auth-alert--error">{error}</div>}
+        <h1 className="astra-auth-title">Вход в аккаунт</h1>
+        <p className="astra-auth-sub">{methodHint}</p>
 
-          <div className="login-methods">
-            <button
-              type="button"
-              className={`method-btn ${method === "password" ? "is-active" : ""}`}
-              onClick={() => setMethod("password")}
-            >
-              Почта+пароль
-            </button>
-            <button
-              type="button"
-              className={`method-btn ${method === "code" ? "is-active" : ""}`}
-              onClick={() => setMethod("code")}
-            >
-              Почта+код
-            </button>
-            <button
-              type="button"
-              className={`method-btn ${method === "telegram_widget" ? "is-active" : ""}`}
-              onClick={() => setMethod("telegram_widget")}
-            >
-              Telegram
-            </button>
-          </div>
+        <AuthTabs
+          label="Способ входа"
+          value={method}
+          onChange={switchMethod}
+          items={METHOD_TABS}
+        />
 
-          <form onSubmit={handleSubmit}>
-            {method === "code" && (
-              <div className="wrap" style={{ marginBottom: 10 }}>
-                <button
-                  type="button"
-                  className="login-button"
-                  onClick={async () => {
-                    try {
-                      setError("");
-                      await resendEmailCode({ email });
-                      navigate("/sign_in/code", { state: { email } });
-                    } catch (e) {
-                      setError(e?.message || "Не удалось отправить код");
-                    }
-                  }}
-                >
-                  Отправить код на почту
-                </button>
-              </div>
-            )}
-            {method !== "telegram_widget" &&
-              <div className="form-group">
-                <Label htmlFor="email" required>
-                  Логин:
+        {/* key по тексту: новое сообщение — новый узел, значит вход
+            (fade + 2px) играет и при смене ошибки, а не только при
+            её появлении */}
+        {error && (
+          <AuthAlert key={error} tone="error" fix="Проверьте введённые данные и попробуйте снова.">
+            {error}
+          </AuthAlert>
+        )}
+
+        {/* Панель под вкладками: вход направленный (--auth-dir),
+            при первой отрисовке — без проезда, работает стаггер строк */}
+        <div
+          key={method}
+          className={`astra-auth-panel${dir ? " is-switching" : ""}`}
+          style={dir ? { "--auth-dir": dir } : undefined}
+        >
+          <form className="astra-auth-form" onSubmit={handleSubmit}>
+            {method !== "telegram" && (
+              <div {...rowProps(0)}>
+                <Label htmlFor="email" className="astra-auth-label">
+                  Логин
                 </Label>
                 <Input
                   id="email"
@@ -204,22 +228,24 @@ const Login = ({ setIsLogged }) => {
                   value={email}
                   onChange={(e) => setLogin(trimAndLimit(e.target.value, 255))}
                   placeholder="Введите email"
-                  className="login-input"
+                  className="astra-auth-input"
+                  autoComplete="email"
+                  inputMode="email"
                   required
                 />
-              </div>}
+              </div>
+            )}
 
             {method === "password" && (
-              <div className="form-group">
-                <Label htmlFor="password" required>
-                  Пароль:
+              <div {...rowProps(1)}>
+                <Label htmlFor="password" className="astra-auth-label">
+                  Пароль
                 </Label>
                 <PasswordFieldAuth
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Введите пароль"
-                  inputClassName="login-input"
                   autoComplete="current-password"
                   required
                 />
@@ -228,49 +254,79 @@ const Login = ({ setIsLogged }) => {
 
             {/* ввод кода вынесен на отдельную страницу /sign_in/code */}
 
-            {method === "telegram_widget" && (
-              <div className="form-group">
-                {!tgBotUsername ? (
-                  <div className="auth-alert">
-                    VITE_TG_BOT_USERNAME не задан. Невозможно показать Telegram Login Widget.
-                  </div>
-                ) : (
-                  <div className="auth-telegram-wrap">
-                    <div ref={widgetContainerRef} />
-                  </div>
-                )}
+            {method === "telegram" && (
+              <div {...rowProps(0)}>
+                <div className="astra-auth-tg">
+                  <button
+                    type="button"
+                    className="astra-btn astra-auth-cta"
+                    onClick={handleTelegramStart}
+                    disabled={tgStatus === "waiting" || tgStatus === "confirmed"}
+                  >
+                    {tgStatus === "waiting" ? "Ожидаем подтверждения…" : "Открыть Telegram"}
+                  </button>
+                </div>
               </div>
             )}
 
-            {method !== "telegram_widget" && (
-              <div className="wrap">
-                <button type="submit" className="login-button" disabled={isSubmitting}>
-                  {isSubmitting ? "Вход…" : "Войти"}
-                  <SignInSvg />
+            {method !== "telegram" && (
+              /* .astra-ring: clip-path кнопки съедает outline — кольцо на обёртке */
+              <span
+                className={`astra-ring astra-auth-cta-ring${stagger ? " astra-auth-rise" : ""}`}
+                style={stagger ? revealDelay(2) : undefined}
+              >
+                <button type="submit" className="astra-btn astra-auth-cta" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <span className="astra-auth-spin" aria-hidden="true" />
+                      Вход…
+                    </>
+                  ) : (
+                    "Войти"
+                  )}
                 </button>
-              </div>
+              </span>
             )}
-          </form>
 
-          {canUseTelegram && (
-            <div className="wrap" style={{ marginTop: 10 }}>
+            {method === "code" && (
               <button
                 type="button"
-                className="login-button"
-                onClick={handleTelegram}
+                className="astra-btn-ghost astra-auth-ghost"
+                onClick={async () => {
+                  try {
+                    setError("");
+                    if (email === "") {
+                      setError("Введите email");
+                      return;
+                    }
+                    await resendEmailCode({ email });
+                    navigate("/sign_in/code", { state: { email } });
+                  } catch (e) {
+                    setError(e?.message || "Не удалось отправить код");
+                  }
+                }}
               >
-                Войти через Telegram
+                Отправить код на почту
               </button>
-            </div>
-          )}
-
-          <p className="text-login">
-            Ещё нет аккаунта?<br />
-            <Link to="/sign_up" className="login-href"> Зарегистрироваться</Link>
-          </p>
+            )}
+          </form>
         </div>
+
+        <div className="astra-auth-rule" aria-hidden="true" />
+
+        <p className="astra-auth-foot">
+          <Link to="/reset-password" className="astra-auth-link">
+            Забыли пароль?
+          </Link>
+        </p>
+        <p className="astra-auth-foot">
+          <Link to="/sign_up" className="astra-auth-link">
+            Зарегистрироваться
+          </Link>
+        </p>
+
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,0 +1,426 @@
+/* ============================================================
+   FAQ — «Частые вопросы», v3 «Ash and Signal».
+
+   Решение одно и доведено до конца: страница — это СПРАВОЧНИК, а не
+   стопка одинаковых карточек. Слева — липкая колонка: большой
+   заголовок Mon Trappist, оглавление из трёх групп и карточка
+   поддержки. Справа — три группы, каждая одной ясеневой панелью,
+   вопросы внутри разделены волосяными линиями (карточек в карточках
+   нет). Розовый — ровно одна кнопка «Написать в поддержку»: это
+   единственное действие на странице. Ховер вопроса больше не красит
+   текст в мягкий розовый — тот цвет принадлежит ценам.
+   ============================================================ */
+
+.faq-root {
+    background: var(--astra-bg);
+    text-transform: none;
+}
+
+.faq-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+    gap: 64px;
+    align-items: start;
+    padding-bottom: 96px;
+}
+
+/* ---------- левая колонка ---------- */
+.faq-rail {
+    position: sticky;
+    top: 96px; /* под липкой шапкой 64px + воздух */
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    min-width: 0;
+}
+
+.faq-head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.faq-title {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.faq-lead {
+    margin: 0;
+    max-width: 30ch;
+    font-family: var(--astra-body);
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+}
+
+/* оглавление: три строки по 44px, тихие; ховер — ярче, не розовее */
+.faq-toc ul {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--astra-line);
+}
+
+.faq-toc li {
+    border-bottom: 1px solid var(--astra-line);
+}
+
+.faq-toc-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 4px;
+    font-family: var(--astra-body);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--astra-ink-dim);
+    text-decoration: none;
+    transition: color var(--astra-t-color) var(--astra-ease);
+}
+
+.faq-toc-link:hover {
+    color: var(--astra-ink);
+}
+
+.faq-toc-link:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+    border-radius: var(--astra-r-sm);
+}
+
+.faq-toc-count {
+    font-family: var(--astra-display);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--astra-ink-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- карточка поддержки: единственное действие ---------- */
+.faq-support {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 24px;
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-lg);
+    background: var(--astra-card);
+}
+
+.faq-support-title {
+    margin: 0;
+    font-family: var(--astra-heading);
+    font-size: calc((11px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--astra-ink);
+}
+
+.faq-support-text {
+    margin: 0 0 4px;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+}
+
+.faq-support-ring {
+    display: flex;
+}
+
+.faq-support-btn {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+    text-decoration: none;
+}
+
+/* карточка живёт в колонке на десктопе и в конце списка на узких */
+.faq-support-slot--end {
+    display: none;
+}
+
+/* ---------- группы вопросов ---------- */
+.faq-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    min-width: 0;
+    max-width: 780px;
+}
+
+.faq-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    scroll-margin-top: 84px;
+}
+
+.faq-group-title {
+    margin: 0;
+    font-family: var(--astra-heading);
+    font-size: calc((13px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--astra-ink);
+}
+
+/* одна панель на группу; строки — через волосяные линии */
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-lg);
+    background: var(--astra-card);
+}
+
+.faq-item + .faq-item {
+    border-top: 1px solid var(--astra-line);
+}
+
+.faq-item {
+    transition: background var(--astra-t-color) var(--astra-ease);
+}
+
+.faq-item[open] {
+    background: var(--astra-card-2);
+}
+
+.faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    min-height: 64px;
+    padding: 16px 20px 16px 24px;
+    box-sizing: border-box;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--astra-body);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--astra-ink);
+    transition: background var(--astra-t-color) var(--astra-ease);
+}
+
+.faq-q::-webkit-details-marker {
+    display: none;
+}
+
+.faq-q::marker {
+    content: "";
+}
+
+/* Brighter-Never-Darker: строка светлеет, текст остаётся чернилами */
+.faq-item:not([open]) .faq-q:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.faq-q:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: -2px;
+}
+
+.faq-q-text {
+    min-width: 0;
+}
+
+.faq-q-icon {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-sm);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--astra-ink-dim);
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+}
+
+.faq-chevron {
+    width: 18px;
+    height: 18px;
+    transition: transform var(--astra-t-move) var(--astra-ease);
+}
+
+.faq-q:hover .faq-q-icon {
+    background: rgba(255, 255, 255, 0.075);
+    border-color: var(--astra-line-strong);
+    color: var(--astra-ink);
+}
+
+.faq-item[open] .faq-q-icon {
+    border-color: var(--astra-line-strong);
+    color: var(--astra-ink);
+}
+
+.faq-item[open] .faq-chevron {
+    transform: rotate(180deg);
+}
+
+.faq-a {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+    padding: 0 24px 24px;
+}
+
+.faq-item[open] .faq-a {
+    animation: faq-a-in var(--astra-t-move) var(--astra-ease);
+}
+
+@keyframes faq-a-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.faq-a-p {
+    margin: 0;
+    max-width: 64ch;
+    font-family: var(--astra-body);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--astra-ink-dim);
+}
+
+/* номер заказа — данные: моноширинно, на пепельной подложке */
+.faq-code {
+    padding: 1px 6px;
+    border: 1px solid var(--astra-line);
+    border-radius: 6px;
+    background: var(--astra-bg);
+    color: var(--astra-ink);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+/* ---------- планшет и телефон: одна колонка ---------- */
+@media (max-width: 1024px) {
+    .faq-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px;
+    }
+
+    .faq-rail {
+        position: static;
+        gap: 20px;
+    }
+
+    .faq-lead {
+        max-width: none;
+    }
+
+    /* оглавление — ряд чипов, листается внутри себя */
+    .faq-toc ul {
+        flex-direction: row;
+        gap: 8px;
+        border: 0;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .faq-toc ul::-webkit-scrollbar {
+        display: none;
+    }
+
+    .faq-toc li {
+        flex: none;
+        border: 0;
+    }
+
+    .faq-toc-link {
+        min-height: 44px;
+        padding: 0 16px;
+        border: 1px solid var(--astra-line);
+        border-radius: var(--astra-r-md);
+        background: var(--astra-card);
+        font-size: 14px;
+        white-space: nowrap;
+    }
+
+    .faq-toc-link:hover {
+        background: var(--astra-card-2);
+        border-color: var(--astra-line-strong);
+    }
+
+    .faq-support-slot--rail {
+        display: none;
+    }
+
+    .faq-support-slot--end {
+        display: block;
+    }
+
+    .faq-groups {
+        max-width: none;
+        gap: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .faq-groups {
+        gap: 32px;
+    }
+
+    .faq-group-title {
+        font-size: calc((11px) * var(--astra-heading-scale, 1));
+    }
+
+    .faq-q {
+        min-height: 56px;
+        padding: 14px 14px 14px 18px;
+        gap: 14px;
+        font-size: 16px;
+    }
+
+    .faq-q-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .faq-a {
+        padding: 0 18px 20px;
+    }
+
+    .faq-support {
+        padding: 20px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .faq-item,
+    .faq-q,
+    .faq-q-icon,
+    .faq-chevron,
+    .faq-toc-link {
+        transition: none;
+    }
+
+    .faq-item[open] .faq-a {
+        animation: none;
+    }
+}

@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { DashboardPage } from './DashboardPage';
+import { OrdersPage } from './OrdersPage';
 import { ProductsPage } from './ProductsPage';
 import { CategoriesPage } from './CategoriesPage';
 import { PromocodesPage } from './PromocodesPage';
 import { UsersPage } from './UsersPage';
+import { PaymentsPage } from './PaymentsPage';
 import styles from './admin.module.css';
 
 const AdminMenu = () => {
@@ -18,6 +20,10 @@ const AdminMenu = () => {
     switch (activeTab) {
       case 'dashboard':
         return <DashboardPage />;
+      case 'orders':
+        return <OrdersPage />;
+      case 'payments':
+        return <PaymentsPage />;
       case 'products':
         return <ProductsPage />;
       case 'categories':
@@ -33,6 +39,8 @@ const AdminMenu = () => {
 
   const navItems = [
     { id: 'dashboard', label: 'Дашборд', icon: '📊' },
+    { id: 'orders', label: 'Заказы', icon: '🧾' },
+    { id: 'payments', label: 'Платежи', icon: '💳' },
     { id: 'products', label: 'Товары', icon: '📦' },
     { id: 'categories', label: 'Категории', icon: '📁' },
     { id: 'promocodes', label: 'Промокоды', icon: '🏷️' },

@@ -17,6 +17,19 @@ const roles = ["customer", "moderator", "admin", "support", "seller"];
 const statuses = ["active", "blocked", "suspended"];
 const DEFAULT_PAGE_SIZE = 20;
 
+// Небольшой read-only компонент для отображения поля
+const ReadonlyField = ({ label, value }) => (
+  <div className={styles.formGroup} style={{ marginBottom: 4 }}>
+    <label className={styles.formLabel}>{label}</label>
+    <div
+      className={styles.formInput}
+      style={{ opacity: 0.8, cursor: "default", userSelect: "text" }}
+    >
+      {value === null || value === undefined || value === "" ? "-" : String(value)}
+    </div>
+  </div>
+);
+
 export const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,6 +101,53 @@ export const UsersPage = () => {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  /* Результат возврата из OrderDetailsModal. Сервер уже поменял статус
+    заказа (canceled, is_paid=false) и начислил деньги на баланс — здесь
+    только синхронизируем локальный стейт, чтобы не делать полный
+    re-fetch карточки пользователя (это сбросило бы isEditMode/form). */
+  const onOrderRefunded = useCallback(
+    async (result) => {
+      const publicId = result?.order_public_id;
+      if (!publicId) return;
+
+      // 1. Инвалидируем кеш деталей — следующий открытый заказ подтянется заново
+      setOrderDetailsCache((prev) => {
+        if (!(publicId in prev)) return prev;
+        const next = { ...prev };
+        delete next[publicId];
+        return next;
+      });
+
+      // 2. Обновляем строку в «Заказы пользователя» (тот же публичный ID)
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.public_id === publicId
+            ? {
+                ...o,
+                status: "canceled",
+                is_paid: false,
+                can_refund: false,
+                refunded_at: result.refunded_at,
+                refund_amount: result.refunded_amount,
+              }
+            : o
+        )
+      );
+
+      // 3. Баланс вырос — обновляем и в шапке карточки, и в форме
+      if (selectedUser?.id) {
+        setSelectedUser((prev) =>
+          prev ? { ...prev, balance: result.new_user_balance } : prev
+        );
+        setForm((prev) => ({ ...prev, balance: result.new_user_balance }));
+      }
+
+      // 4. Обновляем таблицу пользователей за модалкой
+      await fetchUsers();
+    },
+    [selectedUser?.id, fetchUsers]
+  );
 
   const openUserModal = async (userId) => {
     const [user, userOrders] = await Promise.all([
@@ -257,7 +317,23 @@ export const UsersPage = () => {
         pageSizeOptions={[10, 20, 50, 100]}
       />
 
-      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Пользователь">
+      <Modal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={
+          <div>
+            <span>Пользователь</span>
+            <button
+              type="button"
+              className={styles.modalCloseBtn}
+              onClick={() => { setModalOpen(false) }}
+              aria-label="Закрыть"
+            >
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+        }
+      >
         <form onSubmit={onSave} className={styles.form}>
           <div className={styles.formActions} style={{ justifyContent: "space-between" }}>
             <button
@@ -286,6 +362,16 @@ export const UsersPage = () => {
             <input disabled={!isEditMode} type="checkbox" checked={form.is_email_verified} onChange={(e) => setForm({ ...form, is_email_verified: e.target.checked })} />
             {" "}Email подтверждён
           </label>
+
+          {/* --- Telegram (только для чтения, в API не отправляется) --- */}
+          <div className={styles.formGroup} style={{ marginTop: 12 }}>
+            <label className={styles.formLabel} style={{fontSize: 24, textTransform: "none"}}>Telegram</label>
+            <ReadonlyField label="Telegram ID" value={selectedUser?.telegram_id} />
+            <ReadonlyField label="Username" value={selectedUser?.telegram_username} />
+            <ReadonlyField label="Имя" value={selectedUser?.telegram_first_name} />
+            <ReadonlyField label="Фамилия" value={selectedUser?.telegram_last_name} />
+          </div>
+
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>Заказы пользователя</label>
             <div className={styles.tableContainer} style={{ marginTop: 0, marginBottom: 0 }}>
@@ -302,12 +388,12 @@ export const UsersPage = () => {
                     <tr><td colSpan={3}>Нет заказов</td></tr>
                   ) : (
                     orders.map((order) => (
-                      <tr key={order.public_id}>
+                      <tr text-none key={order.public_id}>
                         <td>
                           <button
                             type="button"
                             onClick={() => openOrderDetails(order.public_id)}
-                            style={{ background: "transparent", border: "none", padding: 0, color: "#2563eb", cursor: "pointer" }}
+                            style={{ background: "transparent", border: "none", padding: 0, color: "var(--astra-pink)", cursor: "pointer" }}
                           >
                             {order.public_id}
                           </button>
@@ -342,6 +428,7 @@ export const UsersPage = () => {
         order={selectedOrderDetails}
         loading={orderDetailsLoading}
         error={orderDetailsError}
+        onRefunded={onOrderRefunded}
       />
     </div>
   );

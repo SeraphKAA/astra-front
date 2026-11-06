@@ -1,10 +1,25 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { useToast } from "../../shared/ui/Toast/ToastProvider";
+import { useRevealOnce, revealDelay } from "../../shared/fx/motionUtils";
+import {
+  ShoppingBagIcon,
+  Share2Icon,
+  Building2Icon,
+  MailIcon,
+  SendIcon,
+  ClockIcon,
+  CopyIcon,
+  MessageCircleIcon,
+  ChainIcon,
+  BackpackIcon,
+  BadgeCheckNotFillIcon,
+} from "../../shared/icons/lucide";
 import "./cooperation.css";
 
 const COOP_EMAIL = "astraassistance@gmail.com";
-const COOP_TELEGRAM_URL = "https://t.me/astrashopshop";
+const COOP_TELEGRAM_URL = "https://t.me/astrashopsupport";
+
 
 async function copyTextToClipboard(text) {
   if (navigator.clipboard?.writeText) {
@@ -27,105 +42,52 @@ async function copyTextToClipboard(text) {
   }
 }
 
+/** Появление-однажды (.astra-reveal + useRevealOnce), стаггер 60мс. */
+const Reveal = ({ as: Tag = "div", index = 0, className = "", children, ...rest }) => {
+  const ref = useRevealOnce();
+  return (
+    <Tag ref={ref} className={`astra-reveal ${className}`.trim()} style={revealDelay(index)} {...rest}>
+      {children}
+    </Tag>
+  );
+};
+
+const HIGHLIGHTS = [
+  "3 формата партнёрства",
+  "SLA для B2B-клиентов",
+  "Ответ за 1 рабочий день",
+];
+
 const PARTNERS = [
   {
     title: "Продавцы цифровых товаров",
-    text: "Подключайте свой ассортимент и управляйте продажами через единую витрину и удобные инструменты.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path
-          d="M4 7h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-        <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.5" />
-      </svg>
-    ),
+    text: "Поставляйте нам товары любого уровня, подходящего под концепцию магазина и получайте процент от продаж со своей наценкой.",
+    icon: <ShoppingBagIcon />,
   },
   {
     title: "Партнёры по трафику",
-    text: "Получайте вознаграждение за привлечение клиентов по прозрачной партнёрской модели.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path
-          d="M4 12c3-4 13-4 16 0M7 15c2-2 8-2 10 0"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-        />
-        <circle cx="12" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.5" />
-      </svg>
-    ),
+    text: "Ищем YouTube-блогеров, авторов нарезок, владельцев Telegram-каналов и других партнёров. Размещайте наш контент на своих площадках и получайте оплату за привлечённые просмотры.",
+    icon: <Share2Icon />,
   },
   {
     title: "B2B-компании",
-    text: "Создаём индивидуальные условия, SLA и интеграции под задачи вашей команды.",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-        <rect x="3" y="8" width="8" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <rect x="13" y="4" width="8" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M7 12h0M17 9h0M17 13h0M17 17h0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      </svg>
-    ),
+    text: "Рассмотрим индивидуальные условия, оптовые цены, SLA и интеграции под наши процессы.",
+    icon: <Building2Icon />,
   },
 ];
 
 const STEPS = [
   {
-    number: "01",
     title: "Оставьте заявку",
-    text: "Напишите нам в Telegram или на почту, кратко опишите ваш формат сотрудничества.",
+    text: "Напишите в Telegram или на почту и кратко опишите, какой формат сотрудничества вам подходит.",
   },
   {
-    number: "02",
     title: "Согласуем условия",
-    text: "Обсуждаем комиссию, сроки, объёмы и технические требования.",
+    text: "Обсудим комиссию, сроки, объёмы и технические требования.",
   },
   {
-    number: "03",
-    title: "Запускаем продажи",
-    text: "Настраиваем доступы, каталог и совместно запускаем первые сделки.",
-  },
-];
-
-const CONTACTS = [
-  {
-    label: "Email",
-    value: COOP_EMAIL,
-    hint: "Нажмите, чтобы скопировать",
-    copyValue: COOP_EMAIL,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-        <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M3 7l9 6 9-6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    label: "Telegram",
-    value: "@astrashopshop",
-    href: COOP_TELEGRAM_URL,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path
-          d="M20 5L4 11l6 2 2 6 3-5 5-9z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-  },
-  {
-    label: "Время ответа",
-    value: "Обычно в течение 1 рабочего дня",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden>
-        <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.5" />
-        <path d="M12 8v4l3 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-    ),
+    title: "Запустим продажи",
+    text: "Настроим доступы и каталог, затем вместе запустим первые сделки.",
   },
 ];
 
@@ -142,136 +104,151 @@ const Cooperation = () => {
   };
 
   return (
-    <div className="coop-page">
+    <div className="coop-page text-none">
       <div className="coop-container">
-        <header className="coop-hero">
-          <p className="coop-eyebrow">Партнёрская программа</p>
+        <Reveal as="header" className="coop-hero">
           <h1 className="coop-title">Сотрудничество</h1>
           <div className="coop-title-divider" aria-hidden />
           <p className="coop-subtitle">
-            Партнёрство с ASTRA Shop для специалистов, команд и компаний
+            ASTRA работает с продавцами цифровых товаров, партнерами по рекламе и B2B-компаниями.
+            Выберите свой формат, предоставьте ссылки на ресурс, условия и напишите нам.
           </p>
-        </header>
+        </Reveal>
 
-        <div className="coop-highlights">
-          <div className="coop-highlight-card">
-            <span className="coop-highlight-value">3</span>
-            <span className="coop-highlight-label">Формата партнёрства</span>
-          </div>
-          <div className="coop-highlight-card">
-            <span className="coop-highlight-value">SLA</span>
-            <span className="coop-highlight-label">Для B2B-клиентов</span>
-          </div>
-          <div className="coop-highlight-card">
-            <span className="coop-highlight-value">1 день</span>
-            <span className="coop-highlight-label">Средний ответ</span>
-          </div>
-        </div>
+        <ul className="coop-highlights">
+          {HIGHLIGHTS.map((text, index) => (
+            <Reveal as="li" key={text} index={index + 1} className="coop-chip">
+              {text}
+            </Reveal>
+          ))}
+        </ul>
 
         <section className="coop-section">
-          <h2 className="coop-section-title">Кого мы ищем</h2>
+          <Reveal as="div" className="coop-section-header">
+            <BackpackIcon className="backpack-icon" />
+            <h2 className="coop-section-title">С кем мы работаем</h2>
+          </Reveal>
           <div className="coop-grid">
-            {PARTNERS.map((item) => (
-              <article key={item.title} className="coop-card">
-                <div className="coop-card-icon">{item.icon}</div>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-              </article>
+            {PARTNERS.map((item, index) => (
+              <Reveal key={item.title} index={index + 1} className="coop-cell">
+                <article className="coop-value-card">
+                  <div className="coop-value-icon" aria-hidden>
+                    {item.icon}
+                  </div>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </article>
+              </Reveal>
             ))}
           </div>
         </section>
 
         <section className="coop-section">
-          <h2 className="coop-section-title">Как начать</h2>
-          <div className="coop-steps">
+          <Reveal as="div" className="coop-section-header">
+            <BadgeCheckNotFillIcon className="badge-check-icon" />
+            <h2 className="coop-section-title">Как начать</h2>
+          </Reveal>
+          <ol className="coop-steps">
             {STEPS.map((step, index) => (
-              <article key={step.number} className="coop-step">
-                <div className="coop-step-marker">
-                  <span className="coop-step-number">{step.number}</span>
-                  {index < STEPS.length - 1 && <span className="coop-step-line" aria-hidden />}
+              <Reveal as="li" key={step.title} index={index + 1} className="coop-step">
+                <div className="coop-step-marker" aria-hidden>
+                  <span className="coop-step-number">{index + 1}</span>
+                  {index < STEPS.length - 1 && <span className="coop-step-line" />}
                 </div>
                 <div className="coop-step-body">
                   <h3>{step.title}</h3>
                   <p>{step.text}</p>
                 </div>
-              </article>
+              </Reveal>
             ))}
-          </div>
+          </ol>
         </section>
 
         <section className="coop-section">
-          <h2 className="coop-section-title">Контакты для сотрудничества</h2>
+          <br />
+          <Reveal as="div" className="coop-section-header">
+            <ChainIcon className="chain-icon" />
+            <h2 className="coop-section-title">Как с нами связаться</h2>
+          </Reveal>
           <div className="coop-contact-grid">
-            {CONTACTS.map((contact) => {
-              const content = (
-                <>
-                  <div className="coop-contact-icon">{contact.icon}</div>
-                  <div className="coop-contact-body">
-                    <span className="coop-contact-label">{contact.label}</span>
-                    <span className="coop-contact-value">{contact.value}</span>
-                    {contact.hint && <span className="coop-contact-hint">{contact.hint}</span>}
-                  </div>
-                </>
-              );
+            <Reveal index={1} className="coop-cell">
+              <button
+                type="button"
+                className="coop-contact-card coop-contact-action"
+                onClick={handleCopyEmail}
+              >
+                <span className="coop-contact-icon" aria-hidden>
+                  <MailIcon />
+                </span>
+                <span className="coop-contact-body">
+                  <span className="coop-contact-label">Email</span>
+                  <span className="coop-contact-value">{COOP_EMAIL}</span>
+                  <span className="coop-contact-hint text-none">
+                    <CopyIcon aria-hidden />
+                    Нажмите — email скопируется
+                  </span>
+                </span>
+              </button>
+            </Reveal>
 
-              if (contact.copyValue) {
-                return (
-                  <button
-                    key={contact.label}
-                    type="button"
-                    className="coop-contact-card coop-contact-card-link coop-contact-card-button"
-                    onClick={handleCopyEmail}
-                  >
-                    {content}
-                  </button>
-                );
-              }
+            <Reveal index={2} className="coop-cell">
+              <a
+                href={COOP_TELEGRAM_URL}
+                className="coop-contact-card coop-contact-action"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span className="coop-contact-icon" aria-hidden>
+                  <SendIcon />
+                </span>
+                <span className="coop-contact-body">
+                  <span className="coop-contact-label">Telegram</span>
+                  <span className="coop-contact-value">@astrashopsupport</span>
+                  <span className="coop-contact-hint">Откроется чат в Telegram</span>
+                </span>
+              </a>
+            </Reveal>
 
-              if (contact.href) {
-                return (
-                  <a
-                    key={contact.label}
-                    href={contact.href}
-                    className="coop-contact-card coop-contact-card-link"
-                    target={contact.href.startsWith("http") ? "_blank" : undefined}
-                    rel={contact.href.startsWith("http") ? "noreferrer" : undefined}
-                  >
-                    {content}
-                  </a>
-                );
-              }
-
-              return (
-                <div key={contact.label} className="coop-contact-card">
-                  {content}
-                </div>
-              );
-            })}
+            <Reveal index={3} className="coop-cell">
+              <div className="coop-contact-card">
+                <span className="coop-contact-icon" aria-hidden>
+                  <ClockIcon />
+                </span>
+                <span className="coop-contact-body">
+                  <span className="coop-contact-label">Время ответа</span>
+                  <span className="coop-contact-value">Работаем с 10:00 до 22:00</span>
+                  <span className="coop-contact-hint">Ответ в течение суток</span>
+                </span>
+              </div>
+            </Reveal>
           </div>
         </section>
 
-        <section className="coop-cta">
+        <Reveal as="section" className="coop-cta">
           <div className="coop-cta-inner">
             <h2>Готовы обсудить партнёрство?</h2>
             <p>Напишите нам — подберём формат сотрудничества под ваши задачи</p>
             <div className="coop-cta-actions">
               <a
                 href={COOP_TELEGRAM_URL}
-                className="coop-cta-btn coop-cta-btn-primary"
+                className="astra-btn coop-cta-btn"
                 target="_blank"
                 rel="noreferrer"
               >
+                <SendIcon className="coop-btn-icon" />
                 Написать в Telegram
               </a>
-              <button type="button" className="coop-cta-btn coop-cta-btn-secondary" onClick={handleCopyEmail}>
+              <button type="button" className="astra-btn-ghost coop-cta-btn text-none" onClick={handleCopyEmail}>
+                <CopyIcon className="coop-btn-icon" />
                 Скопировать email
               </button>
-              <NavLink to="/support" className="coop-cta-btn coop-cta-btn-secondary">
+              <NavLink to="/support" className="astra-btn-ghost coop-cta-btn">
+                <MessageCircleIcon className="coop-btn-icon" />
                 Открыть поддержку
               </NavLink>
             </div>
           </div>
-        </section>
+        </Reveal>
       </div>
     </div>
   );

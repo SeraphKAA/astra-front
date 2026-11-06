@@ -1,160 +1,298 @@
+/* ============================================================
+   ЗАКАЗЫ ПРОДАВЦА — операторский инструмент: скан и скорость.
+   Ясеневые карточки, одна мягкая тень, розовый только на действии.
+   Появления — грамматика orders.css: fadeInUp + ступенчатая задержка.
+   ============================================================ */
+
 .seller-chat-page {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 24px 16px;
-    color: #fff;
+    padding: 28px 16px 64px;
+    color: var(--astra-ink);
     box-sizing: border-box;
-    animation: fadeIn var(--duration-slow, 0.5s) ease;
+    animation: fadeIn var(--duration-slow, 0.8s) var(--ease-out-smooth, ease);
 }
 
+/* ---------- шапка: как /orders — заголовок + розовое подчёркивание ---------- */
+
 .seller-chat-head h1 {
-    margin: 0 0 6px 0;
-    font-size: 24px;
+    margin: 0;
+    font-size: calc((26px) * var(--astra-heading-scale, 1));
     font-weight: 800;
 }
 
+.seller-chat-head h1::after {
+    content: "";
+    display: block;
+    width: 52px;
+    height: 3px;
+    margin-top: 10px;
+    border-radius: var(--astra-r-pill);
+    background: linear-gradient(90deg, var(--astra-pink), transparent);
+    opacity: 0.9;
+}
+
 .seller-chat-sub {
-    color: rgba(255, 255, 255, 0.72);
+    margin-top: 10px;
+    color: var(--astra-ink-dim);
     font-size: 13px;
 }
 
-.seller-chat-controls {
-    display: flex;
-    gap: 10px;
-    margin-top: 14px;
-    margin-bottom: 14px;
+.seller-chat-sub strong {
+    color: var(--astra-ink);
+    font-weight: 600;
 }
 
-.seller-chat-status-tabs {
-    margin-bottom: 14px;
-    display: inline-flex;
-    gap: 8px;
+/* ---------- панель управления: вкладки + поиск + «Обновить» одной строкой ---------- */
+
+.seller-chat-toolbar {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     flex-wrap: wrap;
 }
 
 .seller-chat-tabs {
-    margin-top: 14px;
     display: inline-flex;
     gap: 6px;
     background: rgba(255, 255, 255, 0.04);
     padding: 6px;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--astra-r-xl);
+    border: 1px solid var(--astra-line);
+    flex: 0 0 auto;
+}
+
+/* вторая строка того же пилюльного словаря — фильтр статуса на «Мои» */
+.seller-chat-status-tabs {
+    margin-top: 12px;
+    display: inline-flex;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 6px;
+    border-radius: var(--astra-r-xl);
+    border: 1px solid var(--astra-line);
+    flex-wrap: wrap;
 }
 
 .seller-tab {
     border: none;
     background: transparent;
-    color: rgba(255, 255, 255, 0.75);
-    padding: 9px 14px;
-    border-radius: 10px;
+    color: var(--astra-ink-dim);
+    padding: 9px 16px;
+    border-radius: var(--astra-r-md);
     cursor: pointer;
-    font-weight: 700;
+    font-family: var(--astra-body);
+    font-weight: 600;
+    font-size: 14px;
     transition:
-        background var(--duration-fast, 0.2s) ease,
-        color var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) var(--ease-spring, ease);
+        background var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+        color var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+        transform var(--duration-fast, 0.15s) var(--ease-out-smooth, ease);
 }
 
 .seller-tab:hover:not(.is-active) {
     background: rgba(255, 255, 255, 0.06);
-    color: #fff;
+    color: var(--astra-ink);
 }
 
 .seller-tab:active {
-    transform: scale(0.97);
+    transform: scale(0.985);
+    transition-duration: 80ms;
 }
 
+/* активная вкладка — плоская розовая заливка + БЕЛЫЕ чернила,
+   ховер только сменой заливки, без ореолов */
 .seller-tab.is-active {
-    background: rgba(226, 121, 155, 0.18);
-    color: #fff;
-    box-shadow: 0 0 0 1px rgba(226, 121, 155, 0.25);
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+    box-shadow: none;
 }
+
+.seller-tab.is-active:hover {
+    background: var(--astra-pink-bright);
+}
+
+/* кольцо фокуса на вкладках — ЧЕРНИЛЬНОЕ: розовое на розовом не читается */
+.seller-tab:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+/* ---------- поиск: ясеневый колодец, силуэт поисковой пилюли (44 / r-md) ---------- */
 
 .seller-chat-search {
-    flex: 1;
-    padding: 11px 14px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: #1c1c1f;
-    color: #fff;
+    flex: 1 1 240px;
+    min-width: 200px;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: var(--astra-r-md);
+    border: 1px solid var(--astra-line);
+    background: var(--astra-card);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-size: 16px; /* правило шестнадцати пикселей: iOS не приближает */
+    box-sizing: border-box;
     transition:
-        border-color var(--duration-fast, 0.2s) ease,
-        box-shadow var(--duration-fast, 0.2s) ease;
+        border-color var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+        background var(--duration-fast, 0.15s) var(--ease-out-smooth, ease);
 }
 
+.seller-chat-search::placeholder {
+    color: var(--astra-ink-dim);
+}
+
+.seller-chat-search:hover {
+    border-color: var(--astra-line-strong);
+}
+
+/* Клик мышью НЕ подсвечивает поле; ясеневый контур — только с клавиатуры */
 .seller-chat-search:focus {
     outline: none;
-    border-color: rgba(226, 121, 155, 0.4);
-    box-shadow: 0 0 0 3px rgba(226, 121, 155, 0.1);
+    box-shadow: none;
 }
 
+:root[data-modality="keyboard"] .seller-chat-search:focus {
+    outline: 1px solid var(--astra-focus-field);
+    outline-offset: 0;
+}
+
+/* ---------- кнопки: призрачная и первичная, 44px при r-md ---------- */
+
 .seller-chat-btn {
-    padding: 10px 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.06);
-    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: var(--astra-r-md);
+    border: 1px solid var(--astra-line-strong);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--astra-ink);
     cursor: pointer;
     white-space: nowrap;
+    font-family: var(--astra-display);
     font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+    box-shadow: none;
     transition:
-        background var(--duration-fast, 0.2s) ease,
-        border-color var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) ease;
+        background var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+        border-color var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+        transform var(--duration-fast, 0.15s) var(--ease-out-smooth, ease);
 }
 
 .seller-chat-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.075);
+    border-color: rgba(236, 234, 238, 0.3);
 }
 
 .seller-chat-btn:active:not(:disabled) {
-    transform: scale(0.97);
+    transform: scale(0.985);
+    transition-duration: 80ms;
 }
 
+.seller-chat-btn:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 3px;
+}
+
+.seller-chat-btn:disabled {
+    color: var(--astra-ink-dim);
+    border-color: var(--astra-line);
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* первичное действие — плоский розовый, БЕЛЫЙ текст,
+   ховер ТОЛЬКО меняет заливку */
 .seller-chat-btn.primary {
-    background: var(--accent, #e2799b);
-    border-color: var(--accent, #e2799b);
+    background: var(--astra-pink-fill);
+    border-color: transparent;
+    color: var(--astra-on-pink);
 }
 
 .seller-chat-btn.primary:hover:not(:disabled) {
-    background: #eb8fb0;
-    border-color: #eb8fb0;
+    background: var(--astra-pink-bright);
+    border-color: transparent;
 }
 
-.seller-chat-muted {
-    color: rgba(255, 255, 255, 0.72);
-    padding: 24px 0;
+/* выключенная розовая — смена поверхности, не прозрачность */
+.seller-chat-btn.primary:disabled {
+    background: var(--astra-card-2);
+    color: var(--astra-ink-dim);
+}
+
+/* ---------- состояния списка ---------- */
+
+.seller-chat-loading {
+    margin-top: 18px;
+    padding: 32px 0;
     text-align: center;
+    color: var(--astra-ink-dim);
+    font-size: 14px;
+}
+
+.seller-chat-empty {
+    margin-top: 18px;
+    padding: 40px 24px;
+    text-align: center;
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-xl);
+    animation: fadeInUp var(--duration-slow, 0.8s) var(--ease-out-smooth, ease);
+}
+
+.seller-chat-empty-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--astra-ink);
+}
+
+.seller-chat-empty-sub {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--astra-ink-dim);
 }
 
 .seller-chat-error {
-    color: #ff8a8a;
-    padding: 12px 16px;
-    background: rgba(255, 107, 107, 0.1);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 107, 107, 0.2);
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 16px;
+    color: #ffc9cf; /* светлые чернила ошибки на тёмной панели */
+    background: rgba(255, 77, 94, 0.1); /* тон --astra-err #FF4D5E */
+    border: 1px solid rgba(255, 77, 94, 0.25);
+    border-radius: var(--astra-r-lg);
+    font-weight: 600;
+    animation: fadeInUp 0.3s var(--ease-out-smooth, ease);
 }
 
+/* ---------- карточки заказов ---------- */
+
 .seller-chat-list {
+    margin-top: 18px;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
 .seller-order-card {
-    background: #1c1c1f;
-    border-radius: 16px;
-    padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-lg);
+    padding: 18px 20px;
+    animation: fadeInUp var(--duration-slow, 0.8s) var(--ease-out-smooth, ease) backwards;
     transition:
-        transform var(--duration-fast, 0.2s) var(--ease-out-smooth, ease),
-        border-color var(--duration-fast, 0.2s) ease,
-        box-shadow var(--duration-fast, 0.2s) ease;
-    animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease) backwards;
+        transform var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+        border-color var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+        box-shadow var(--duration-fast, 0.15s) var(--ease-out-smooth, ease);
 }
 
+/* ступени появления: первые три — лесенкой, дальше одна общая */
 .seller-chat-list > .seller-order-card:nth-child(1) { animation-delay: 0.03s; }
 .seller-chat-list > .seller-order-card:nth-child(2) { animation-delay: 0.06s; }
 .seller-chat-list > .seller-order-card:nth-child(3) { animation-delay: 0.09s; }
@@ -162,20 +300,39 @@
 
 .seller-order-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(226, 121, 155, 0.2);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    border-color: var(--astra-line-strong);
+    box-shadow: var(--astra-shadow-sm);
 }
 
-.seller-order-row {
+.seller-order-top {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    align-items: center;
+    flex-wrap: wrap;
 }
 
-.seller-order-title {
-    font-weight: 800;
+.seller-order-id {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+
+.seller-order-id-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--astra-ink-dim);
+}
+
+.seller-order-id-value {
+    font-family: var(--astra-display);
+    font-weight: 700;
     font-size: 15px;
+    color: var(--astra-ink);
+    overflow-wrap: anywhere;
 }
 
 .seller-order-badges {
@@ -185,106 +342,251 @@
     justify-content: flex-end;
 }
 
-.seller-badge {
-    font-size: 11px;
-    padding: 5px 10px;
-    border-radius: 999px;
+/* статус — тонированная плашка, как .orders-paid-badge:
+   заливка-намёк + светлые чернила того же тона, никогда не сплошной цвет */
+.seller-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 11px;
+    border-radius: var(--astra-r-sm);
+    font-family: var(--astra-display);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
     background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--astra-ink);
+}
+
+/* тон --astra-warn #FFC14D */
+.seller-status-badge.is-processing {
+    background: rgba(255, 193, 77, 0.12);
+    border-color: rgba(255, 193, 77, 0.25);
+    color: #ffd98f;
+}
+
+/* тон --astra-ok #3DDC97 */
+.seller-status-badge.is-completed {
+    background: rgba(61, 220, 151, 0.12);
+    border-color: rgba(61, 220, 151, 0.25);
+    color: #7dffb0;
+}
+
+/* тон --astra-err #FF4D5E */
+.seller-status-badge.is-canceled {
+    background: rgba(255, 77, 94, 0.12);
+    border-color: rgba(255, 77, 94, 0.28);
+    color: #ffc9cf;
+}
+
+/* тип заказа — тихая ясеневая метка, сырое значение API */
+.seller-type-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 11px;
+    border-radius: var(--astra-r-sm);
+    font-size: 13px;
     font-weight: 600;
     text-transform: lowercase;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--astra-line);
+    color: var(--astra-ink-dim);
 }
 
-.seller-order-grid {
-    margin-top: 12px;
+/* ---------- мета: приглушённые подписи, читаемые значения ---------- */
+
+.seller-order-meta {
+    margin: 14px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px 12px;
-    color: rgba(255, 255, 255, 0.78);
-    font-size: 13px;
-    line-height: 1.4;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px 20px;
 }
 
-.seller-order-grid span {
-    color: rgba(255, 255, 255, 0.5);
+.seller-order-meta-item {
+    min-width: 0;
 }
+
+.seller-order-meta dt {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--astra-ink-dim);
+}
+
+.seller-order-meta dd {
+    margin: 4px 0 0;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--astra-ink);
+    overflow-wrap: anywhere;
+}
+
+/* деньги говорят своим голосом: Unbounded 700, мягкий розовый */
+.seller-order-meta dd.seller-order-sum {
+    font-family: var(--astra-display);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    color: var(--astra-soft);
+}
+
+/* ---------- действия: одна строка, прижатая вправо ---------- */
 
 .seller-order-actions {
-    margin-top: 14px;
-    display: flex;
-    justify-content: flex-end;
-    padding-top: 12px;
+    margin-top: 16px;
+    padding-top: 14px;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.seller-order-status {
     display: flex;
-    gap: 8px;
     align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
     flex-wrap: wrap;
 }
 
+/* селект статуса — поле приложения: ясеневый колодец, r-md */
 .seller-order-select {
-    padding: 10px 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: #232328;
-    color: #f4f4f6;
-    transition: border-color var(--duration-fast, 0.2s) ease;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: var(--astra-r-md);
+    border: 1px solid var(--astra-line);
+    background: var(--astra-card-2);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-size: 16px;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition:
+        border-color var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+        background var(--duration-fast, 0.15s) var(--ease-out-smooth, ease);
 }
 
+.seller-order-select:hover {
+    border-color: var(--astra-line-strong);
+}
+
+/* Клик мышью не подсвечивает; ясеневый контур — только для клавиатуры */
 .seller-order-select:focus {
     outline: none;
-    border-color: rgba(226, 121, 155, 0.4);
+    box-shadow: none;
+}
+
+:root[data-modality="keyboard"] .seller-order-select:focus {
+    outline: 1px solid var(--astra-focus-field);
+    outline-offset: 0;
 }
 
 .seller-order-select option {
-    background: #232328;
-    color: #f4f4f6;
+    background: var(--astra-card-2);
+    color: var(--astra-ink);
 }
 
+/* «Открыть чат» — призрачная кнопка: белые 4%, волосяная рамка */
 .seller-chat-link {
-    color: var(--accent, #e2799b);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: var(--astra-r-md);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--astra-line-strong);
+    color: var(--astra-ink);
     text-decoration: none;
-    font-weight: 700;
-    padding: 8px 12px;
-    border-radius: 10px;
-    background: rgba(226, 121, 155, 0.1);
-    border: 1px solid rgba(226, 121, 155, 0.2);
+    font-family: var(--astra-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+    box-sizing: border-box;
     transition:
-        background var(--duration-fast, 0.2s) ease,
-        color var(--duration-fast, 0.2s) ease;
+        background var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+        border-color var(--duration-fast, 0.15s) var(--ease-out-smooth, ease);
 }
 
 .seller-chat-link:hover {
-    background: rgba(226, 121, 155, 0.18);
-    color: #f5d4e0;
+    background: rgba(255, 255, 255, 0.075);
+    border-color: rgba(236, 234, 238, 0.3);
 }
 
+.seller-chat-link:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 3px;
+}
+
+/* ---------- мобильная раскладка ---------- */
+
 @media (max-width: 720px) {
-    .seller-chat-controls {
-        flex-direction: column;
+    .seller-chat-head h1 {
+        font-size: calc((22px) * var(--astra-heading-scale, 1));
     }
 
-    .seller-order-grid {
-        grid-template-columns: 1fr;
+    .seller-chat-toolbar {
+        align-items: stretch;
+    }
+
+    .seller-chat-tabs {
+        flex: 1 1 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        box-sizing: border-box;
+    }
+
+    .seller-chat-search {
+        flex: 1 1 auto;
+        min-width: 0;
     }
 
     .seller-chat-status-tabs {
         display: flex;
         width: 100%;
-        gap: 6px;
-        flex-wrap: nowrap;
+        box-sizing: border-box;
     }
 
     .seller-chat-status-tabs .seller-tab {
         flex: 1 1 0;
         min-width: 0;
-        padding: 6px 8px;
+        padding: 9px 8px;
         font-size: 12px;
-        line-height: 1.1;
+        line-height: 1.2;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
+
+    .seller-order-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .seller-order-select {
+        width: 100%;
+    }
+}
+
+.seller-chat-link {
+    gap: 8px; /* уже есть flex, но без gap бейдж прилипнет к тексту */
+}
+
+.seller-chat-link-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+    font-family: var(--astra-display);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    box-shadow: none;
 }

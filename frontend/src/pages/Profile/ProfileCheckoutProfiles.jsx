@@ -82,17 +82,27 @@ export const ProfileCheckoutProfiles = () => {
     load();
   }, []);
 
-  const openAdd = () => {
-    setEditingProfile(null);
-    setSelectedSchema(schemas[0] || null);
-    setFormValues({});
-    setModalOpen(true);
-  };
-
   const openEdit = (profile) => {
-    const schema = schemaByType[String(profile.profile_type).toLowerCase()];
+    let schema = schemaByType[String(profile.profile_type).toLowerCase()];
+    if (!schema && profile.schema_id) {
+      schema = schemas.find(s => String(s.id) === String(profile.schema_id));
+    }
+    if (!schema) {
+      const fakeFields = Object.keys(profile.data || {}).map(key => ({
+        key,
+        label: key,
+        type: 'text',
+        required: false,
+      }));
+      schema = {
+        id: 'fallback',
+        profile_type: profile.profile_type,
+        title: profile.profile_type,
+        fields: fakeFields,
+      };
+    }
     setEditingProfile(profile);
-    setSelectedSchema(schema || null);
+    setSelectedSchema(schema);
     setFormValues({ ...(profile.data || {}) });
     setModalOpen(true);
   };
@@ -163,17 +173,16 @@ export const ProfileCheckoutProfiles = () => {
     <section className="profile-card">
       <div className="profile-avatars-head">
         <h2>Данные для заказов</h2>
-        <button type="button" className="profile-upload-btn" onClick={openAdd}>
-          Добавить
-        </button>
       </div>
       <p className="profile-checkout-hint">
-        UID, сервер и другие данные для игр. При оплате корзины их можно перепроверить.
+        UID, сервер и другие данные для игр — при оплате корзины их можно перепроверить.
       </p>
       {loading ? (
-        <div className="profile-loading">Загрузка...</div>
+        <div className="profile-loading">Загружаем данные...</div>
       ) : profiles.length === 0 ? (
-        <div className="profile-empty">Пока нет сохранённых данных.</div>
+        <div className="profile-empty">
+          Пока нет сохранённых данных.
+        </div>
       ) : (
         <div className="profile-checkout-list">
           {profiles.map((p) => {
@@ -194,7 +203,13 @@ export const ProfileCheckoutProfiles = () => {
                     <div className="profile-checkout-item-meta">
                       {Object.entries(p.data || {})
                         .slice(0, 3)
-                        .map(([k, v]) => `${k}: ${v}`)
+                        .map(([k, v]) => {
+                          /* Показываем человеческую подпись поля из схемы,
+                             а не сырой ключ (uid → «UID игрока») */
+                          const fieldLabel =
+                            (schema?.fields || []).find((f) => f.key === k)?.label || k;
+                          return `${fieldLabel}: ${v}`;
+                        })
                         .join(" · ")}
                     </div>
                   </div>
@@ -217,6 +232,9 @@ export const ProfileCheckoutProfiles = () => {
         isOpen={modalOpen}
         onClose={() => !saving && setModalOpen(false)}
         title={editingProfile ? "Изменить данные" : "Добавить данные для игры"}
+        /* «Закрыть» во время сохранения выключен явно, а не молчит */
+        closeDisabled={saving}
+        closeDisabledLabel="Сохраняем данные — закрыть нельзя"
       >
         {!editingProfile && (
           <label className="profile-checkout-field" style={{ marginBottom: 12 }}>
@@ -225,7 +243,7 @@ export const ProfileCheckoutProfiles = () => {
               value={selectedSchema?.id || ""}
               onChange={(e) => onSchemaPick(e.target.value)}
             >
-              <option value="">— выберите —</option>
+              <option value="">Выберите из списка</option>
               {schemas.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.title}
@@ -243,7 +261,12 @@ export const ProfileCheckoutProfiles = () => {
           />
         ))}
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 16 }}>
-          <Button type="button" variant="secondary" onClick={() => setModalOpen(false)}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setModalOpen(false)}
+            disabled={saving}
+          >
             Отмена
           </Button>
           <Button type="button" onClick={onSave} disabled={saving || !selectedSchema}>

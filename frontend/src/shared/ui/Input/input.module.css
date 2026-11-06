@@ -1,3 +1,11 @@
+/* ============================================================
+   Общее поле ввода (admin, фильтры) — токены v3.
+
+   Раунд 5: фокус НЕЙТРАЛЬНЫЙ (--astra-focus-field) вместо розовой
+   подсветки, кегль 16px (iOS не зумит вёрстку), пепельные
+   поверхности и волосяные кромки, скругление 8px.
+   ============================================================ */
+
 .inputGroup {
   display: flex;
   flex-direction: column;
@@ -5,40 +13,57 @@
 }
 
 .label {
-  font-family: 'Roboto', sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  color: #595959;
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--astra-ink-dim, #a5a2ab);
 }
 
 .input {
-  padding: 10px 12px;
-  background: #121212;
-  border: 1px solid #2a2a2e;
-  border-radius: 8px;
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  color: white;
-  transition: all 0.2s ease;
+  padding: 11px 14px;
+  box-sizing: border-box;
+  background: var(--astra-card-2, #1f1f23);
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+  border-radius: var(--astra-r-md, 8px);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  /* Sixteen-Pixel-Input */
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--astra-ink, #eceaee);
+  outline: none;
+  box-shadow: none;
+  transition:
+    border-color var(--astra-t-color, 150ms) var(--astra-ease, ease),
+    box-shadow var(--astra-t-color, 150ms) var(--astra-ease, ease);
 }
 
+/* Brighter-Never-Darker */
+.input:hover:not(:disabled) {
+  border-color: var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+}
+
+/* Клик мышью поле не подсвечивает; кольцо — только для клавиатуры */
 .input:focus {
   outline: none;
-  border-color: #E2799B;
-  box-shadow: 0 0 0 2px rgba(226, 121, 155, 0.2);
+  box-shadow: none;
+}
+
+:root[data-modality="keyboard"] .input:focus {
+  outline: 1px solid var(--astra-focus-field, rgba(236, 234, 238, 0.55));
+  outline-offset: 0;
 }
 
 .input::placeholder {
-  color: #3a3a3e;
+  color: var(--astra-ink-faint, #75727c);
 }
 
 .input.error {
-  border-color: #dc2626;
+  border-color: var(--astra-err, #ff4d5e);
 }
 
-.input.error:focus {
-  border-color: #dc2626;
-  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+:root[data-modality="keyboard"] .input.error:focus {
+  outline-color: var(--astra-err, #ff4d5e);
 }
 
 .input:disabled {
@@ -47,7 +72,21 @@
 }
 
 .errorMessage {
-  font-size: 12px;
-  color: #dc2626;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--astra-err, #ff4d5e);
+}
+
+@media (forced-colors: active) {
+  .input:focus {
+    outline: 2px solid Highlight;
+    outline-offset: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input {
+    transition: none;
+  }
 }

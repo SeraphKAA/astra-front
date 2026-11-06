@@ -1,13 +1,14 @@
 import { apiRequest } from "../../../shared/commonApi";
-import { LS } from "../../../utilities/utilLocalStorage";
 
-export const refreshTokens = (refresh_token) => {
-    return apiRequest({
-        url: "/users/refresh",
-        method: "POST",
-        authorized: false,
-        body: { refresh_token },
-    });
+export const logoutUser = () => {
+    return apiRequest(
+        {
+            url: "/users/logout/user",
+            method: "POST",
+            // credentials: "include",
+            // authorized: true,
+        }
+    );
 };
 
 

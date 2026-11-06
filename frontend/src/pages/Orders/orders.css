@@ -1,262 +1,802 @@
+/* ================================================================
+   «Покупки» — v3 «Ash and Signal», distilled.
+   Карточка отвечает на три вопроса покупателя, в этом порядке:
+   ЧТО я купил → СКОЛЬКО это стоило → ЧТО с заказом сейчас.
+   Номер и дата — тихая служебная строка. Одна статусная плашка
+   вместо двух (оплата + статус). Розовый — только там, где
+   действие: активная вкладка, «Оплатить», «Отправить отзыв».
+   Никаких повторяющихся входов при смене вкладки, никаких
+   градиентов и подскоков.
+   ================================================================ */
+
 .orders-page {
-    max-width: 980px;
+    max-width: 880px;
     margin: 0 auto;
-    padding: 28px 16px 48px;
-    color: #fff;
+    padding: 32px 28px 96px;
     box-sizing: border-box;
-    animation: fadeIn var(--duration-slow, 0.5s) ease;
+    color: var(--astra-ink, #ECEAEE);
+    font-family: var(--astra-body, "Golos Text", sans-serif);
+    animation: orders-fade var(--astra-t-enter, 800ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1)) both;
+    width: 100%;
+    overflow-x: clip;
 }
 
-.orders-page h1 {
-    margin: 0;
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+@supports not (overflow-x: clip) {
+    .orders-page { overflow-x: hidden; }
 }
 
-.orders-page h1::after {
-    content: "";
-    display: block;
-    width: 52px;
-    height: 3px;
-    margin-top: 10px;
-    margin-bottom: 18px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent, #e2799b), transparent);
-    opacity: 0.9;
+@keyframes orders-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
+/* Title-tier: Mon Trappist, КАПС, +0.01em, через общий множитель */
+.orders-title {
+    margin: 0 0 24px;
+    font-family: var(--astra-heading, "Mon Trappist", sans-serif);
+    font-size: calc((26px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--astra-ink, #ECEAEE);
+}
+
+/* ---------- вкладки ----------
+   Ряд пилюль, скроллится внутри себя на узком экране — страница
+   горизонтально не прокручивается никогда. */
 .orders-tabs {
-    display: inline-flex;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.04);
-    padding: 6px;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    margin-bottom: 18px;
+    display: flex;
+    gap: 8px;
+    margin: 0 -28px 20px;
+    padding: 2px 28px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.orders-tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .orders-tab {
-    border: none;
-    background: transparent;
-    color: rgba(255, 255, 255, 0.72);
-    padding: 9px 14px;
-    border-radius: 10px;
-    cursor: pointer;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+    border-radius: var(--astra-r-md, 22px);
+    background: var(--astra-card, #18181B);
+    color: var(--astra-ink-dim, #A5A2AB);
+    font-family: var(--astra-body, "Golos Text", sans-serif);
+    font-size: 14px;
     font-weight: 600;
-    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
     transition:
-        background var(--duration-fast, 0.2s) ease,
-        color var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) var(--ease-spring, ease),
-        box-shadow var(--duration-fast, 0.2s) ease;
+        background var(--astra-t-color, 150ms) var(--astra-ease, ease),
+        border-color var(--astra-t-color, 150ms) var(--astra-ease, ease),
+        color var(--astra-t-color, 150ms) var(--astra-ease, ease);
 }
 
 .orders-tab:hover:not(.is-active) {
-    background: rgba(255, 255, 255, 0.06);
-    color: #fff;
+    background: var(--astra-card-2, #1F1F23);
+    border-color: var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+    color: var(--astra-ink, #ECEAEE);
 }
 
 .orders-tab:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
+    transition-duration: 80ms;
+}
+
+.orders-tab:focus-visible {
+    outline: 2px solid var(--astra-ink, #ECEAEE);
+    outline-offset: 2px;
 }
 
 .orders-tab.is-active {
-    background: rgba(226, 121, 155, 0.16);
-    color: #fff;
-    box-shadow: 0 0 0 1px rgba(226, 121, 155, 0.2);
+    background: var(--astra-pink-fill, #DD0184);
+    border-color: transparent;
+    color: var(--astra-on-pink, #FFFFFF);
 }
 
-.orders-muted {
-    color: rgba(255, 255, 255, 0.62);
-    padding: 36px 24px;
-    text-align: center;
-    background: rgba(26, 26, 28, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 20px;
-    font-size: 15px;
-    animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease);
+.orders-tab.is-active:hover {
+    background: var(--astra-pink-bright, #E30189);
 }
 
-.orders-error {
-    color: #ffb4b4;
-    padding: 14px 16px;
-    background: rgba(255, 107, 107, 0.1);
-    border: 1px solid rgba(255, 107, 107, 0.25);
-    border-radius: 14px;
+.orders-tab-count {
+    font-family: var(--astra-display, "Unbounded", sans-serif);
+    font-size: 12px;
     font-weight: 600;
-    animation: fadeInUp 0.3s var(--ease-out-smooth, ease);
+    font-variant-numeric: tabular-nums;
+    color: var(--astra-ink-faint, #75727C);
 }
 
+.orders-tab:hover .orders-tab-count {
+    color: var(--astra-ink-dim, #A5A2AB);
+}
+
+.orders-tab.is-active .orders-tab-count {
+    color: var(--astra-on-pink, #FFFFFF);
+    opacity: 0.8;
+}
+
+/* ---------- состояния: загрузка / пусто / ошибка ---------- */
+.orders-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+    padding: 56px 24px;
+    border: 1px dashed var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+    border-radius: var(--astra-r-lg, 24px);
+    color: var(--astra-ink-dim, #A5A2AB);
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.orders-state p {
+    margin: 0;
+    max-width: 42ch;
+}
+
+.orders-state--error {
+    border-style: solid;
+    border-color: rgba(255, 77, 94, 0.28);
+    background: rgba(255, 77, 94, 0.06);
+    color: #ffc9cf;
+}
+
+/* ---------- список ---------- */
 .orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Карточка: две колонки — «что» слева, «сколько + статус» справа;
+   действия (если есть) — отдельной строкой снизу. */
+.orders-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 24px;
+    row-gap: 16px;
+    align-items: center;
+    padding: 20px 24px;
+    border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+    border-radius: var(--astra-r-lg, 24px);
+    background: var(--astra-card, #18181B);
+    cursor: pointer;
+    transition:
+        background var(--astra-t-color, 150ms) var(--astra-ease, ease),
+        border-color var(--astra-t-color, 150ms) var(--astra-ease, ease);
+}
+
+/* Brighter-Never-Darker: card → card-2, hairline → strong. Без подъёма. */
+.orders-card:hover {
+    background: var(--astra-card-2, #1F1F23);
+    border-color: var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+}
+
+.orders-card-main {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+/* Название товара — главное в карточке. Кнопка без хрома;
+   обрезается CSS-ом по ширине, а не JS-ом на 20 символах. */
+.orders-card-title {
+    appearance: none;
+    -webkit-appearance: none;
+    align-self: flex-start;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--astra-ink, #ECEAEE);
+    font-family: var(--astra-body, "Golos Text", sans-serif);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.orders-card-title:focus-visible {
+    outline: 2px solid var(--astra-ink, #ECEAEE);
+    outline-offset: 3px;
+    border-radius: var(--astra-r-sm, 10px);
+}
+
+/* служебная строка: № · дата */
+.orders-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: 0;
+    color: var(--astra-ink-faint, #75727C);
+    font-size: 13px;
+    line-height: 1.4;
+    font-variant-numeric: tabular-nums;
+}
+
+.orders-card-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+/* Money-Speaks-Loudest: мягкий розовый, крупнее подписей */
+.orders-card-price {
+    font-family: var(--astra-display, "Unbounded", sans-serif);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--astra-soft, #FF89D6);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.orders-card-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 16px;
+    border-top: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+}
+
+/* ---------- статус: одна плашка, тон из статусной палитры ---------- */
+.orders-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px;              /* было 4px — компенсирует уменьшение line-height */
+    border: 1px solid transparent;
+    border-radius: var(--astra-r-sm, 10px);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;                  /* ← ключевое: 12px line-box */
+    white-space: nowrap;
+}
+
+/* точка — различие не только цветом: форма + подпись */
+.orders-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+    transform: translateY(1.5px);
+}
+
+.orders-status--ok {
+    background: rgba(61, 220, 151, 0.1);
+    border-color: rgba(61, 220, 151, 0.24);
+    color: var(--astra-ok, #3DDC97);
+}
+
+.orders-status--warn {
+    background: rgba(255, 193, 77, 0.1);
+    border-color: rgba(255, 193, 77, 0.26);
+    color: var(--astra-warn, #FFC14D);
+}
+
+.orders-status--err {
+    background: rgba(255, 77, 94, 0.1);
+    border-color: rgba(255, 77, 94, 0.26);
+    color: #ff8a95;
+}
+
+.orders-status--neutral {
+    background: rgba(236, 234, 238, 0.05);
+    border-color: var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+    color: var(--astra-ink-dim, #A5A2AB);
+}
+
+/* ---------- кнопки ----------
+   Buttons differ by FILL, never by shape or face: обе — радиус 22,
+   Unbounded 600/14, 44px. */
+.orders-pay-btn,
+.orders-ghost-btn,
+.order-review-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 22px;
+    border-radius: var(--astra-r-md, 22px);
+    font-family: var(--astra-display, "Unbounded", sans-serif);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition:
+        background var(--astra-t-color, 150ms) var(--astra-ease, ease),
+        border-color var(--astra-t-color, 150ms) var(--astra-ease, ease),
+        color var(--astra-t-color, 150ms) var(--astra-ease, ease);
+}
+
+.orders-pay-btn,
+.order-review-submit {
+    border: none;
+    background: var(--astra-pink-fill, #DD0184);
+    color: var(--astra-on-pink, #FFFFFF);
+    box-shadow: none;
+}
+
+.orders-pay-btn:hover:not(:disabled),
+.order-review-submit:hover:not(:disabled) {
+    background: var(--astra-pink-bright, #E30189);
+}
+
+.orders-ghost-btn {
+    border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--astra-ink, #ECEAEE);
+}
+
+.orders-ghost-btn:hover {
+    background: rgba(255, 255, 255, 0.075);
+    border-color: rgba(236, 234, 238, 0.3);
+}
+
+.orders-pay-btn:active:not(:disabled),
+.orders-ghost-btn:active,
+.order-review-submit:active:not(:disabled) {
+    transform: scale(0.985);
+    transition-duration: 80ms;
+}
+
+.orders-pay-btn:focus-visible,
+.order-review-submit:focus-visible,
+.orders-ghost-btn:focus-visible {
+    outline: 2px solid var(--astra-ink, #ECEAEE);
+    outline-offset: 3px;
+}
+
+/* Disabled — смена поверхности, никогда не opacity (белый на розовом
+   с прозрачностью падает до ~2.5:1) */
+.orders-pay-btn:disabled,
+.order-review-submit:disabled {
+    background: var(--astra-card-2, #1F1F23);
+    color: var(--astra-ink-dim, #A5A2AB);
+    cursor: progress;
+}
+
+.orders-pay-btn.is-block {
+    width: 100%;
+}
+
+/* ================================================================
+   Диалог заказа
+   ================================================================ */
+
+.order-modal-title-row {
+    display: block;
+    width: 100%;
+}
+
+/* номер заказа не рвётся посередине («A7K-» / «4090») */
+.order-modal-number {
+    white-space: nowrap;
+}
+
+.order-modal-close-btn {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--astra-ink-dim);
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: var(--astra-r-md);
+  transition: background var(--astra-t-color) var(--astra-ease), color var(--astra-t-color) var(--astra-ease);
+}
+
+.order-modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--astra-ink);
+}
+
+.order-modal-close-btn:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 2px;
+}
+
+.order-details {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    font-family: var(--astra-body, "Golos Text", sans-serif);
+    color: var(--astra-ink, #ECEAEE);
+}
+
+/* Сводка: что, сколько, статус — и единственное действие, если нужно */
+.order-summary {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.orders-card {
-    background: #1a1a1c;
-    border-radius: 18px;
-    padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease) backwards;
-    transition:
-        transform var(--duration-fast, 0.2s) var(--ease-out-smooth, ease),
-        border-color var(--duration-fast, 0.2s) ease,
-        box-shadow var(--duration-fast, 0.2s) ease;
-}
-
-.orders-list > .orders-card:nth-child(1) { animation-delay: 0.03s; }
-.orders-list > .orders-card:nth-child(2) { animation-delay: 0.06s; }
-.orders-list > .orders-card:nth-child(3) { animation-delay: 0.09s; }
-.orders-list > .orders-card:nth-child(n+4) { animation-delay: 0.12s; }
-
-.orders-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(226, 121, 155, 0.18);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
-}
-
-.orders-card-row {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.orders-card-badges {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-end;
-}
-
-.orders-paid-badge {
-    border-radius: 999px;
-    padding: 5px 11px;
-    font-size: 11px;
+.order-summary-product {
+    margin: 0;
+    font-size: 18px;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.order-summary-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+}
+
+.order-summary-total {
+    font-family: var(--astra-display, "Unbounded", sans-serif);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--astra-soft, #FF89D6);
+    font-variant-numeric: tabular-nums;
+}
+
+.order-summary .orders-pay-btn {
+    margin-top: 4px;
+}
+
+/* Факты — таблица «подпись → значение» на волосяных линиях */
+.order-facts {
+    margin: 0;
+    border-top: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+}
+
+.order-fact {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.order-fact dt {
+    flex: none;
+    color: var(--astra-ink-dim, #A5A2AB);
+}
+
+.order-fact dd {
+    margin: 0;
+    min-width: 0;
+    color: var(--astra-ink, #ECEAEE);
+    text-align: right;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+}
+
+.order-section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Подзаголовок панели — голос Title: Mon Trappist, КАПС */
+.order-section-title {
+    margin: 0;
+    font-family: var(--astra-heading, "Mon Trappist", sans-serif);
+    font-size: calc((12px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
     text-transform: uppercase;
+    color: var(--astra-ink-dim, #A5A2AB);
 }
 
-.orders-paid-badge.is-paid {
-    background: rgba(46, 204, 113, 0.14);
-    color: #7dffb0;
-    border: 1px solid rgba(46, 204, 113, 0.25);
+/* ---------- выданные данные ---------- */
+.order-delivery {
+    padding: 4px 16px;
+    border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+    border-radius: var(--astra-r-sm, 10px);
+    background: rgba(255, 255, 255, 0.025);
 }
 
-.orders-paid-badge.is-unpaid {
-    background: rgba(255, 193, 7, 0.12);
-    color: #ffd27a;
-    border: 1px solid rgba(255, 193, 7, 0.22);
+.order-delivery-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.orders-card-title {
-    font-weight: 800;
-    font-size: 16px;
-    color: #f5f5f5;
-    line-height: 1.3;
-}
-
-.orders-badge {
-    background: rgba(255, 255, 255, 0.07);
-    border-radius: 999px;
-    padding: 5px 11px;
+.order-delivery-caption {
+    margin: 12px 0 0;
+    font-family: var(--astra-display, "Unbounded", sans-serif);
     font-size: 11px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.82);
-    text-transform: lowercase;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    letter-spacing: 0.04em;
+    color: var(--astra-ink-faint, #75727C);
+    font-variant-numeric: tabular-nums;
 }
 
-.orders-card-meta {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    display: grid;
+.order-payload {
+    margin: 0;
+}
+
+.order-payload-row {
+    display: flex;
+    flex-direction: column;
     gap: 6px;
-    color: rgba(255, 255, 255, 0.72);
-    font-size: 13px;
-    line-height: 1.4;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
 }
 
-.orders-chat-link-wrap {
-    margin-top: 8px;
+.order-payload-row:last-child {
+    border-bottom: none;
 }
 
-.orders-chat-link {
+.order-payload-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--astra-ink-dim, #A5A2AB);
+}
+
+.order-payload-value {
+    margin: 0;
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.order-payload-list {
+    display: flex;
+    flex-direction: column;
+}
+
+/* соседние ваучеры в массиве разделяет волосяная линия */
+.order-payload-item + .order-payload-item {
+    border-top: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+}
+
+/* вложенные уровни — отступ, без лишних рамок */
+.order-payload-value .order-payload {
+    padding-left: 12px;
+    border-left: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+}
+
+.order-copy-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Моноширинный — здесь по делу: 0/O и 1/l/I в кодах */
+.order-code-value {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+    border-radius: var(--astra-r-sm, 10px);
+    background: var(--astra-ash, #0B0B0D);
+    color: var(--astra-ink, #ECEAEE);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    word-break: break-all;
+}
+
+.order-copy-btn {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: none;
     display: inline-flex;
     align-items: center;
-    color: var(--accent, #e2799b);
-    text-decoration: none;
-    font-weight: 700;
-    font-size: 13px;
-    padding: 8px 12px;
-    border-radius: 10px;
-    background: rgba(226, 121, 155, 0.1);
-    border: 1px solid rgba(226, 121, 155, 0.2);
-    transition:
-        background var(--duration-fast, 0.2s) ease,
-        color var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) ease;
-}
-
-.orders-chat-link:hover {
-    background: rgba(226, 121, 155, 0.18);
-    color: #f5d4e0;
-    transform: translateX(2px);
-}
-
-.orders-card-actions {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    display: flex;
-    justify-content: flex-end;
-}
-
-.orders-pay-btn {
-    padding: 11px 20px;
-    background: linear-gradient(135deg, #e2799b 0%, #d0688a 100%);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+    border-radius: var(--astra-r-sm, 10px);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--astra-ink-dim, #A5A2AB);
     cursor: pointer;
-    font-weight: 800;
-    font-size: 14px;
-    box-shadow: 0 4px 16px var(--accent-glow, rgba(226, 121, 155, 0.3));
     transition:
-        background var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) var(--ease-spring, ease),
-        box-shadow var(--duration-fast, 0.2s) ease;
+        background var(--astra-t-color, 150ms) var(--astra-ease, ease),
+        border-color var(--astra-t-color, 150ms) var(--astra-ease, ease),
+        color var(--astra-t-color, 150ms) var(--astra-ease, ease);
 }
 
-.orders-pay-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #eb8fb0 0%, #e2799b 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 22px var(--accent-glow, rgba(226, 121, 155, 0.4));
+.order-copy-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
-.orders-pay-btn:active:not(:disabled) {
-    transform: translateY(0) scale(0.98);
+.order-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.075);
+    border-color: rgba(236, 234, 238, 0.3);
+    color: var(--astra-ink, #ECEAEE);
 }
 
-.orders-pay-btn:disabled {
-    opacity: 0.55;
+.order-copy-btn:active {
+    transform: scale(0.98);
+    transition-duration: 80ms;
+}
+
+.order-copy-btn:focus-visible {
+    outline: 2px solid var(--astra-pink, #FF0198);
+    outline-offset: 2px;
+}
+
+.order-copy-btn.is-copied {
+    background: rgba(61, 220, 151, 0.1);
+    border-color: rgba(61, 220, 151, 0.26);
+    color: var(--astra-ok, #3DDC97);
+}
+
+/* ---------- отзыв ---------- */
+.order-review {
+    padding-top: 24px;
+    border-top: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+}
+
+.order-rating-stars {
+    display: flex;
+    gap: 4px;
+    margin-left: -6px;
+}
+
+.order-star {
+    appearance: none;
+    -webkit-appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--astra-r-sm, 10px);
+    background: transparent;
+    color: var(--astra-ink-faint, #75727C);
+    cursor: pointer;
+    transition: color var(--astra-t-color, 150ms) var(--astra-ease, ease);
+}
+
+.order-star svg {
+    width: 28px;
+    height: 28px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+}
+
+/* Выбранная оценка — активный выбор, значит розовый; заливка + контур */
+.order-star.is-filled {
+    color: var(--astra-pink, #FF0198);
+}
+
+.order-star.is-filled svg {
+    fill: currentColor;
+}
+
+.order-star:active:not(:disabled) {
+    transform: scale(0.98);
+    transition-duration: 80ms;
+}
+
+.order-star:focus-visible {
+    outline: 2px solid var(--astra-ink, #ECEAEE);
+    outline-offset: -2px;
+}
+
+.order-star:disabled {
     cursor: not-allowed;
-    transform: none;
+}
+
+.order-review-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--astra-ink, #ECEAEE);
+    margin-bottom: -6px;
+}
+
+.order-review-label span {
+    font-weight: 400;
+    color: var(--astra-ink-faint, #75727C);
+}
+
+/* Overlay field grammar; фокус — только для клавиатуры */
+.order-review-textarea {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 96px;
+    padding: 12px 16px;
+    border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+    border-radius: var(--astra-r-sm, 10px);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--astra-ink, #ECEAEE);
+    font-family: var(--astra-body, "Golos Text", sans-serif);
+    font-size: 16px;
+    line-height: 1.5;
+    resize: vertical;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+        background var(--astra-t-color, 150ms) var(--astra-ease, ease),
+        border-color var(--astra-t-color, 150ms) var(--astra-ease, ease);
+}
+
+.order-review-textarea::placeholder {
+    color: var(--astra-ink-faint, #75727C);
+}
+
+.order-review-textarea:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.order-review-textarea:focus {
+    outline: none;
+    border-color: var(--astra-line-strong, rgba(236, 234, 238, 0.18));
     box-shadow: none;
 }
 
+:root[data-modality="keyboard"] .order-review-textarea:focus {
+    outline: 1px solid var(--astra-focus-field, rgba(236, 234, 238, 0.55));
+    outline-offset: 0;
+}
+
+.order-review-submit {
+    width: 100%;
+}
+
+/* ---------- телефон ---------- */
 @media (max-width: 640px) {
     .orders-page {
-        padding: 20px 12px 40px;
+        padding: 20px 14px 96px;
     }
 
-    .orders-page h1 {
-        font-size: 22px;
+    .orders-title {
+        font-size: calc((20px) * var(--astra-heading-scale, 1));
+        margin-bottom: 16px;
     }
 
     .orders-tabs {
@@ -264,113 +804,192 @@
         grid-template-columns: 1fr 1fr;
         width: 100%;
         box-sizing: border-box;
+        margin: 0 0 14px;
+        gap: 4px; /* добавим небольшой отступ между кнопками */
+        padding: 4px; /* подогнать под размер внутреннего padding */
     }
 
     .orders-tab {
+        min-height: 40px;
+        gap: 6px;
         padding: 8px 10px;
-        font-size: 12px;
+        font-size: 13px;
+        white-space: nowrap;
     }
 
-    .orders-card-row {
+    .orders-card {
+        padding: 14px;
+        column-gap: 12px;
+        row-gap: 12px;
+        border-radius: var(--astra-r-md, 22px);
+    }
+
+    .orders-card-title {
+        font-size: 16px;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .orders-card-price {
+        font-size: 16px;
+    }
+
+    .orders-card-actions {
+        padding-top: 12px;
+    }
+
+    .orders-card-actions > * {
+        flex: 1 1 auto;
+    }
+
+    /* Сводка в модалке: цена и статус — на своей строке */
+    .order-summary-product {
+        font-size: 17px;
+    }
+
+    .order-summary-total {
+        font-size: 20px;
+    }
+
+    .order-summary-line {
+        gap: 8px 10px;
+    }
+
+    /* Факты — по вертикали, иначе подписи сжимаются в столбик */
+    .order-fact {
         flex-direction: column;
-        align-items: stretch;
+        align-items: flex-start;
+        gap: 2px;
     }
 
-    .orders-card-badges {
-        justify-content: flex-start;
+    .order-fact dd {
+        text-align: left;
+    }
+
+    /* Кнопки на всю ширину — палец не промахивается */
+    .orders-pay-btn,
+    .orders-ghost-btn,
+    .order-review-submit {
+        width: 100%;
+    }
+
+    .orders-card-actions .orders-ghost-btn,
+    .orders-card-actions .orders-pay-btn {
+        width: auto;
+    }
+
+    /* Шапка модалки: кнопка чуть плотнее к краю */
+    .order-modal-close-btn {
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+    }
+
+    .order-modal-title-row {
+        padding-right: 56px;
+    }
+
+    /* Код + копирование — с переносом, чтобы код не выдавливал кнопку */
+    .order-copy-row {
+        flex-wrap: wrap;
+    }
+
+    .order-code-value {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    /* Звёзды рейтинга: чуть компактнее */
+    .order-star {
+        width: 40px;
+        height: 40px;
+    }
+
+    .order-star svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* Очень узкие — сводка и цена не должны ломать сетку */
+@media (max-width: 380px) {
+    .orders-card {
+        grid-template-columns: 1fr;
+        row-gap: 10px;
+    }
+
+    .orders-card-side {
+        align-items: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px 12px;
     }
 
     .orders-card-actions {
         justify-content: stretch;
     }
 
-    .orders-pay-btn {
-        width: 100%;
+    .orders-card-actions > * {
+        flex: 1 1 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .orders-page {
+        animation: none;
+    }
+
+    .orders-tab,
+    .orders-card,
+    .orders-pay-btn,
+    .orders-ghost-btn,
+    .order-review-submit,
+    .order-copy-btn,
+    .order-star {
+        transition: none;
     }
 }
 
 
-.order-details {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 4px 0;
-}
-
-.order-detail-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
-    gap: 16px;
-}
-
-.order-detail-row:last-child {
-    border-bottom: none;
-}
-
-.order-detail-label {
-    font-weight: 600;
-    color: #666;
-    min-width: 140px;
-    flex-shrink: 0;
-}
-
-.order-detail-row span:last-child {
-    /* color: #333; */
-    word-break: break-word;
-    text-align: right;
-}
-
-.order-status-processing {
-    color: #f59e0b;
-    font-weight: 500;
-}
-
-.order-status-completed {
-    color: #10b981;
-    font-weight: 500;
-}
-
-.order-status-canceled {
-    color: #ef4444;
-    font-weight: 500;
-}
-
-.order-status-created {
-    color: #6b7280;
-    font-weight: 500;
-}
-
-.order-paid {
-    color: #10b981;
-    font-weight: 500;
-}
-
-.order-unpaid {
-    color: #ef4444;
-    font-weight: 500;
-}
-
-.order-detail-data {
-    flex-direction: column;
-    gap: 8px;
-}
-
-.order-detail-data .order-detail-label {
-    margin-bottom: 4px;
-}
-
-.order-detail-pre {
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 6px;
-    font-size: 12px;
-    overflow: auto;
-    max-height: 200px;
+.orders-list,
+.orders-card {
     width: 100%;
-    margin: 0;
-    border: 1px solid #e9ecef;
-    white-space: pre-wrap;
-    word-break: break-word;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.orders-card-main,
+.orders-card-side {
+    min-width: 0;
+}
+
+.orders-ghost-btn {
+    position: relative; /* если ещё нет */
+}
+
+.orders-btn-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    margin-left: 6px;
+    border-radius: 9px;
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+    font-family: var(--astra-display);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.orders-btn-badge {
+    margin-left: 6px;
+    box-shadow: none;
 }

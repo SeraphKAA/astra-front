@@ -25,7 +25,7 @@ const NotFound404 = () => {
         </section>
 
         <section className="not-found-actions">
-          <NavLink to="/menu" className="not-found-btn not-found-btn-primary">
+          <NavLink to="/main" className="not-found-btn not-found-btn-primary">
             На главную
           </NavLink>
           <NavLink to="/basket" className="not-found-btn not-found-btn-secondary">

@@ -41,15 +41,24 @@ export const normalizeMoneyInput = (value) => {
   return `${parts[0]}.${parts.slice(1).join("").slice(0, 2)}`;
 };
 
-export const normalizeSearchQuery = (value, maxLen = 30) => {
+/**
+ * Санитайзер ДЛЯ НАБОРА: только белый список символов и длина.
+ * Защиту от инъекций здесь не запускаем — она возвращает пустую строку,
+ * и поле очищалось прямо под курсором на промежуточном вводе («--»).
+ * Проверка живёт в normalizeSearchQuery, который вызывается при отправке.
+ */
+export const normalizeSearchTyping = (value, maxLen = 60) => {
   const s = String(value ?? "")
     .replace(/\s+/g, " ")
-    .replace(/[^\p{L}\p{N}\s\-_.]/gu, "")
-    .trim();
-  const normalized = s.slice(0, maxLen);
-  const sqlError = validateNoSqlInjection(normalized, "Поиск");
+    .replace(/[^\p{L}\p{N}\s\p{P}\p{S}]/gu, "");
+  return s.slice(0, maxLen);
+};
+
+export const normalizeSearchQuery = (value, maxLen = 60) => {
+  const s = normalizeSearchTyping(value, maxLen).trim();
+  const sqlError = validateNoSqlInjection(s, "Поиск");
   if (sqlError) return "";
-  return normalized;
+  return s;
 };
 
 export const validateNickname = (value) => {

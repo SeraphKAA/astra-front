@@ -12,10 +12,11 @@ import {
     getProductById,
     updateProduct,
     importProductsFromFile,
+    roundPricesToNine,
 } from "../../entities/product/api/productApi";
 import { getAllCategories } from "../../entities/category/api/categoryApi";
 import {
-    changeMainProductImage,
+    changeProductImageType,
     deleteProductImage,
     getProductImages,
     uploadProductImage,
@@ -34,6 +35,7 @@ import {
 import { DuplicateIcon, CameraIcon, PencilIcon, TrashIcon } from "../../shared/svgIcons";
 import { DuplicateSettingsModal } from "../../shared/ui/DuplicateSettingsModal/DuplicateSettingsModal";
 import styles from './admin.module.css';
+import { RabbitBoostSettings, withRabbitService } from "./RabbitBoostSettings";
 
 const PRODUCT_DUPLICATE_FIELDS = [
     { key: "image", label: "Главное фото" },
@@ -46,6 +48,7 @@ const PRODUCT_DUPLICATE_FIELDS = [
     { key: "is_auto_delivery", label: "Автовыдача" },
     { key: "is_active", label: "Статус активности" },
     { key: "popularity", label: "Популярность" },
+    { key: "priority", label: "Приоритет" },
     { key: "quantity", label: "Остаток" },
     { key: "fulfillment_provider", label: "Провайдер" },
     { key: "provider_service", label: "Сервис провайдера" },
@@ -80,6 +83,7 @@ export const ProductsPage = () => {
         name: "",
         description: "",
         price: "",
+        quantity: 0,
         category_id: "",
         main_category: "all",
         platform: "pc",
@@ -87,17 +91,66 @@ export const ProductsPage = () => {
         is_auto_delivery: false,
         is_active: true,
         popularity: 0,
+        priority: 0,
         extra_checkout_fields: [],
         fulfillment_provider: "none",
         provider_service: "",
         provider_params_json: "",
         checkout_requirements_json: "",
     };
+    const [rounding, setRounding] = useState(false);
     const [formData, setFormData] = useState(initialFormData);
     const [categories, setCategories] = useState([]);
+    
+    const [filterCategoryId, setFilterCategoryId] = useState("");
+    const [filterPriceMin, setFilterPriceMin] = useState("");
+    const [filterPriceMax, setFilterPriceMax] = useState("");
+    const [filterQuantity, setFilterQuantity] = useState("all"); // all | in_stock | out_of_stock
+    const [filterPlatform, setFilterPlatform] = useState("all");
+    const [filterDeliveryType, setFilterDeliveryType] = useState("all");
+    const [filterByPriority, setFilterByPriority] = useState(false);
+    
+    const [applied, setApplied] = useState({
+        search: "",
+        mainCategory: "all",
+        isActive: "all",
+        categoryId: "",
+        priceMin: "",
+        priceMax: "",
+        quantity: "all",
+        platform: "all",
+        deliveryType: "all",
+        byPriority: false,
+    });
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            setApplied({
+                search: filterText.trim(),
+                mainCategory: filterMainCategory,
+                isActive: filterActive,
+                categoryId: filterCategoryId,
+                priceMin: filterPriceMin,
+                priceMax: filterPriceMax,
+                quantity: filterQuantity,
+                platform: filterPlatform,
+                deliveryType: filterDeliveryType,
+                byPriority: filterByPriority,
+            });
+        }, 350);
+        return () => clearTimeout(t);
+    }, [
+        filterText, filterMainCategory, filterActive,
+        filterCategoryId, filterPriceMin, filterPriceMax,
+        filterQuantity, filterPlatform, filterDeliveryType,
+        filterByPriority, 
+    ]);
+
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState("");
     const [productImages, setProductImages] = useState([]);
+    const [uploadImageType, setUploadImageType] = useState("main");
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
@@ -112,7 +165,13 @@ export const ProductsPage = () => {
 
     useEffect(() => {
         setPage(1);
-    }, [filterDebounced, filterMainCategory, filterActive, pageSize]);
+    }, [applied, pageSize]);
+
+    const parseNumber = (v) => {
+        if (v === "" || v == null) return undefined;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : undefined;
+    };
 
     const fetchProducts = useCallback(async () => {
         setLoading(true);
@@ -120,9 +179,21 @@ export const ProductsPage = () => {
             const data = await getProductsMiniList({
                 page,
                 size: pageSize,
-                search: filterDebounced || undefined,
-                main_category: filterMainCategory !== "all" ? filterMainCategory : undefined,
-                is_active: filterActive !== "all" ? filterActive : undefined,
+                search: applied.search || undefined,
+                main_category: applied.mainCategory !== "all" ? applied.mainCategory : undefined,
+                is_active: applied.isActive !== "all" ? applied.isActive : undefined,
+
+                category_id: applied.categoryId ? Number(applied.categoryId) : undefined,
+
+                price_min: parseNumber(applied.priceMin),
+                price_max: parseNumber(applied.priceMax),
+
+                quantity_min: applied.quantity === "in_stock" ? 1 : undefined,
+                quantity_max: applied.quantity === "out_of_stock" ? 0 : undefined,
+
+                platform: applied.platform !== "all" ? applied.platform : undefined,
+                delivery_type: applied.deliveryType !== "all" ? applied.deliveryType : undefined,
+                by_priority: applied.byPriority || undefined,
             });
             const list = Array.isArray(data?.products) ? data.products : [];
             const nextTotal = data?.total ?? list.length;
@@ -134,14 +205,38 @@ export const ProductsPage = () => {
                 setPage(nextPages);
             }
         } catch (error) {
-            // console.error('Error fetching products:', error);
+            pushToast({ type: "error", message: error?.message || "Не удалось загрузить товары" });
             setProducts([]);
             setTotal(0);
             setPages(1);
         } finally {
             setLoading(false);
         }
-    }, [page, pageSize, filterDebounced, filterMainCategory, filterActive]);
+    }, [page, pageSize, applied]);
+
+    const filterCategoryOptions = useMemo(
+        () =>
+            categories
+                .filter((cat) => cat.level >= 1)
+                .map((cat) => ({
+                    id: cat.id,
+                    label: `${cat.level > 1 ? "— " : ""}${cat.name}`,
+                })),
+        [categories]
+    );
+
+    const resetFilters = () => {
+        setFilterText("");
+        setFilterMainCategory("all");
+        setFilterActive("all");
+        setFilterCategoryId("");
+        setFilterPriceMin("");
+        setFilterPriceMax("");
+        setFilterQuantity("all");
+        setFilterPlatform("all");
+        setFilterDeliveryType("all");
+        setFilterByPriority(false);
+    };
 
     useEffect(() => {
         fetchProducts();
@@ -167,7 +262,7 @@ export const ProductsPage = () => {
             walk(Array.isArray(tree) ? tree : [tree], 0, null);
             setCategories(flattened);
         } catch (error) {
-            // console.error('Error fetching categories:', error);
+            pushToast({ type: "error", message: error?.message || "Не удалось загрузить изображение" });
             setCategories([]);
         }
     };
@@ -182,6 +277,28 @@ export const ProductsPage = () => {
             };
         });
     }, [categories]);
+
+    const handleRoundPrices = async () => {
+        if (rounding) return;
+        setRounding(true);
+        try {
+            const result = await roundPricesToNine();
+            pushToast({
+                type: "success",
+                message: result?.updated
+                    ? `Обновлено цен: ${result.updated}`
+                    : "Все цены уже оканчиваются на 9 — менять нечего",
+            });
+            await fetchProducts();
+        } catch (e) {
+            pushToast({
+                type: "error",
+                message: getApiErrorMessage(e, "Не удалось округлить цены"),
+            });
+        } finally {
+            setRounding(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -212,7 +329,9 @@ export const ProductsPage = () => {
             const payload = {
                 ...formData,
                 price: Number(formData.price),
+                quantity: Number(formData.quantity) || 0,
                 popularity: Math.max(0, Number(formData.popularity) || 0),
+                priority: Math.max(0, Number(formData.priority) || 0),
                 category_id: Number(formData.category_id),
                 fulfillment_provider: formData.fulfillment_provider || "none",
                 provider_service: (formData.provider_service || "").trim() || null,
@@ -231,7 +350,6 @@ export const ProductsPage = () => {
             setModalOpen(false);
             resetForm();
         } catch (error) {
-            // console.error('Error saving product:', error);
             setError(error?.message || "Не удалось сохранить товар");
         } finally {
             setIsSubmitting(false);
@@ -244,7 +362,7 @@ export const ProductsPage = () => {
                 await deleteProduct(id);
                 fetchProducts();
             } catch (error) {
-                // console.error('Error deleting product:', error);
+                pushToast({ type: "error", message: error?.message || "Не удалось удалить товар" });
             }
         }
     };
@@ -253,18 +371,29 @@ export const ProductsPage = () => {
         e.preventDefault();
         if (!imageFile || !selectedProduct) return;
 
-        const formData = new FormData();
-        formData.append('file', imageFile);
-
         try {
-            await uploadProductImage(selectedProduct.id, imageFile, productImages.length === 0);
+            // Передаём выбранный тип (main/desktop/mobile)
+            await uploadProductImage(selectedProduct.id, imageFile, uploadImageType);
             const images = await getProductImages(selectedProduct.id);
             setProductImages(images || []);
             fetchProducts();
             setImageFile(null);
-            setImagePreview('');
+            setImagePreview("");
+            pushToast({ type: "success", message: "Изображение загружено" });
         } catch (error) {
-            // console.error('Error uploading image:', error);
+            pushToast({ type: "error", message: error?.message || "Не удалось загрузить изображение" });
+        }
+    };
+
+    const handleChangeImageType = async (imageId, newType) => {
+        try {
+            await changeProductImageType(imageId, newType);
+            // Обновляем список изображений
+            const images = await getProductImages(selectedProduct.id);
+            setProductImages(images || []);
+            pushToast({ type: "success", message: "Тип изображения обновлён" });
+        } catch (error) {
+            pushToast({ type: "error", message: error?.message || "Не удалось изменить тип" });
         }
     };
 
@@ -276,7 +405,7 @@ export const ProductsPage = () => {
                 setProductImages(images || []);
                 fetchProducts();
             } catch (error) {
-                // console.error('Error deleting image:', error);
+                pushToast({ type: "error", message: error?.message || "Не удалось удалить изображение" });
             }
         }
     };
@@ -287,42 +416,130 @@ export const ProductsPage = () => {
     };
 
     const handleImportProductsFile = async (e) => {
-        const file = e.target?.files?.[0];
-        if (!file) return;
+        const files = Array.from(e.target?.files || []);
+        if (files.length === 0) return;
+
         setImportBusy(true);
         setImportSummary(null);
+
+        const summary = { created: 0, failed: 0, updated: 0, items: [] };
+
         try {
-            const res = await importProductsFromFile(file);
-            setImportSummary(res);
-            const failed = Number(res?.failed || 0);
-            const created = Number(res?.created || 0);
+            for (let i = 0; i < files.length; i += 1) {
+                const file = files[i];
+                try {
+                    const res = await importProductsFromFile(file);
+                    const created = Number(res?.created || 0);
+                    const updated = Number(res?.updated || 0);
+                    const failed = Number(res?.failed || 0);
+                    summary.created += created;
+                    summary.updated += updated;
+                    summary.failed += failed;
+
+                    const items = Array.isArray(res?.items) ? res.items : [];
+                    const baseIndex = summary.items.length;
+                    for (const item of items) {
+                        summary.items.push({
+                            ...item,
+                            /* индекс — сквозной, чтобы в UI было видно
+                            «#42», а не «#3» у каждого второго файла */
+                            index: baseIndex + Number(item.index || 0),
+                            /* к строке добавляем имя файла — иначе по «Строка 5»
+                            непонятно, в каком файле ошибка */
+                            sheet_row: item.sheet_row,
+                            file_name: file.name,
+                        });
+                    }
+                } catch (err) {
+                    /* Файл целиком не ушёл (не JSON, 500 и т.п.) —
+                    фиксируем и продолжаем со следующим. */
+                    summary.failed += 1;
+                    summary.items.push({
+                        index: summary.items.length,
+                        sheet_row: null,
+                        file_name: file.name,
+                        ok: false,
+                        error: err?.message || "Не удалось импортировать файл",
+                    });
+                }
+
+                setImportSummary({ ...summary });
+            }
+
             pushToast({
-                type: failed > 0 ? "info" : "success",
-                message: `Импорт завершён: создано ${created}, с ошибками ${failed}`,
+                type: summary.failed > 0 ? "info" : "success",
+                message:
+                    files.length > 1
+                        ? `Импорт завершён: создано ${summary.created}, обновлено ${summary.updated}, с ошибками ${summary.failed} (${files.length} файлов)`
+                        : `Импорт завершён: создано ${summary.created}, обновлено ${summary.updated}, с ошибками ${summary.failed}`,
             });
+
             await fetchProducts();
-        } catch (err) {
-            pushToast({ type: "error", message: err?.message || "Не удалось импортировать товары" });
         } finally {
             setImportBusy(false);
             if (e?.target) e.target.value = "";
         }
     };
+    // const handleImportProductsFile = async (e) => {
+    //     const file = e.target?.files?.[0];
+    //     if (!file) return;
+    //     setImportBusy(true);
+    //     setImportSummary(null);
+    //     try {
+    //         const res = await importProductsFromFile(file);
+    //         setImportSummary(res);
+    //         const failed = Number(res?.failed || 0);
+    //         const created = Number(res?.created || 0);
+    //         pushToast({
+    //             type: failed > 0 ? "info" : "success",
+    //             message: `Импорт завершён: создано ${created}, с ошибками ${failed}`,
+    //         });
+    //         await fetchProducts();
+    //     } catch (err) {
+    //         pushToast({ type: "error", message: err?.message || "Не удалось импортировать товары" });
+    //     } finally {
+    //         setImportBusy(false);
+    //         if (e?.target) e.target.value = "";
+    //     }
+    // };
+
+    const loadAllTargets = useCallback(async (excludeId) => {
+        let allItems = [];
+        let page = 1;
+        const size = 100;
+        let hasMore = true;
+        while (hasMore) {
+            const data = await getProductsMiniList({ page, size });
+            const list = Array.isArray(data?.products) ? data.products : [];
+            allItems = allItems.concat(list);
+            if (list.length < size) {
+                hasMore = false;
+            } else {
+                page++;
+            }
+        }
+        return allItems.filter(item => item.id !== excludeId);
+    }, []);
 
     const openDuplicateModal = async (product) => {
         setDuplicateSource(product);
         setDuplicateModalOpen(true);
         try {
-            const data = await getProductsMiniList({ page: 1, size: 100 });
-            const list = Array.isArray(data?.products) ? data.products : [];
+            const allTargets = await loadAllTargets(product.id);
             setDuplicateTargets(
-                list
-                    .filter((item) => item.id !== product.id)
-                    .map((item) => ({
-                        id: item.id,
-                        label: item.name,
-                        depth: 0,
-                    }))
+                allTargets.map((item) => ({
+                    id: item.id,
+                    label: item.name,
+                    depth: 0,
+                    /* Доп. поля — только для клиентских фильтров в модалке.
+                    Сервер всё равно отдаёт полный список, второго запроса
+                    при смене фильтра не будет. */
+                    price: item.price,
+                    category_id: item.category_id,
+                    platform: item.platform,
+                    delivery_type: item.delivery_type,
+                    quantity: item.quantity,
+                }))
             );
         } catch {
             setDuplicateTargets([]);
@@ -380,6 +597,7 @@ export const ProductsPage = () => {
                 name: full.name,
                 description: full.description || "",
                 price: full.price,
+                quantity: full.quantity ?? 0,
                 category_id: full.category_id,
                 main_category: full.main_category || "games",
                 platform: full.platform || "pc",
@@ -387,6 +605,7 @@ export const ProductsPage = () => {
                 is_auto_delivery: Boolean(full.is_auto_delivery),
                 is_active: Boolean(full.is_active),
                 popularity: full.popularity ?? 0,
+                priority: full.priority ?? 0,
                 fulfillment_provider: full.fulfillment_provider || "none",
                 provider_service: full.provider_service || "",
                 provider_params_json: full.provider_params ? JSON.stringify(full.provider_params, null, 2) : "",
@@ -400,6 +619,7 @@ export const ProductsPage = () => {
                 name: product.name,
                 description: product.description || "",
                 price: product.price,
+                quantity: product.quantity ?? 0,
                 category_id: product.category_id,
                 main_category: product.main_category || "games",
                 platform: product.platform || "pc",
@@ -407,6 +627,7 @@ export const ProductsPage = () => {
                 is_auto_delivery: Boolean(product.is_auto_delivery),
                 is_active: Boolean(product.is_active),
                 popularity: product.popularity ?? 0,
+                priority: product.priority ?? 0,
                 extra_checkout_fields: [],
             });
             setError(e?.message || "Не удалось загрузить детали товара");
@@ -419,6 +640,10 @@ export const ProductsPage = () => {
         try {
             const images = await getProductImages(product.id);
             setProductImages(images || []);
+            // Сбросить выбор типа при открытии
+            setUploadImageType("main");
+            setImageFile(null);
+            setImagePreview("");
         } catch (e) {
             setProductImages([]);
         }
@@ -434,10 +659,21 @@ export const ProductsPage = () => {
             <div className={styles.adminHeader}>
                 <h1 className={styles.pageTitle}>Товары</h1>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={rounding}
+                        aria-busy={rounding || undefined}
+                        onClick={handleRoundPrices}
+                        title="Цены товаров ≥ 10 ₽ — вверх до числа, оканчивающегося на 9"
+                    >
+                        {rounding ? "Округляем…" : "Округлить цены до 9"}
+                    </Button>
                     <input
                         ref={importFileRef}
                         type="file"
                         accept=".json,.xlsx,application/json"
+                        multiple
                         style={{ display: "none" }}
                         onChange={handleImportProductsFile}
                     />
@@ -447,7 +683,7 @@ export const ProductsPage = () => {
                         disabled={importBusy}
                         onClick={() => importFileRef.current?.click()}
                     >
-                        {importBusy ? "Импорт…" : "Импорт из файла"}
+                        {importBusy ? "Импорт…" : "Импорт из файлов"}
                     </Button>
                     <Button onClick={() => setModalOpen(true)}>+ Добавить товар</Button>
                 </div>
@@ -459,23 +695,25 @@ export const ProductsPage = () => {
                     style={{
                         marginBottom: 12,
                         padding: 12,
-                        borderRadius: 12,
-                        border: "1px solid rgba(226, 121, 155, 0.35)",
-                        background: "rgba(18, 18, 18, 0.55)",
-                        color: "#f2f2f2",
+                        borderRadius: "var(--astra-r-sm)",
+                        border: "1px solid var(--astra-line-strong)",
+                        background: "var(--astra-card)",
+                        color: "var(--astra-ink)",
                         fontSize: 14,
                     }}
                 >
                     <div style={{ fontWeight: 700, marginBottom: 6 }}>Результат импорта</div>
-                    <div>Создано: {importSummary.created ?? 0}, ошибок: {importSummary.failed ?? 0}</div>
+                    <div>Создано: {importSummary.created ?? 0}, обновлено: {importSummary.updated ?? 0} ошибок: {importSummary.failed ?? 0}</div>
                     {Array.isArray(importSummary.items) && importSummary.failed > 0 && (
                         <ul style={{ margin: "8px 0 0", paddingLeft: 18, maxHeight: 180, overflow: "auto" }}>
                             {importSummary.items
                                 .filter((it) => !it?.ok)
                                 .slice(0, 30)
                                 .map((it) => (
-                                    <li key={`${it.index}-${it.sheet_row ?? "r"}`}>
-                                        {it.sheet_row != null ? `Строка ${it.sheet_row}: ` : `#${it.index + 1}: `}
+                                    <li key={`${it.file_name || ""}-${it.index}-${it.sheet_row ?? "r"}`}>
+                                        {it.file_name ? `${it.file_name}: ` : ""}
+                                        {it.sheet_row != null ? `строка ${it.sheet_row}` : `#${it.index + 1}`}
+                                        {" — "}
                                         {it.error || "ошибка"}
                                     </li>
                                 ))}
@@ -490,32 +728,116 @@ export const ProductsPage = () => {
                     value={filterText}
                     onChange={(e) => setFilterText(e.target.value)}
                 />
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginTop: 8 }}>
                     <select
                         className={styles.formSelect}
-                        value={filterMainCategory}
-                        onChange={(e) => setFilterMainCategory(e.target.value)}
+                        value={filterCategoryId}
+                        onChange={(e) => setFilterCategoryId(e.target.value)}
                         style={{ maxWidth: 240 }}
+                        title="Точная категория товара (не «раздел»)"
                     >
-                        <option value="all">{MAIN_CATEGORY_LABELS.all}</option>
-                        {MAIN_CATEGORY_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                            </option>
+                        <option value="">Все категории</option>
+                        {filterCategoryOptions.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{cat.label}</option>
                         ))}
                     </select>
+
+                    <input
+                        type="number"
+                        min={0}
+                        className={styles.formInput}
+                        placeholder="Цена от"
+                        value={filterPriceMin}
+                        onChange={(e) => setFilterPriceMin(e.target.value)}
+                        style={{ maxWidth: 120 }}
+                    />
+                    <input
+                        type="number"
+                        min={0}
+                        className={styles.formInput}
+                        placeholder="Цена до"
+                        value={filterPriceMax}
+                        onChange={(e) => setFilterPriceMax(e.target.value)}
+                        style={{ maxWidth: 120 }}
+                    />
+
+                    <select
+                        className={styles.formSelect}
+                        value={filterQuantity}
+                        onChange={(e) => setFilterQuantity(e.target.value)}
+                        style={{ maxWidth: 180 }}
+                    >
+                        <option value="all">Любой остаток</option>
+                        <option value="in_stock">В наличии</option>
+                        <option value="out_of_stock">Нет в наличии</option>
+                    </select>
+
+                    <select
+                        className={styles.formSelect}
+                        value={filterPlatform}
+                        onChange={(e) => setFilterPlatform(e.target.value)}
+                        style={{ maxWidth: 160 }}
+                    >
+                        <option value="all">Любая платформа</option>
+                        <option value="pc">pc</option>
+                        <option value="mobile">mobile</option>
+                        <option value="service">service</option>
+                    </select>
+
+                    <select
+                        className={styles.formSelect}
+                        value={filterDeliveryType}
+                        onChange={(e) => setFilterDeliveryType(e.target.value)}
+                        style={{ maxWidth: 200 }}
+                    >
+                        <option value="all">Любая выдача</option>
+                        <option value="code">code</option>
+                        <option value="login_password">login_password</option>
+                        <option value="email_password">email_password</option>
+                        <option value="email_code">email_code</option>
+                        <option value="game_id">game_id</option>
+                        <option value="activation_link">activation_link</option>
+                        <option value="qr_login">qr_login</option>
+                    </select>
+
                     <select
                         className={styles.formSelect}
                         value={filterActive}
                         onChange={(e) => setFilterActive(e.target.value)}
-                        style={{ maxWidth: 240 }}
+                        style={{ maxWidth: 160 }}
+                        title="Фильтр по статусу активности товара"
                     >
-                        <option value="all">Любой статус</option>
-                        <option value="active">Активные</option>
-                        <option value="inactive">Неактивные</option>
+                        <option value="all">Все статусы</option>
+                        <option value="active">Активен</option>
+                        <option value="inactive">Неактивен</option>
                     </select>
-                    <button type="button" className={styles.adminButtonSecondary} onClick={fetchProducts} disabled={loading}>
-                        Обновить
+
+                    <label
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            fontSize: 13,
+                            color: "var(--astra-ink, inherit)",
+                            whiteSpace: "nowrap",
+                        }}
+                        title="Сортировать товары по полю priority (иначе — по popularity)"
+                    >
+                        <input
+                            type="checkbox"
+                            checked={filterByPriority}
+                            onChange={(e) => setFilterByPriority(e.target.checked)}
+                        />
+                        По приоритету
+                    </label>
+
+                    <button
+                        type="button"
+                        className={styles.adminButtonSecondary}
+                        onClick={resetFilters}
+                        disabled={loading}
+                    >
+                        Сбросить фильтры
                     </button>
                 </div>
             </div>
@@ -528,7 +850,9 @@ export const ProductsPage = () => {
                             <th>Изображение</th>
                             <th>Название</th>
                             <th>Цена</th>
+                            <th>Количество</th>
                             <th>Популярность</th>
+                            <th>Приоритет</th>
                             <th>Категория</th>
                             <th>Раздел</th>
                             <th>Статус</th>
@@ -541,22 +865,24 @@ export const ProductsPage = () => {
                                 <tr key={product.id}>
                                     <td>{product.id}</td>
                                     <td>
-                                        {product.image_url && (
+                                        {product.image_main && (
                                             <img
-                                                src={normalizeMediaUrl(product.image_url)}
+                                                src={normalizeMediaUrl(product.image_main)}
                                                 alt={product.name}
                                                 className={styles.productImage}
                                             />
                                         )}
-                                        {!product.image_url && (
+                                        {!product.image_main && (
                                             <div className={styles.productImagePlaceholder}>
                                                 📦
                                             </div>
                                         )}
                                     </td>
-                                    <td>{product.name}</td>
+                                    <td className="text-none">{product.name}</td>
                                     <td>{product.price} ₽</td>
+                                    <td>{product.quantity ?? 0}</td>
                                     <td>{product.popularity ?? 0}</td>
+                                    <td>{product.priority ?? 0}</td>
                                     <td>{product.category_id}</td>
                                     <td>{getMainCategoryLabel(product.main_category)}</td>
                                     <td>
@@ -608,7 +934,7 @@ export const ProductsPage = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="8" style={{ textAlign: 'center', padding: '40px' }}>
+                                <td colSpan="10" style={{ textAlign: 'center', padding: '40px' }}>
                                     Товары не найдены
                                 </td>
                             </tr>
@@ -632,8 +958,21 @@ export const ProductsPage = () => {
             <Modal
                 isOpen={modalOpen}
                 onClose={() => { setModalOpen(false); resetForm(); }}
-                title={editingProduct ? 'Редактировать товар' : 'Добавить товар'}
+                title={
+                    <div>
+                        {editingProduct ? 'Редактировать товар' : 'Добавить товар'}
+                        <button
+                            type="button"
+                            className={styles.modalCloseBtn}
+                            onClick={() => setModalOpen(false)}
+                            aria-label="Закрыть"
+                        >
+                            <span aria-hidden="true">✕</span>
+                        </button>
+                    </div>
+                }
             >
+
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.formGroup}>
                         <label className={styles.formLabel}>Название</label>
@@ -668,6 +1007,22 @@ export const ProductsPage = () => {
                     </div>
 
                     <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Количество</label>
+                        <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            className={styles.formInput}
+                            value={formData.quantity}
+                            onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
+                            required
+                        />
+                        <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+                            Остаток товара на складе
+                        </span>
+                    </div>
+
+                    <div className={styles.formGroup}>
                         <label className={styles.formLabel}>Популярность</label>
                         <input
                             type="number"
@@ -678,7 +1033,22 @@ export const ProductsPage = () => {
                             onChange={(e) => setFormData({ ...formData, popularity: e.target.value })}
                         />
                         <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
-                            Чем выше значение, тем выше товар в каталоге и на главной
+                            Чем выше значение, тем выше товар на главной странице
+                        </span>
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Приоритет</label>
+                        <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            className={styles.formInput}
+                            value={formData.priority}
+                            onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                        />
+                        <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+                            Чем выше значение, тем выше товар в каталоге
                         </span>
                     </div>
 
@@ -766,13 +1136,17 @@ export const ProductsPage = () => {
                         <select
                             className={styles.formSelect}
                             value={formData.fulfillment_provider}
-                            onChange={(e) => setFormData({ ...formData, fulfillment_provider: e.target.value })}
+                            onChange={(e) => setFormData(e.target.value === "rabbitboost"
+                                ? { ...withRabbitService(formData, "discord_boosts"), fulfillment_provider: "rabbitboost" }
+                                : { ...formData, fulfillment_provider: e.target.value })}
                         >
                             <option value="none">none</option>
                             <option value="desslyhub">desslyhub</option>
+                            <option value="rabbitboost">RabbitBoost — Discord</option>
                         </select>
                     </div>
 
+                    {formData.fulfillment_provider === "rabbitboost" && <RabbitBoostSettings form={formData} onChange={setFormData} />}
                     {formData.fulfillment_provider === "desslyhub" && (
                         <>
                             <div className={styles.formGroup}>
@@ -868,7 +1242,12 @@ export const ProductsPage = () => {
             {/* Image Upload Modal */}
             <Modal
                 isOpen={imageModalOpen}
-                onClose={() => { setImageModalOpen(false); setImageFile(null); setImagePreview(''); }}
+                onClose={() => {
+                    setImageModalOpen(false);
+                    setImageFile(null);
+                    setImagePreview("");
+                    setUploadImageType("main");
+                }}
                 title="Управление изображениями"
             >
                 <div className={styles.imageUpload}>
@@ -907,6 +1286,25 @@ export const ProductsPage = () => {
                                 </div>
                             )}
                         </div>
+
+                        {/* НОВОЕ: выбор типа загружаемого изображения */}
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Тип изображения</label>
+                            <select
+                                className={styles.formSelect}
+                                value={uploadImageType}
+                                onChange={(e) => setUploadImageType(e.target.value)}
+                                disabled={!imageFile}
+                            >
+                                <option value="main">Главное</option>
+                                <option value="desktop">Для ПК</option>
+                                <option value="mobile">Для мобильных</option>
+                            </select>
+                            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+                                Для каждого типа можно загрузить только одно изображение.
+                            </span>
+                        </div>
+
                         <button
                             type="submit"
                             className={styles.adminButton}
@@ -917,26 +1315,38 @@ export const ProductsPage = () => {
                     </form>
                     <div className={styles.formGroup}>
                         {(productImages || []).map((image) => (
-                            <div key={image.id} className={styles.actionButtons}>
+                            <div key={image.id} className={styles.imageItem}>
                                 <img
                                     src={normalizeMediaUrl(image.url)}
                                     alt="product"
                                     className={styles.productImage}
                                 />
-                                <button
-                                    type="button"
-                                    className={styles.adminButtonSecondary}
-                                    onClick={() => changeMainProductImage(image.id, true).then(() => getProductImages(selectedProduct.id)).then((images) => setProductImages(images || []))}
-                                >
-                                    {image.is_main ? "Главное" : "Сделать главным"}
-                                </button>
-                                <button
-                                    type="button"
-                                    className={styles.adminButtonSecondary}
-                                    onClick={() => handleDeleteImage(selectedProduct.id, image.id)}
-                                >
-                                    Удалить
-                                </button>
+                                <div>
+                                    <span>Тип: {image.image_type}</span>
+                                    <div className={styles.actionButtons}>
+                                        <select
+                                            value={image.image_type}
+                                            className={styles.imageItemSelect}
+                                            onChange={(e) => {
+                                                changeProductImageType(image.id, String(e.target.value))
+                                                    .then(() => getProductImages(selectedProduct.id))
+                                                    .then((images) => setProductImages(images || []))
+                                                    .catch((err) => pushToast({ type: "error", message: err.message }));
+                                            }}
+                                        >
+                                            <option value="main">Главное</option>
+                                            <option value="desktop">Для ПК</option>
+                                            <option value="mobile">Для мобильных</option>
+                                        </select>
+                                        <button
+                                            type="button"
+                                            className={styles.adminButtonSecondary}
+                                            onClick={() => handleDeleteImage(selectedProduct.id, image.id)}
+                                        >
+                                            Удалить
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -950,6 +1360,7 @@ export const ProductsPage = () => {
                 sourceLabel={duplicateSource ? `${duplicateSource.name} (#${duplicateSource.id})` : ""}
                 fieldOptions={PRODUCT_DUPLICATE_FIELDS}
                 targets={duplicateTargets}
+                categoryOptions={filterCategoryOptions}
                 onSubmit={onDuplicateProductSettings}
                 busy={duplicateBusy}
             />

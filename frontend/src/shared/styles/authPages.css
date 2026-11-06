@@ -1,298 +1,708 @@
-/* Общие стили страниц входа и регистрации */
+/* ============================================================
+   ASTRA — экраны авторизации, мир v3 «ash and signal».
 
-.body-wrapper-log,
-.body-wrapper {
-    min-height: calc(100vh - 140px);
+   Одна пепельная карточка по центру пепельного холста, за ней —
+   тихая фиолетово-розовая подсветка.
+
+   Раунд 5:
+   • появление карточки — reveal-once (подъём 14px + fade, 800мс,
+     единственная кривая), строки формы входят стаггером 60мс с
+     капом 6 и ТОЛЬКО на первой отрисовке — переключение вкладок
+     стаггер не переигрывает;
+   • вкладки — один скользящий индикатор (authTabs.css) плюс
+     direction-aware вход панели ниже (±16px, 300мс);
+   • сообщения об ошибке и успехе входят fade + 2px, 150мс;
+   • скругления: карточка --astra-r-xl, поля и кнопки --astra-r-md,
+     мелкий хром --astra-r-sm — ни 14/16/22/26px, ни «таблеток»;
+   • фокус ПОЛЯ нейтральный (--astra-focus-field), розовый остаётся
+     только на действии; CTA — белые чернила на --astra-pink-fill;
+   • ховеры сдержанные: смена поверхности, без подскока и ореола.
+
+   Ряд вкладок живёт в shared/FieldAuthReg/authTabs.css.
+   Блок «legacy» внизу держит .wrap и .login-button, потому что на
+   них до сих пор опирается widgets/ProfileSetupModal (файл вне
+   этого набора).
+   ============================================================ */
+
+/* ---------- холст страницы ---------- */
+.astra-auth {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 40px 16px 32px;
     box-sizing: border-box;
-    position: relative;
-    animation: fadeIn var(--duration-slow, 0.5s) ease;
+    width: 100%;
+    min-height: 60vh;
+    padding: clamp(28px, 6vh, 64px) 16px clamp(40px, 8vh, 72px);
 }
 
-.body-wrapper-log::before,
-.body-wrapper::before {
-    content: "";
+/* тихая подсветка за карточкой: фиолет информирует, розовый лишь дышит */
+.astra-auth-wash {
     position: absolute;
     inset: 0;
-    background:
-        radial-gradient(ellipse 70% 50% at 50% -10%, rgba(226, 121, 155, 0.14) 0%, transparent 55%),
-        radial-gradient(ellipse 40% 30% at 90% 80%, rgba(226, 121, 155, 0.06) 0%, transparent 50%);
-    pointer-events: none;
     z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(760px 420px at 50% -80px, rgba(140, 97, 236, 0.10), transparent 62%),
+        radial-gradient(560px 400px at 50% 46%, rgba(255, 1, 152, 0.05), transparent 66%);
 }
 
-.div_for_login_,
-.main {
+/* ---------- карточка ---------- */
+.astra-auth-card {
     position: relative;
     z-index: 1;
-    width: min(480px, 100%);
-    padding: 28px 24px 24px;
-    text-align: center;
-    border-radius: 22px;
-    background: rgba(20, 20, 22, 0.88);
-    border: 1px solid rgba(226, 121, 155, 0.22);
-    box-shadow:
-        0 20px 50px rgba(0, 0, 0, 0.42),
-        0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-    backdrop-filter: blur(14px);
-    animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, cubic-bezier(0.22, 1, 0.36, 1));
-    transition:
-        border-color var(--duration-normal, 0.35s) ease,
-        box-shadow var(--duration-normal, 0.35s) ease;
-}
-
-.div_for_login_:hover,
-.main:hover {
-    border-color: rgba(226, 121, 155, 0.32);
-    box-shadow:
-        0 24px 56px rgba(0, 0, 0, 0.45),
-        0 0 40px rgba(226, 121, 155, 0.06);
-}
-
-.div_for_login_ .logo,
-.main .logo {
-    width: 110px;
-    height: auto;
-    margin: 0 auto 14px;
-    display: block;
-    transition: transform var(--duration-slow, 0.5s) var(--ease-out-smooth, ease);
-}
-
-.div_for_login_:hover .logo,
-.main:hover .logo {
-    transform: scale(1.03);
-}
-
-.auth-page-title {
-    margin: 0 0 6px;
-    font-family: 'Inter', system-ui, sans-serif;
-    font-weight: 700;
-    font-size: 22px;
-    line-height: 1.25;
-    color: #fff;
-    letter-spacing: -0.01em;
-}
-
-.auth-subtitle-divider {
-    width: 48px;
-    height: 3px;
-    margin: 0 auto 18px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, transparent, var(--accent, #e2799b), transparent);
-    opacity: 0.85;
-}
-
-.login-methods {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin: 16px 0 10px;
-}
-
-.login-methods .method-btn {
-    width: auto;
-    padding: 9px 14px;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.78);
-    cursor: pointer;
-    font-family: "Montserrat", system-ui, sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    transition:
-        background var(--duration-fast, 0.2s) ease,
-        border-color var(--duration-fast, 0.2s) ease,
-        color var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) var(--ease-spring, ease),
-        box-shadow var(--duration-fast, 0.2s) ease;
-}
-
-.login-methods .method-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    transform: translateY(-1px);
-}
-
-.login-methods .method-btn:active:not(:disabled) {
-    transform: translateY(0) scale(0.97);
-}
-
-.login-methods .method-btn.is-active {
-    background: rgba(226, 121, 155, 0.16);
-    border-color: rgba(226, 121, 155, 0.42);
-    color: #fff;
-    box-shadow: 0 0 0 1px rgba(226, 121, 155, 0.15);
-}
-
-.login-methods .method-btn:disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
-}
-
-.form-group {
-    margin-bottom: 4px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 440px;
+    padding: clamp(22px, 5vw, 30px) clamp(20px, 5vw, 28px) clamp(20px, 5vw, 26px);
     text-align: left;
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-xl);
+    /* One-Shadow: одна нейтральная тень на поверхность */
+    box-shadow: var(--astra-shadow);
 }
 
-.wrap {
+/* ---------- локап над заголовком: маскот + словомарка ----------
+   Части разнесены настоящим зазором; обе наследуют цвет ссылки
+   (плоский currentColor), --astra-paper приравнен к телу карточки. */
+.astra-auth-brand-row {
     display: flex;
     justify-content: center;
-    align-items: center;
-    margin-top: 4px;
+    margin-bottom: 16px;
 }
 
-.login-button,
-.register-button {
+.astra-auth-brand {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 14px 20px;
-    border-radius: 14px;
-    margin-top: 14px;
-    margin-bottom: 8px;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    background: linear-gradient(135deg, #e2799b 0%, #d0688a 100%);
-    width: min(420px, 100%);
-    font-family: "Montserrat", system-ui, sans-serif;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 4px;
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink);
+    --astra-paper: var(--astra-card);
+    transition: color var(--astra-t-color) var(--astra-ease);
+}
+
+.astra-auth-brand:hover,
+.astra-auth-brand:focus-visible {
+    color: var(--astra-pink);
+}
+
+.astra-auth-brand:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 3px;
+}
+
+.astra-auth-mark {
+    display: block;
+    width: 30px;
+    height: 30px;
+    aspect-ratio: 1;
+    flex-shrink: 0;
+}
+
+.astra-auth-word {
+    display: block;
+    height: 18px;
+    width: auto;
+    aspect-ratio: 1180 / 280;
+    flex-shrink: 0;
+}
+
+/* ---------- заголовок ---------- */
+.astra-auth-title {
+    margin: 0 0 6px;
+    font-family: var(--astra-display);
     font-weight: 700;
-    font-size: 15px;
-    box-shadow: 0 6px 20px var(--accent-glow, rgba(226, 121, 155, 0.35));
+    font-size: calc((clamp(20px, 5.2vw, 24px)) * var(--astra-heading-scale, 1));
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-align: center;
+    color: var(--astra-ink);
+}
+
+.astra-auth-sub {
+    margin: 0 0 18px;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    color: var(--astra-ink-dim);
+}
+
+.astra-auth-sub strong {
+    color: var(--astra-ink);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   МОТОРИКА КАРТОЧКИ
+   ============================================================ */
+
+/* Стаггер строк: играет один раз, только когда карточка уже
+   проявилась (.is-revealed ставит useRevealOnce). Задержка приходит
+   из revealDelay(i) — 60мс на шаг, максимум 6 шагов. */
+.astra-auth-card.is-revealed .astra-auth-rise {
+    animation: astra-auth-rise var(--astra-t-enter) var(--astra-ease) both;
+    animation-delay: var(--reveal-delay, 0ms);
+}
+
+@keyframes astra-auth-rise {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Панель под вкладками: направление берётся из --auth-dir (±1),
+   класс .is-switching ставится только после первого переключения —
+   на первой отрисовке работает стаггер, а не проезд. */
+.astra-auth-panel.is-switching {
+    animation: astra-auth-panel-in var(--astra-t-move) var(--astra-ease) both;
+}
+
+@keyframes astra-auth-panel-in {
+    from {
+        opacity: 0;
+        transform: translateX(calc(var(--auth-dir, 1) * 16px));
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ---------- поля ---------- */
+.astra-auth-form {
+    display: block;
+}
+
+.astra-auth-field {
+    display: block;
+    margin: 0 0 14px;
+}
+
+.astra-auth-label {
+    display: block;
+    width: 100%;
+    margin: 0 0 8px;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--astra-ink-dim);
+}
+
+.astra-auth-input,
+.astra-auth-card .password-field-auth-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    height: 48px;
+    margin: 0;
+    padding: 0 16px;
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    /* Sixteen-Pixel-Input: iOS не перепрыгивает вёрстку */
+    font-size: 16px;
+    line-height: 1.4;
+    outline: none;
+    box-shadow: none;
     transition:
-        background var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) var(--ease-spring, ease),
-        box-shadow var(--duration-fast, 0.2s) ease,
-        opacity var(--duration-fast, 0.2s) ease;
+        border-color var(--astra-t-color) var(--astra-ease),
+        box-shadow var(--astra-t-color) var(--astra-ease);
 }
 
-.login-button:hover:not(:disabled),
-.register-button:hover:not(:disabled) {
-    background: linear-gradient(135deg, #eb8fb0 0%, #e2799b 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 28px var(--accent-glow, rgba(226, 121, 155, 0.42));
+/* Brighter-Never-Darker: кромка на ховере светлеет */
+.astra-auth-input:hover:not(:disabled),
+.astra-auth-card .password-field-auth-input:hover:not(:disabled) {
+    border-color: var(--astra-line-strong);
 }
 
-.login-button:active:not(:disabled),
-.register-button:active:not(:disabled) {
-    transform: translateY(0) scale(0.98);
-}
-
-.login-button:disabled,
-.register-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
+/* Клик мышью не подсвечивает поле ничем — ни розовым, ни серым. Индикатор
+   остаётся только для обхода с клавиатуры: ясеневый контур 1px поверх кромки. */
+.astra-auth-input:focus,
+.astra-auth-card .password-field-auth-input:focus {
+    outline: none;
     box-shadow: none;
 }
 
-.text-login {
-    color: rgba(255, 255, 255, 0.72);
-    font-size: 15px;
+:root[data-modality="keyboard"] .astra-auth-input:focus,
+:root[data-modality="keyboard"] .astra-auth-card .password-field-auth-input:focus {
+    outline: 1px solid var(--astra-focus-field);
+    outline-offset: 0;
+}
+
+.astra-auth-input::placeholder,
+.astra-auth-card .password-field-auth-input::placeholder {
+    color: var(--astra-ink-dim);
+}
+
+.astra-auth-input:disabled,
+.astra-auth-card .password-field-auth-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Chrome/Safari перекрашивают автозаполнение своим фоном */
+.astra-auth-input:-webkit-autofill,
+.astra-auth-input:-webkit-autofill:hover,
+.astra-auth-input:-webkit-autofill:focus,
+.astra-auth-card .password-field-auth-input:-webkit-autofill,
+.astra-auth-card .password-field-auth-input:-webkit-autofill:hover,
+.astra-auth-card .password-field-auth-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--astra-ink) !important;
+    caret-color: var(--astra-ink);
+    -webkit-box-shadow: 0 0 0 1000px var(--astra-card-2) inset !important;
+    box-shadow: 0 0 0 1000px var(--astra-card-2) inset !important;
+    transition: background-color 9999s ease-out 0s;
+}
+
+/* Заливка автозаполнения занимает box-shadow целиком, поэтому кольцо для
+   КЛАВИАТУРЫ добавляем первым слоем той же тени. Гейт по модальности: без
+   него автозаполненное поле подсвечивалось и от клика мышью. */
+:root[data-modality="keyboard"] .astra-auth-input:-webkit-autofill:focus,
+:root[data-modality="keyboard"] .astra-auth-card .password-field-auth-input:-webkit-autofill:focus {
+    -webkit-box-shadow:
+        0 0 0 1px var(--astra-focus-field),
+        0 0 0 1000px var(--astra-card-2) inset !important;
+    box-shadow:
+        0 0 0 1px var(--astra-focus-field),
+        0 0 0 1000px var(--astra-card-2) inset !important;
+}
+
+/* поле пароля: кнопка-глаз внутри 48px-поля, хит-зона 44px */
+.astra-auth-card .password-field-auth-input {
+    padding-right: 52px;
+}
+
+.astra-auth-card .password-field-auth-toggle {
+    top: 50%;
+    right: 2px;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 20px;
+    color: var(--astra-ink-dim);
+}
+
+.astra-auth-card .password-field-auth-toggle:hover:not(:disabled) {
+    color: var(--astra-ink);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- единственная розовая CTA ----------
+   clip-path кнопки съедает outline, поэтому кольцо — на обёртке */
+.astra-auth-cta-ring {
+    display: flex;
+    width: 100%;
+    margin-top: 6px;
+    border-radius: var(--astra-r-md);
+}
+
+.astra-auth-cta {
+    width: 100%;
+    min-height: 48px;
+    padding: 13px 20px;
+    box-sizing: border-box;
+    border-radius: var(--astra-r-md);
+}
+
+/* Pink-Only-Where-You-Act: пока действовать нельзя (отправка, таймер
+   повторной отправки, непринятое соглашение) — кнопка уходит в пепел,
+   но остаётся читаемой; штатные 40% прозрачности убили бы контраст */
+.astra-auth-card .astra-auth-cta:disabled {
+    opacity: 1;
+    background: var(--astra-card-2);
+    color: var(--astra-ink-dim);
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.astra-auth-ghost {
+    width: 100%;
+    min-height: 48px;
+    box-sizing: border-box;
+    margin-top: 10px;
+    border-radius: var(--astra-r-md);
+}
+
+.astra-auth-ghost:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* ---------- загрузка ---------- */
+.astra-auth-spin {
+    width: 15px;
+    height: 15px;
+    box-sizing: border-box;
+    /* чернила на розовом теперь белые — кольцо спиннера тоже */
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: var(--astra-on-pink);
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: astra-auth-spin 0.7s linear infinite;
+}
+
+.astra-auth-cta:disabled .astra-auth-spin {
+    border-color: rgba(236, 234, 238, 0.18);
+    border-top-color: var(--astra-ink-dim);
+}
+
+.astra-auth-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 12px 0 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    color: var(--astra-ink-dim);
+    animation: astra-auth-msg-in var(--astra-t-color) var(--astra-ease) both;
+}
+
+.astra-auth-status .astra-auth-spin {
+    border-color: rgba(236, 234, 238, 0.18);
+    border-top-color: var(--astra-ink-dim);
+}
+
+@keyframes astra-auth-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ---------- сообщения: проблема + как её починить ----------
+   Входят движением, а не «выскакивают»: fade + подъём 2px, 150мс. */
+.astra-auth-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: var(--astra-r-md);
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.45;
+    animation: astra-auth-msg-in var(--astra-t-color) var(--astra-ease) both;
+}
+
+@keyframes astra-auth-msg-in {
+    from {
+        opacity: 0;
+        transform: translateY(2px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.astra-auth-alert--error {
+    background: rgba(255, 77, 94, 0.1);
+    border: 1px solid rgba(255, 77, 94, 0.32);
+    color: var(--astra-err);
+}
+
+/* информация — фиолетовая, розовый бережём для действия */
+.astra-auth-alert--info {
+    background: var(--astra-violet-wash);
+    border: 1px solid rgba(140, 97, 236, 0.35);
+    color: #b9a3f5;
+}
+
+.astra-auth-alert-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.astra-auth-alert-body {
+    display: block;
+    min-width: 0;
+}
+
+.astra-auth-alert-text {
+    display: block;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+}
+
+.astra-auth-alert-fix {
+    display: block;
+    margin-top: 4px;
+    font-weight: 400;
+    color: var(--astra-ink-dim);
+}
+
+/* ---------- OTP ----------
+   Базовый вид ячеек живёт в shared/ui/OtpInput/otpInput.module.css;
+   здесь только размер под ширину карточки. Селектор держится за
+   data-атрибут ячейки, а не за её доступное имя (оно русское). */
+.astra-auth-otp {
+    margin: 2px 0 6px;
+}
+
+.astra-auth-otp input[data-otp-cell] {
+    width: 46px;
+    height: 54px;
+    border-radius: var(--astra-r-md);
+    /* Sixteen-Pixel-Input */
+    font-size: 18px;
+}
+
+/* ---------- соглашение ---------- */
+.astra-auth-terms {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 14px 0 2px;
+    padding: 10px 0;
+    min-height: 44px;
+    box-sizing: border-box;
+    cursor: pointer;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--astra-ink-dim);
+}
+
+.astra-auth-terms input[type="checkbox"] {
+    margin-top: 1px;
+    border-radius: var(--astra-r-sm);
+}
+
+/* Заливка чекбокса — --astra-pink-fill (та же, что у кнопок), галочка
+   белая; ореол снят: подсветок в v3 больше нет. */
+.astra-auth-card input[type="checkbox"]:checked {
+    background: var(--astra-pink-fill);
+    border-color: var(--astra-pink-fill);
+    box-shadow: none;
+}
+
+.astra-auth-card input[type="checkbox"]:checked::after {
+    border-color: var(--astra-on-pink);
+}
+
+.astra-auth-card input[type="checkbox"]:hover:not(:disabled) {
+    border-color: var(--astra-line-strong);
+}
+
+.astra-auth-card input[type="checkbox"]:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+.astra-auth-terms-link {
+    color: var(--astra-ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    border-radius: var(--astra-r-sm);
+    transition: color var(--astra-t-color) var(--astra-ease);
+}
+
+.astra-auth-terms-link:hover {
+    color: var(--astra-pink);
+}
+
+.astra-auth-terms-link:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+}
+
+/* ---------- Telegram Login Widget ---------- */
+.astra-auth-tg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 76px;
+    padding: 14px;
+    box-sizing: border-box;
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+}
+
+/* ---------- подвал карточки ---------- */
+.astra-auth-rule {
+    height: 1px;
+    margin: 18px 0 0;
+    background: var(--astra-line);
+}
+
+.astra-auth-foot {
+    margin: 6px 0 0;
+    text-align: center;
+    font-family: var(--astra-body);
+    font-size: 14px;
     line-height: 1.5;
-    margin: 18px 0 4px;
+    color: var(--astra-ink-dim);
 }
 
-.login-href,
-.register-href {
-    font-family: 'Roboto', system-ui, sans-serif;
-    font-weight: 500;
-    font-size: 15px;
-    color: var(--accent, #e2799b);
-    text-decoration: none;
-    transition: color var(--duration-fast, 0.2s) ease;
+.astra-auth-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 4px;
+    font-weight: 600;
+    color: var(--astra-ink-dim);
+    border-radius: var(--astra-r-sm);
+    transition: color var(--astra-t-color) var(--astra-ease);
 }
 
-.login-href:hover,
-.register-href:hover {
-    color: #f0a8c0;
+.astra-auth-link:hover {
+    color: var(--astra-pink);
     text-decoration: underline;
     text-underline-offset: 3px;
 }
 
-.auth-alert {
-    width: min(420px, 100%);
-    margin: 10px auto 4px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    text-align: left;
-    white-space: pre-wrap;
-    font-family: "Montserrat", system-ui, sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    line-height: 1.4;
-    animation: fadeInUp 0.3s var(--ease-out-smooth, ease);
+.astra-auth-link:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 3px;
 }
 
-.auth-alert--error,
-.auth-alert {
-    background: rgba(239, 68, 68, 0.12);
-    border: 1px solid rgba(239, 68, 68, 0.32);
-    color: #ffb4b4;
+/* ============================================================
+   адаптив — до 360px без горизонтальной прокрутки
+   ============================================================ */
+@media (max-width: 480px) {
+    .astra-auth {
+        padding: 24px 12px 40px;
+    }
+
+    .astra-auth-mark {
+        width: 26px;
+        height: 26px;
+    }
+
+    .astra-auth-word {
+        height: 15px;
+    }
+
+    .astra-auth-brand {
+        gap: 10px;
+    }
+
+    .astra-auth-otp input[data-otp-cell] {
+        width: 40px;
+        height: 50px;
+    }
 }
 
-.auth-alert--info {
-    background: rgba(74, 158, 255, 0.1);
-    border: 1px solid rgba(74, 158, 255, 0.28);
-    color: #b8d4ff;
+@media (max-width: 360px) {
+    .astra-auth-otp input[data-otp-cell] {
+        width: 36px;
+    }
 }
 
-.auth-hint {
-    margin: 4px auto 14px;
-    width: min(420px, 100%);
-    text-align: center;
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.78);
-    line-height: 1.45;
-}
-
-.auth-hint strong {
-    color: #fff;
-    font-weight: 600;
-}
-
-.auth-telegram-wrap {
+/* ============================================================
+   LEGACY-ХУКИ. widgets/ProfileSetupModal (вне этого набора) до сих
+   пор рендерит .wrap и .login-button — оставляем их живыми, но
+   переписанными в грамматику v3: заливка --astra-pink-fill, белые
+   чернила, рог-нотч, ховер — только смена заливки (без подскока
+   и без ореола). Удалять можно только вместе с правкой
+   ProfileSetupModal.
+   ============================================================ */
+.wrap {
     display: flex;
     justify-content: center;
-    margin-top: 8px;
-    padding: 12px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    align-items: center;
 }
 
-@media (max-width: 600px) {
-    .body-wrapper-log,
-    .body-wrapper {
-        min-height: calc(100vh - 120px);
-        padding: 24px 12px 20px;
+.login-button {
+    --astra-notch: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: min(420px, 100%);
+    min-height: 48px;
+    padding: 13px 20px;
+    box-sizing: border-box;
+    border: none;
+    cursor: pointer;
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+    font-family: var(--astra-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+    border-radius: var(--astra-r-md);
+    clip-path: polygon(0 0, calc(100% - var(--astra-notch)) 0, 100% var(--astra-notch), 100% 100%, 0 100%);
+    box-shadow: none;
+    transition: background var(--astra-t-color) var(--astra-ease);
+}
+
+.login-button:hover:not(:disabled) {
+    background: var(--astra-pink-bright);
+}
+
+.login-button:active:not(:disabled) {
+    transform: scale(0.985);
+    transition-duration: 80ms;
+}
+
+.login-button:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 3px;
+}
+
+.login-button:disabled {
+    background: var(--astra-card-2);
+    color: var(--astra-ink-dim);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ============================================================
+   reduced motion — длительности зануляются глобально; здесь
+   дополнительно снимаем вращение спиннеров и проезды, чтобы
+   состояние читалось текстом, а не движением
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .astra-auth-spin {
+        animation: none;
+        border-top-color: currentColor;
     }
 
-    .div_for_login_,
-    .main {
-        padding: 22px 16px 18px;
-        border-radius: 18px;
+    .astra-auth-card.is-revealed .astra-auth-rise,
+    .astra-auth-panel.is-switching,
+    .astra-auth-alert,
+    .astra-auth-status {
+        animation: none;
+        opacity: 1;
+        transform: none;
     }
 
-    .auth-page-title {
-        font-size: 20px;
+    .login-button:active:not(:disabled) {
+        transform: none;
     }
+}
 
-    .login-button,
-    .register-button {
-        width: 100%;
-        font-size: 14px;
-        padding: 13px 16px;
-    }
-
-    .login-methods .method-btn {
-        font-size: 12px;
-        padding: 8px 12px;
+/* ============================================================
+   forced-colors — box-shadow не рисуется, возвращаем контур
+   ============================================================ */
+@media (forced-colors: active) {
+    .astra-auth-input:focus,
+    .astra-auth-card .password-field-auth-input:focus {
+        outline: 2px solid Highlight;
+        outline-offset: 1px;
     }
 }

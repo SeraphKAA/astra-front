@@ -47,6 +47,15 @@ export const importProductsBulk = (products) => {
     });
 };
 
+// Округление цен у товаров до 9 
+export const roundPricesToNine = () => {
+    return apiRequest({
+        url: "/product/admin/round-prices-to-nine",
+        method: "POST",
+    });
+};
+
+
 /** Импорт из файла: .json или .xlsx (multipart, поле file) */
 export const importProductsFromFile = (file) => {
     const fd = new FormData();
@@ -74,22 +83,51 @@ export const getProductsByCategory = (categoryId, { page = 1, size = 20 } = {}) 
 };
 
 /** Пагинированный список товаров (краткая информация) */
-export const getProductsMiniList = ({
-    page = 1,
-    size = 20,
-    search,
-    main_category,
-    is_active,
-    category_id,
-} = {}) => {
+export const getProductsMiniList = (dto = {}) => {
+    const {
+        page = 1,
+        size = 20,
+        search,
+        main_category,
+        is_active,
+        category_id,
+        price_min,
+        price_max,
+        quantity_min,
+        quantity_max,
+        platform,
+        delivery_type,
+        by_priority,
+        sort,             // задел на будущее (popularity | price_asc | price_desc | newest)
+    } = dto;
+
     const params = new URLSearchParams({
         page: String(page),
         size: String(size),
     });
-    if (search) params.set("search", search);
-    if (main_category && main_category !== "all") params.set("main_category", main_category);
-    if (is_active && is_active !== "all") params.set("is_active", is_active);
-    if (category_id) params.set("category_id", String(category_id));
+
+    // Один сериализатор вместо простыни if-ов. Пустые значения и
+    // служебное "all" не уходят на бэк — эндпоинт читает отсутствие
+    // параметра как "фильтр не задан".
+    const append = (key, value) => {
+        if (value === undefined || value === null || value === "") return;
+        if (value === "all") return;
+        params.set(key, String(value));
+    };
+
+    append("search",        search);
+    append("main_category", main_category);
+    append("is_active",     is_active);
+    append("category_id",   category_id);
+    append("price_min",     price_min);
+    append("price_max",     price_max);
+    append("quantity_min",  quantity_min);
+    append("quantity_max",  quantity_max);
+    append("platform",      platform);
+    append("delivery_type", delivery_type);
+    append("sort",          sort);
+    append("by_priority",   by_priority);
+
     return apiRequest({
         url: `/product/mini-info?${params.toString()}`,
     });
@@ -102,9 +140,12 @@ export const getProductById = (product_id) => {
 };
 
 
-export const searchProducts = (query) => {
+export const searchProducts = (query, { page = 1, size = 24 } = {}) => {
+    const params = new URLSearchParams({ q: query });
+    if (page > 1) params.set("page", String(page));
+    if (size !== 24) params.set("size", String(size));
     return apiRequest({
-        url: `/product/search?q=${encodeURIComponent(query)}`,
+        url: `/product/search?${params.toString()}`,
     });
 };
 

@@ -9,7 +9,7 @@
 .spinner {
   border-style: solid;
   border-color: #2a2a2e;
-  border-top-color: var(--spinner-color, #E2799B);
+  border-top-color: var(--astra-pink);
   border-radius: 50%;
   animation: astraSpin 0.8s linear infinite;
 }

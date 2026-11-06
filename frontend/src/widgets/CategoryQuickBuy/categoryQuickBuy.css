@@ -1,0 +1,1453 @@
+/* ============================================================
+   CategoryQuickBuy — попап быстрой покупки (v3 «ash and signal»)
+
+   Плотная пепельная панель (--astra-card) с волосяной рамкой: без
+   стекла, фильтров и тени — затемнение и блюр живут на оверлее, вход
+   панели только opacity. Розовый — только в точках действия (выбранный
+   вариант, «Купить сейчас»), цена — мягкий розовый, скидка — пурпур.
+
+   Раскладка (layout pass):
+   • высота панели — ПО СОДЕРЖИМОМУ, а не фиксированные 720px: один-два
+     варианта больше не оставляют пустоту посреди окна, а 10–15 не
+     растягивают его за экран — тело упирается в потолок и листается;
+   • медиа-колонка — квадрат (арт каталога 1:1) и задаёт минимальную
+     высоту строки, поэтому короткая покупка всё равно выглядит собранной;
+   • блок оформления (количество → итог → промокод → кнопки) — липкий
+     низ тела: сколько бы вариантов ни было, «Купить сейчас» на экране;
+   • ≤2 варианта — строки во всю ширину, 3+ — ровная сетка в две колонки.
+   ============================================================ */
+
+.cqb-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 4000;
+    display: flex;
+    padding: 24px 16px;
+    /* Полоса прокрутки у оверлея появляется, ТОЛЬКО если панель выше
+       экрана; жёлоб не резервируем (round 5, #11). */
+    overflow-y: auto;
+    scrollbar-gutter: auto;
+    overscroll-behavior: contain;
+    background: rgba(9, 9, 11, 0.78);
+    -webkit-backdrop-filter: blur(10px) saturate(1.15);
+    backdrop-filter: blur(10px) saturate(1.15);
+    animation: cqb-fade-in var(--astra-t-move) var(--astra-ease) both;
+}
+
+@keyframes cqb-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes cqb-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.cqb-panel {
+    /* Потолок тела панели: экран минус поля оверлея, но не выше 820px */
+    /* Сторона квадрата медиа = высота панели: не выше экрана минус поля */
+    --cqb-side: clamp(400px, calc(100dvh - 48px), 620px);
+    --cqb-max-h: var(--cqb-side);
+    position: relative;
+    margin: auto;
+    width: 100%;
+    max-width: 1300px;
+    outline: none;
+    animation: cqb-fade-in var(--astra-t-move) var(--astra-ease) both;
+}
+
+.cqb-clip {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--cqb-side) minmax(0, 1fr);
+    align-items: stretch;
+    overflow: hidden;
+    border-radius: var(--astra-r-xl);
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+}
+
+/* ---------- медиа ---------- */
+.cqb-media {
+    --astra-paper: var(--astra-card-2);
+    position: relative;
+    width: var(--cqb-side);
+    /* квадрат — только МИНИМУМ: строку грида может задать более высокое
+       тело (длинный список вариантов). Фиксированная height не давала
+       колонке растянуться под align-items: stretch, и под фото светилась
+       полоса фона .cqb-clip. height: auto + min-height — колонка тянется
+       на всю строку, но не ниже квадрата. */
+    height: auto;
+    min-height: var(--cqb-side);
+    overflow: hidden;
+    background: var(--astra-card-2);
+    border-right: 1px solid var(--astra-line);
+}
+
+/* Арт всегда заполняет колонку целиком — без серых полей сверху/снизу
+   и по бокам. cover масштабирует под любую пропорцию контейнера;
+   фокус чуть выше центра, чтобы не срезать надписи и лица сверху. */
+.cqb-media img,
+.cqb-avatar {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    /* cover: контейнер теперь может быть не строго квадратным (620×648)
+       и, главное, не совпадать с пропорцией арта. contain оставлял серые
+       полосы; cover тянет арт на всю колонку, обрезая лишнее по одной оси */
+    object-fit: cover;
+    /* фокус чуть выше центра — верх арта (название, лицо) не срезается */
+    object-position: center 35%;
+}
+
+/* ---------- тело ---------- */
+.cqb-body {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+    height: var(--cqb-max-h);
+    padding: 28px 32px 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--astra-line-strong) transparent;
+}
+
+/* Без блока оформления (обзор, ошибки, пусто) нижнее поле даёт тело */
+.cqb-body:not(:has(.cqb-checkout)) {
+    padding-bottom: 28px;
+}
+
+/* ---------- шапка: назад · крошки · заголовок · описание ---------- */
+.cqb-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    /* правый край — под «?» (44px + 16px поля) */
+    padding-right: 52px;
+}
+
+.cqb-back {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 6px;
+    max-width: 100%;
+    min-height: 44px;
+    margin: -10px 0 -4px -12px;
+    padding: 0 14px 0 10px;
+    border: none;
+    border-radius: var(--astra-r-md);
+    background: transparent;
+    color: var(--astra-ink-dim);
+    font-family: var(--astra-body);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+}
+
+.cqb-back:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--astra-ink);
+}
+
+.cqb-back:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+.cqb-back svg {
+    flex: none;
+}
+
+.cqb-back-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cqb-back-to {
+    color: var(--astra-ink-faint);
+    font-weight: 500;
+}
+
+.cqb-back:hover .cqb-back-to {
+    color: var(--astra-ink-dim);
+}
+
+/* крошки: где мы находимся; назад ведёт кнопка */
+.cqb-crumbs {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    color: var(--astra-ink-faint);
+    overflow-wrap: anywhere;
+}
+
+/* Dialog Title: голос заголовков — Mon Trappist, КАПС, +0.01em.
+   База 28px по DESIGN.md сжата до 18–22px: множитель ×2 делает из неё
+   36–44px — плотный конденс, которому хватает двух строк. */
+.cqb-title {
+    margin: 0;
+    font-family: var(--astra-heading);
+    font-size: calc(clamp(18px, 1.9vw, 22px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1.05;
+    text-transform: uppercase;
+    text-wrap: balance;
+    color: var(--astra-ink);
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Описание: до трёх строк. Минимум — две строки, чтобы смена варианта
+   с коротким/длинным описанием не дёргала пилюли под курсором. */
+.cqb-desc {
+    margin: 4px 0 0;
+    min-height: calc(2 * 1.5em);
+    max-width: 60ch;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ---------- обзор подкатегорий ----------
+   Те же квадратные плитки, что на главной. Своей прокрутки у сетки нет:
+   листается тело панели (скролл в скролле ломал колесо и тач). */
+.cqb-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+    gap: 18px 14px;
+    animation: cqb-fade-in var(--astra-t-color) var(--astra-ease) both;
+}
+
+.cqb-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: var(--astra-r-lg);
+    background: none;
+    text-align: center;
+    cursor: pointer;
+}
+
+.cqb-tile:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 3px;
+}
+
+.cqb-tile-art {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--astra-r-lg);
+    background: var(--astra-card-2);
+    transition:
+        transform var(--astra-t-move) var(--astra-ease),
+        box-shadow var(--astra-t-move) var(--astra-ease);
+}
+
+.cqb-tile-art::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--astra-line);
+    pointer-events: none;
+    transition: box-shadow var(--astra-t-color) var(--astra-ease);
+}
+
+.cqb-tile:hover .cqb-tile-art {
+    transform: translateY(-4px);
+    box-shadow: var(--astra-shadow-sm);
+}
+
+.cqb-tile:hover .cqb-tile-art::after {
+    box-shadow: inset 0 0 0 1px var(--astra-line-strong);
+}
+
+.cqb-tile-img,
+.cqb-tile-avatar {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cqb-tile-label {
+    font-family: var(--astra-body);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--astra-ink-dim);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color var(--astra-t-color) var(--astra-ease);
+}
+
+.cqb-tile:hover .cqb-tile-label {
+    color: var(--astra-ink);
+}
+
+.cqb-tile.is-pending {
+    cursor: progress;
+}
+
+.cqb-tile.is-pending .cqb-tile-art {
+    opacity: 0.6;
+}
+
+.cqb-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border: 1px solid var(--astra-line);
+  border-radius: var(--astra-r-md);
+  background: var(--astra-card);
+  color: var(--astra-ink-dim);
+  cursor: pointer;
+  transition:
+      background var(--astra-t-color) var(--astra-ease),
+      border-color var(--astra-t-color) var(--astra-ease),
+      color var(--astra-t-color) var(--astra-ease);
+}
+
+.cqb-close-btn:hover {
+  background: var(--astra-card-2);
+  border-color: var(--astra-line-strong);
+  color: var(--astra-ink);
+}
+
+.cqb-close-btn:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 2px;
+}
+
+.cqb-close-btn-text {
+    font-size: 20px;
+}
+
+/* ---------- варианты ----------
+   Одна грамматика на любое количество: строка «название — цена».
+   ≤2 варианта — строки во всю ширину (не остаётся рваного хвоста чипов),
+   3+ — две ровные колонки, названия и цены стоят по одной оси. */
+.cqb-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    animation: cqb-fade-in var(--astra-t-color) var(--astra-ease) both;
+}
+
+.cqb-options--few {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* 1–3 варианта: список (вместе со строкой наличия) встаёт по центру
+   между шапкой и блоком оформления — свободное место делится поровну
+   на отступ над списком и над оформлением. */
+.cqb-options--center {
+    margin-top: auto;
+}
+
+/* 1–2 варианта — чуть выше центра: оптический центр короткого списка
+   лежит выше геометрического. Сдвиг относительный, раскладку не трогает. */
+@media (min-width: 721px) {
+    .cqb-options--few.cqb-options--center,
+    .cqb-options--few.cqb-options--center ~ .cqb-meta {
+        position: relative;
+        top: -24px;
+    }
+}
+
+.cqb-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 10px 16px;
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    background: var(--astra-card);
+    color: var(--astra-ink-dim);
+    font-family: var(--astra-body);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--astra-t-color) var(--astra-ease),
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+}
+
+/* ховер = светлее, никогда темнее; розовое — только выбор */
+.cqb-pill:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(236, 234, 238, 0.3);
+    color: var(--astra-ink);
+}
+
+.cqb-pill:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+/* выбор: --astra-pink-fill + белый (4.76:1), без ореола */
+.cqb-pill.is-active {
+    background: var(--astra-pink-fill);
+    border-color: transparent;
+    color: var(--astra-on-pink);
+    box-shadow: none;
+}
+
+/* выбранная НЕ светлеет: #E30189 под белым здесь не нужен */
+.cqb-pill.is-active:hover {
+    background: var(--astra-pink-fill);
+}
+
+.cqb-pill-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cqb-pill-price {
+    flex: none;
+    font-family: var(--astra-display);
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--astra-soft);
+    white-space: nowrap;
+}
+
+.cqb-pill.is-active .cqb-pill-price {
+    color: var(--astra-on-pink);
+}
+
+/* ---------- пейджер ---------- */
+.cqb-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: -8px;
+}
+
+.cqb-pager-btn {
+    justify-content: center;
+    width: 44px;
+    min-height: 44px;
+    padding: 0;
+}
+
+/* выключенная стрелка — смена поверхности, не прозрачность */
+.cqb-pager-btn:disabled {
+    background: var(--astra-card-2);
+    border-color: var(--astra-line);
+    color: var(--astra-ink-faint);
+    cursor: not-allowed;
+}
+
+.cqb-pager-info {
+    min-width: 58px;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    color: var(--astra-ink-dim);
+}
+
+/* ---------- наличие / статус ---------- */
+.cqb-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: -8px;
+}
+
+.cqb-stock,
+.cqb-status-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--astra-r-sm);
+    font-family: var(--astra-body);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.cqb-stock {
+    background: rgba(61, 220, 151, 0.1);
+    border: 1px solid rgba(61, 220, 151, 0.24);
+    color: var(--astra-ok, #3ddc97);
+}
+
+.cqb-stock-label {
+    color: var(--astra-ink-dim);
+    font-weight: 500;
+}
+
+.cqb-stock-value {
+    font-weight: 700;
+}
+
+.cqb-stock:has(.cqb-stock-value--empty) {
+    background: rgba(255, 77, 94, 0.1);
+    border-color: rgba(255, 77, 94, 0.26);
+    color: #ff8a95;
+}
+
+.cqb-status-badge {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.cqb-status-badge.is-active {
+    background: rgba(61, 220, 151, 0.1);
+    border: 1px solid rgba(61, 220, 151, 0.24);
+    color: var(--astra-ok, #3ddc97);
+}
+
+.cqb-status-badge.is-inactive {
+    background: rgba(255, 77, 94, 0.1);
+    border: 1px solid rgba(255, 77, 94, 0.26);
+    color: #ff8a95;
+}
+
+.cqb-media-hold {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: var(--astra-card-2);
+}
+
+/* ---------- оформление: липкий низ тела ----------
+   margin-top:auto прижимает блок к низу, когда вариантов мало (строка
+   панели задана квадратом медиа); sticky держит его на экране, когда
+   вариантов много и тело листается. */
+.cqb-checkout {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: auto -32px 0;
+    padding: 18px 32px 24px;
+    border-top: 1px solid var(--astra-line);
+    background: var(--astra-card);
+}
+
+/* количество слева, итог справа — одна строка */
+.cqb-qty-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+}
+
+.cqb-qty {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.cqb-qty-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 20px;
+    background: transparent;
+    color: var(--astra-ink);
+    cursor: pointer;
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+}
+
+.cqb-qty-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.cqb-qty-btn:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+.cqb-qty-btn:disabled {
+    color: var(--astra-ink-faint);
+    cursor: not-allowed;
+}
+
+.cqb-qty-value {
+    min-width: 36px;
+    text-align: center;
+    font-family: var(--astra-display);
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--astra-ink);
+}
+
+.cqb-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin: 0;
+    min-width: 0;
+}
+
+.cqb-total-label {
+    font-family: var(--astra-body);
+    font-size: 14px;
+    color: var(--astra-ink-dim);
+}
+
+.cqb-total-nums {
+    display: inline-flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px 10px;
+    min-width: 0;
+}
+
+/* итог — мягкий розовый, барабаны SlidingNumber; opacity/filter цифр
+   здесь не трогаем (round 5, #6) */
+.cqb-total-value {
+    font-family: var(--astra-display);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+    color: var(--astra-soft);
+    white-space: nowrap;
+}
+
+.cqb-total-drop {
+    align-self: center;
+    white-space: nowrap;
+}
+
+.cqb-total-old {
+    font-family: var(--astra-display);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--astra-ink-dim);
+    white-space: nowrap;
+}
+
+/* ---------- промокод ---------- */
+.cqb-promo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cqb-promo-row {
+    display: flex;
+    gap: 8px;
+}
+
+.cqb-promo-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 48px;
+    padding: 0 18px;
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    transition:
+        border-color var(--astra-t-color) var(--astra-ease),
+        background var(--astra-t-color) var(--astra-ease);
+}
+
+.cqb-promo-input::placeholder {
+    color: var(--astra-ink-faint);
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.cqb-promo-input:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(236, 234, 238, 0.3);
+}
+
+/* Фокус поля принадлежит .astra-field (только клавиатура). Здесь лишь
+   держим свою рамку, чтобы inherit не подставил currentColor. */
+.cqb-promo-input.astra-field:focus {
+    border-color: var(--astra-line-strong);
+    box-shadow: none;
+}
+
+.cqb-promo-input:disabled {
+    color: var(--astra-ink-dim);
+    cursor: not-allowed;
+}
+
+.cqb-promo-btn {
+    flex: none;
+    min-height: 48px;
+}
+
+/* выключено — смена поверхности, не прозрачность */
+.cqb-promo-btn:disabled,
+.cqb-promo-btn:disabled:hover {
+    background: var(--astra-card-2);
+    border-color: var(--astra-line);
+    color: var(--astra-ink-faint);
+    cursor: not-allowed;
+}
+
+.cqb-promo-skel {
+    display: block;
+    width: 46%;
+    height: 12px;
+}
+
+.cqb-promo-note {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--astra-ink-dim);
+}
+
+.cqb-promo-note--error {
+    color: #ffc9cf;
+}
+
+/* ---------- кнопки: две равные колонки ---------- */
+.cqb-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+}
+
+.cqb-actions .astra-btn-ghost,
+.cqb-buy-btn {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+}
+
+.cqb-cart-btn svg {
+    width: 18px;
+    height: auto;
+    flex: none;
+}
+
+.cqb-cart-label {
+    white-space: nowrap;
+}
+
+/* кольцо фокуса вокруг «рогатой» кнопки живёт на необрезанной обёртке */
+.cqb-buy-ring {
+    display: flex;
+    min-width: 0;
+}
+
+.cqb-buy-ring:focus-within,
+.cqb-buy-ring:has(:focus-visible) {
+    outline-color: var(--astra-ink);
+}
+
+.cqb-body .astra-btn,
+.cqb-body .astra-btn-ghost {
+    min-height: 44px;
+}
+
+/* ---------- состояния ---------- */
+.cqb-hold {
+    min-height: 160px;
+}
+
+.cqb-skeletons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cqb-skel-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.cqb-skel-pill {
+    height: 48px;
+    border-radius: var(--astra-r-md);
+}
+
+.cqb-skel-line {
+    width: 55%;
+    height: 18px;
+}
+
+.cqb-skel-btn {
+    width: 100%;
+    height: 48px;
+    border-radius: var(--astra-r-md);
+}
+
+.cqb-state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.cqb-state-text {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+}
+
+.cqb-state-text--error {
+    color: #ffc9cf;
+}
+
+/* ---------- «?» информация о категории ---------- */
+.cqb-help-btn {
+    position: absolute;
+    top: 16px;
+    right: 65px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+    background: var(--astra-card);
+    color: var(--astra-ink-dim);
+    cursor: pointer;
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+}
+
+.cqb-help-btn:hover {
+    background: var(--astra-card-2);
+    border-color: var(--astra-line-strong);
+    color: var(--astra-ink);
+}
+
+.cqb-help-btn:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+/* ---------- закрыть ----------
+   No Visible Close Cross: окно закрывают Esc и клик по затемнению; одна
+   скрытая кнопка «Закрыть» внутри ловушки фокуса проявляется только
+   при клавиатурном фокусе. */
+.cqb-sr-close {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+    background: transparent;
+    color: var(--astra-ink);
+    font: inherit;
+    cursor: pointer;
+}
+
+.cqb-sr-close:focus-visible {
+    z-index: 3;
+    top: 16px;
+    left: 16px;
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    padding: 0 18px;
+    overflow: visible;
+    clip-path: none;
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    background: var(--astra-card-2);
+    font-family: var(--astra-body);
+    font-size: 14px;
+    font-weight: 600;
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 3px;
+}
+
+/* ---------- закрытие ---------- */
+.cqb-overlay--closing {
+    animation: cqb-fade-out var(--astra-t-move) var(--astra-ease) forwards;
+    pointer-events: none;
+}
+
+/* панель не стекло — лёгкий спуск допустим; блюр живёт на оверлее */
+@keyframes cqb-panel-out {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+
+.cqb-panel--closing {
+    animation: cqb-panel-out var(--astra-t-move) var(--astra-ease) forwards;
+}
+
+/* ===== свайп для закрытия ===== */
+.cqb-panel.is-swiping {
+    transition: none !important;
+}
+
+/* .cqb-panel.swipe-close {
+    transition: transform var(--astra-t-move) var(--astra-ease) !important;
+} ?? */
+
+/* Свайп-закрытие: панель уезжает за край И гаснет одновременно.
+   Класс .cqb-panel--closing в этот момент НЕ навешивается — его
+   анимация (fade + лёгкий scale) перебивала бы inline-transform
+   и панель «возвращалась» перед исчезновением (ровно тот баг,
+   который чиним). Оверлей гаснет своим .cqb-overlay--closing
+   в тот же такт. */
+.cqb-panel.is-swiping {
+    transition: none !important;
+}
+
+.cqb-panel.swipe-close {
+    transition:
+        transform var(--astra-t-move) var(--astra-ease),
+        opacity var(--astra-t-move) var(--astra-ease) !important;
+    opacity: 0;
+}
+
+/* ---------- ≤720: одна колонка ----------
+   Панель растёт по содержимому, листается оверлей. overflow: clip (не
+   hidden) — чтобы не создавать контейнер прокрутки и липкий блок
+   оформления держался у низа экрана. */
+@media (max-width: 720px) {
+    .cqb-overlay {
+        padding: 12px 10px;
+    }
+
+    .cqb-clip {
+        grid-template-columns: minmax(0, 1fr);
+        overflow: clip;
+    }
+
+    .cqb-media {
+        /* 4:3 — квадратный арт под cover теряет лишь полосы сверху/снизу,
+           надпись и персонаж остаются в кадре */
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        border-right: none;
+        border-bottom: 1px solid var(--astra-line);
+    }
+
+    .cqb-body {
+        height: auto;
+        overflow: visible;
+        padding: 20px 20px 0;
+        gap: 18px;
+    }
+
+    .cqb-body:not(:has(.cqb-checkout)) {
+        padding-bottom: 22px;
+    }
+
+    .cqb-head {
+        padding-right: 0;
+    }
+
+    .cqb-help-btn {
+        top: 12px;
+        right: 12px;
+    }
+
+    .cqb-checkout {
+        margin: auto -20px 0;
+        padding: 14px 20px 18px;
+        border-radius: 0 0 var(--astra-r-xl) var(--astra-r-xl);
+    }
+}
+
+/* ≤420: варианты в одну колонку — две по ~160px рвали бы название и цену */
+@media (max-width: 420px) {
+    .cqb-body {
+        padding: 18px 16px 0;
+    }
+
+    .cqb-body:not(:has(.cqb-checkout)) {
+        padding-bottom: 20px;
+    }
+
+    .cqb-checkout {
+        margin: auto -16px 0;
+        padding: 12px 16px 16px;
+    }
+
+    .cqb-options {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cqb-tiles {
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        gap: 14px 10px;
+    }
+
+    .cqb-total-value {
+        font-size: 20px;
+    }
+
+    /* «Купить сейчас» в одну строку на 390px */
+    .cqb-actions .astra-btn-ghost,
+    .cqb-buy-btn {
+        padding-left: 12px;
+        padding-right: 12px;
+        white-space: nowrap;
+    }
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .cqb-overlay,
+    .cqb-panel,
+    .cqb-options,
+    .cqb-tiles {
+        animation: none;
+    }
+
+    .cqb-tile-art,
+    .cqb-tile-art::after {
+        transition: none;
+    }
+
+    .cqb-tile:hover .cqb-tile-art {
+        transform: none;
+    }
+
+    .cqb-overlay--closing,
+    .cqb-panel--closing {
+        animation: none;
+        opacity: 0;
+    }
+}
+
+/* ============================================================
+   Вложенная модалка «Информация» (FAQ) — та же порода: плотная
+   пепельная панель за размытой подложкой с цифрами родителя.
+   ============================================================ */
+.cqb-info-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 4100;
+    display: flex;
+    padding: 24px 16px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: rgba(9, 9, 11, 0.78);
+    -webkit-backdrop-filter: blur(10px) saturate(1.15);
+    backdrop-filter: blur(10px) saturate(1.15);
+    animation: cqb-fade-in var(--astra-t-move) var(--astra-ease) both;
+}
+
+@keyframes cqb-info-panel-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.cqb-info-panel {
+    position: relative;
+    margin: auto;
+    width: 100%;
+    max-width: 640px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--astra-r-xl);
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    outline: none;
+    animation: cqb-info-panel-in var(--astra-t-move) var(--astra-ease) both;
+}
+
+/* No Visible Close Cross — скрыта до клавиатурного фокуса */
+.cqb-info-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.cqb-info-close-btn:focus-visible {
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    padding: 0 18px;
+    overflow: visible;
+    clip-path: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 3px;
+}
+
+.cqb-info-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 28px 28px 24px;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.cqb-info-title {
+    margin: 0 44px 0 0;
+    font-family: var(--astra-heading);
+    font-size: calc((17px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    color: var(--astra-ink);
+}
+
+.cqb-info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cqb-info-subtitle {
+    margin: 0;
+    font-family: var(--astra-heading);
+    font-size: calc((12px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--astra-ink-dim);
+}
+
+.cqb-info-faq {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cqb-info-faq-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--astra-r-sm);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--astra-line);
+}
+
+/* порядковый номер — сигнальный розовый (решение владельца) */
+.cqb-info-faq-icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    margin-top: 1px;
+    border-radius: var(--astra-r-sm);
+    background: rgba(114, 0, 80, 0.22);
+    border: 1px solid rgba(114, 0, 80, 0.55);
+    color: color-mix(in srgb, var(--astra-soft) 55%, var(--astra-ink-dim));
+    font-family: var(--astra-display);
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.cqb-info-faq-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.cqb-info-q {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--astra-ink);
+    overflow-wrap: anywhere;
+}
+
+.cqb-info-a {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+    overflow-wrap: anywhere;
+}
+
+.cqb-info-list {
+    margin: 0;
+    padding: 0 0 0 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    list-style: disc;
+}
+
+.cqb-info-list-item {
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--astra-ink-dim);
+    overflow-wrap: anywhere;
+}
+
+.cqb-info-overlay--closing {
+    animation: cqb-fade-out var(--astra-t-move) var(--astra-ease) forwards;
+    pointer-events: none;
+}
+
+.cqb-info-panel--closing {
+    animation: cqb-panel-out var(--astra-t-move) var(--astra-ease) forwards;
+}
+
+@media (max-width: 720px) {
+    .cqb-info-body {
+        padding: 22px 20px 20px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cqb-info-overlay,
+    .cqb-info-panel {
+        animation: none;
+    }
+
+    .cqb-info-overlay--closing,
+    .cqb-info-panel--closing {
+        animation: none;
+        opacity: 0;
+    }
+}
+
+@media (max-width: 720px) {
+    .cqb-overlay {
+        padding: 12px 10px 0;    /* низ = 0, см. п. 3 */
+    }
+
+    .cqb-clip {
+        grid-template-columns: minmax(0, 1fr);
+        overflow: hidden;        /* не clip: см. п. 3 */
+    }
+
+    .cqb-media {
+        /* Квадрат строго по ширине колонки. Родительский
+           min-height: var(--cqb-side) на мобиле не нужен — он считался
+           от 100dvh и растягивал медиа до ~620px, выдавливая тело
+           за экран. */
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        aspect-ratio: 1 / 1;
+        border-right: none;
+        border-bottom: 1px solid var(--astra-line);
+    }
+
+    /* Бокс 1:1 + арт 1:1 (фото товара) — cover кладёт кадр без полей
+       и без искажений. object-position: center — срез симметричный. */
+    .cqb-media img,
+    .cqb-avatar {
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .cqb-body {
+        height: auto;
+        overflow: visible;
+        padding: 20px 20px 0;
+        gap: 18px;
+    }
+
+    .cqb-body:not(:has(.cqb-checkout)) {
+        padding-bottom: 22px;
+    }
+
+    .cqb-head { padding-right: 0; }
+
+    .cqb-help-btn {
+        top: 12px;
+        right: 68px;   /* рядом с крестиком, а не поверх него */
+    }
+
+    .cqb-close-btn {
+        top: 12px;
+        right: 12px;
+    }
+
+    .cqb-checkout {
+        margin: auto -20px 0;
+        padding: 14px 20px 18px;
+        border-radius: 0 0 var(--astra-r-xl) var(--astra-r-xl);
+    }
+}
+
+/* Убираем нижний padding оверлея — иначе sticky-низ не доходит
+   до кромки экрана. Верхний/боковые оставляем: они нужны, когда
+   попап короткий. */
+@media (max-width: 720px) {
+    .cqb-overlay {
+        padding: 12px 10px 0;
+    }
+
+    .cqb-clip {
+        /* clip создавал локальный containing block для sticky в части
+           браузеров — низ .cqb-checkout переставал липнуть к низу
+           оверлея. hidden рисует то же скругление и не ломает sticky. */
+        overflow: hidden;
+        border-bottom-left-radius: var(--astra-r-xl);
+        border-bottom-right-radius: var(--astra-r-xl);
+    }
+
+    /* Запас снизу под липкий низ: чтобы последний элемент тела
+       не прятался под кнопками, когда контент прокручен до конца. */
+    .cqb-body:has(.cqb-checkout) {
+        padding-bottom: 0;
+    }
+
+    .cqb-checkout {
+        /* та же логика, что в базовых правилах, но с учётом
+           мобильных паддингов тела */
+        margin: auto -20px 0;
+        padding: 14px 20px 18px;
+    }
+}
+
+/* Базовая панель: готова ехать по transform, но НЕ по X — пан задан
+   только вертикальным, горизонтальный жест отдан браузеру. */
+.cqb-panel {
+    touch-action: pan-y;
+    transition: transform var(--astra-t-move) var(--astra-ease);
+}
+
+/* Пока палец ведёт панель — никакой интерполяции, движение 1:1. */
+.cqb-panel.is-swiping {
+    transition: none !important;
+}
+
+/* Свайп-закрытие: панель уезжает за край И гаснет одновременно.
+   Класс .cqb-panel--closing в этот момент НЕ навешивается — см.
+   className-логику выше. */
+.cqb-panel.swipe-close {
+    transition:
+        transform var(--astra-t-move) var(--astra-ease),
+        opacity var(--astra-t-move) var(--astra-ease) !important;
+    opacity: 0;
+}

@@ -47,18 +47,75 @@ export const ReferalIcon = () => {
 
 export const OrderIcon = () => {
     return (
-        <svg width="22" height="20" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg
+            width="22"
+            height="22  "
+            opacity="0.7"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            {/* Ручки пакета: две вертикальные «ножки» + полукруг сверху */}
             <path
-                opacity="0.7"
-                d="M19.8799 7.49378L18.207 15.8579C18.0006 16.8898 17.8975 17.4057 17.6281 17.7917C17.3905 18.132 17.0635 18.4 16.6832 18.5662C16.2519 18.7547 15.7258 18.7547 14.6735 18.7547H7.06875C6.01645 18.7547 5.4903 18.7547 5.05904 18.5662C4.67873 18.4 4.35175 18.132 4.11419 17.7917C3.8448 17.4057 3.74161 16.8898 3.53524 15.8579L1.86242 7.49378M19.8799 7.49378H17.6277M19.8799 7.49378H21.0059M1.86242 7.49378H0.736328M1.86242 7.49378H4.1146M17.6277 7.49378H4.1146M17.6277 7.49378L14.2494 0.737244M4.1146 7.49378L7.49287 0.737244M7.49287 10.8721V14.2503M10.8711 10.8721V14.2503M14.2494 10.8721V14.2503"
-                stroke="white"
-                strokeWidth="1.47415"
+                d="M8 8V6A4 4 0 0 1 16 6V8"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+            {/* Тело пакета: прямой верх, закруглённое дно */}
+            <path
+                d="M5 8H19V18.5A2.5 2.5 0 0 1 16.5 21H7.5A2.5 2.5 0 0 1 5 18.5V8Z"
+                stroke="currentColor"
+                strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
         </svg>
     );
 };
+
+// export const OrderIcon = () => {
+//     return (
+//         <svg
+//             width="22"
+//             height="20"
+//             viewBox="0 0 24 24"
+//             fill="none"
+//             xmlns="http://www.w3.org/2000/svg"
+//             aria-hidden="true"
+//         >
+//             {/* 3D-коробка: верхние грани + нижняя пирамида */}
+//             <path
+//                 d="M20.5 7.28v9.44a1.6 1.6 0 0 1-.85 1.42l-7 3.78a1.6 1.6 0 0 1-1.5 0l-7-3.78a1.6 1.6 0 0 1-.85-1.42V7.28a1.6 1.6 0 0 1 .85-1.42l7-3.78a1.6 1.6 0 0 1 1.5 0l7 3.78a1.6 1.6 0 0 1 .85 1.42Z"
+//                 stroke="currentColor"
+//                 strokeWidth="1.5"
+//                 strokeLinejoin="round"
+//             />
+//             {/* «Крышка» — линия сгиба по переднему ребру */}
+//             <path
+//                 d="m3.5 6.5 8.5 4.5 8.5-4.5"
+//                 stroke="currentColor"
+//                 strokeWidth="1.5"
+//                 strokeLinejoin="round"
+//             />
+//             {/* Вертикальное ребро от центра к низу */}
+//             <path
+//                 d="M12 20.5V11"
+//                 stroke="currentColor"
+//                 strokeWidth="1.5"
+//                 strokeLinejoin="round"
+//             />
+//             {/* «Лента» скотча на верхней крышке */}
+//             <path
+//                 d="m7.5 4.15 8.5 4.5"
+//                 stroke="currentColor"
+//                 strokeWidth="1.5"
+//                 strokeLinejoin="round"
+//             />
+//         </svg>
+//     );
+// };
 
 export const HelpIcon = () => {
     return (
@@ -482,3 +539,66 @@ export const CrownIcon = () => {
 
     );
 };
+
+export const ChatIcon = ({ className }) => (
+    <svg
+        className={className}
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden
+    >
+        <path
+            d="M20 12.5c0 3.6-3.58 6.5-8 6.5a9.7 9.7 0 0 1-2.4-.3L5 21l1.03-3.1A6.4 6.4 0 0 1 4 12.5C4 8.9 7.58 6 12 6s8 2.9 8 6.5Z"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <circle cx="8.5" cy="12.5" r="1" fill="currentColor" />
+        <circle cx="12" cy="12.5" r="1" fill="currentColor" />
+        <circle cx="15.5" cy="12.5" r="1" fill="currentColor" />
+    </svg>
+);
+
+export const RefundIcon = ({ className }) => (
+    <svg
+        className={className}
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden
+    >
+        <path
+            d="M3.5 12a8.5 8.5 0 1 0 2.5-6"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M3 4v5h5"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M14.5 9.5h-4a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4h-4"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />
+        <path
+            d="M12.5 8v1.5M12.5 17.5V19"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+        />
+    </svg>
+);

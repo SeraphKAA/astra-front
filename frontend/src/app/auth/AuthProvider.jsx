@@ -2,14 +2,17 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AuthContext } from "./AuthContext";
 import { LS } from "../../utilities/utilLocalStorage";
-import { getMyProfile, refreshTokens as refreshTokensApi } from "../../entities/user/api/userApi";
+import { getMyProfile, logoutUser } from "../../entities/user/api/userApi";
 import {
   emailLogin,
   emailRegister,
   emailResendCode,
   emailVerify,
-  telegramWebAppLogin,
-  telegramWidgetLogin,
+  telegramBotStart,
+  telegramBotStatus,
+  requestPasswordResetApi,
+  verifyPasswordResetCodeApi,
+  resetPasswordApi,
 } from "../../entities/auth/api/authApi";
 import { getActiveAvatarByUserId } from "../../entities/files/api/fileApi";
 
@@ -39,9 +42,19 @@ export const AuthProvider = ({ children }) => {
     return profile;
   }, []);
 
+  // const logout = useCallback(async () => {
+  //   await LS.remove("access_token");
+  //   await LS.remove("refresh_token");
+  //   setUser(null);
+  //   setActiveAvatar(null);
+  //   setIsAuthenticated(false);
+  // }, []);
   const logout = useCallback(async () => {
-    await LS.remove("access_token");
-    await LS.remove("refresh_token");
+    try {
+      await logoutUser(); // вызовет POST /users/logout с куками
+    } catch {
+      // игнорируем ошибки при логауте
+    }
     setUser(null);
     setActiveAvatar(null);
     setIsAuthenticated(false);
@@ -64,42 +77,31 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user?.id]);
 
-  const refreshTokens = useCallback(async () => {
-    const rt = await LS.get("refresh_token");
-    if (!rt) throw new Error("No refresh token");
-    const data = await refreshTokensApi(rt);
-    if (data?.access_token && data?.refresh_token) {
-      await LS.set("access_token", data.access_token);
-      await LS.set("refresh_token", data.refresh_token);
-      return data.access_token;
-    }
-    return null;
-  }, []);
+  // const refreshTokens = useCallback(async () => {
+  //   const rt = await LS.get("refresh_token");
+  //   if (!rt) throw new Error("No refresh token");
+  //   const data = await refreshTokensApi(rt);
+  //   if (data?.access_token && data?.refresh_token) {
+  //     await LS.set("access_token", data.access_token);
+  //     await LS.set("refresh_token", data.refresh_token);
+  //     return data.access_token;
+  //   }
+  //   return null;
+  // }, []);
 
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
       try {
-        const at = await LS.get("access_token");
-        const rt = await LS.get("refresh_token");
-        if (!at || !rt) {
-          if (at || rt) {
-            await logout();
-          } else {
-            setIsAuthenticated(false);
-            setUser(null);
-          }
-          return;
-        }
         await loadUserProfile();
-      } catch (e) {
+      } catch {
         await logout();
       } finally {
         setIsLoading(false);
       }
     };
     init();
-  }, [loadUserProfile, logout]);
+  }, [loadUserProfile]);
 
   const loginWithEmail = useCallback(
     async ({ email, password }) => {
@@ -144,58 +146,41 @@ export const AuthProvider = ({ children }) => {
     return emailResendCode({ email });
   }, []);
 
-  const loginWithTelegramWebApp = useCallback(
-    async () => {
-      const initData =
-        window?.Telegram?.WebApp?.initData ||
-        window?.Telegram?.WebApp?.initDataUnsafe?.query_id ||
-        "";
+  const buildTgUrl = (startParam) => {
+    const botUsername = process.env.REACT_APP_TG_BOT_USERNAME || "astra_auth_bot";
+    if (!botUsername) return "";
+    return `https://t.me/${botUsername}?start=${encodeURIComponent(startParam)}`;
+  };
 
-      if (!initData || typeof initData !== "string") {
-        const err = new Error("Telegram WebApp initData is not available");
-        err.code = "NO_TG_INITDATA";
-        throw err;
-      }
+  const startTelegramBotLogin = useCallback(async () => {
+    const refCode = await LS.get("pending_ref_code");
+    const res = await telegramBotStart({ refCode });
+    return { ...res, bot_url: buildTgUrl(res.start_param) };
+  }, []);
 
-      const refCode = await LS.get("pending_ref_code");
-      const data = await telegramWebAppLogin({ initData, refCode });
-      if (data?.user_data) {
-        setUser(data.user_data);
-        await loadActiveAvatar(data.user_data);
-      } else {
-        const profile = await loadUserProfile();
-        await loadActiveAvatar(profile);
-      }
-      await LS.remove("pending_ref_code");
+  const pollTelegramBotLogin = useCallback(async (code) => {
+    const res = await telegramBotStatus({ code });
+    if (res?.status === "confirmed" && res.user) {
+      setUser(res.user);
+      await loadActiveAvatar(res.user);
       setIsAuthenticated(true);
-      return data;
-    },
-    [loadActiveAvatar, loadUserProfile]
-  );
-
-  const loginWithTelegramWidget = useCallback(
-    async (payload) => {
-      if (!payload || typeof payload !== "object") {
-        const err = new Error("Telegram widget payload is not available");
-        err.code = "NO_TG_WIDGET_PAYLOAD";
-        throw err;
-      }
-
-      const refCode = await LS.get("pending_ref_code");
-      const data = await telegramWidgetLogin({ payload, refCode });
-      if (data?.user_data) {
-        setUser(data.user_data);
-        await loadActiveAvatar(data.user_data);
-      } else {
-        const profile = await loadUserProfile();
-        await loadActiveAvatar(profile);
-      }
       await LS.remove("pending_ref_code");
-      setIsAuthenticated(true);
-      return data;
-    },
-    [loadActiveAvatar, loadUserProfile]
-  );
+    }
+    return res;
+  }, [loadActiveAvatar]);
+
+  const requestPasswordReset = useCallback(async ({ email }) => {
+    return requestPasswordResetApi({ email });
+  }, []);
+
+  const verifyResetCode = useCallback(async ({ email, code }) => {
+    return verifyPasswordResetCodeApi({ email, code });
+  }, []);
+
+  const resetPassword = useCallback(async ({ email, code, newPassword }) => {
+    return resetPasswordApi({ email, code, newPassword });
+  }, []);
+
 
   useEffect(() => {
     if (!isAuthenticated || !user?.id) {
@@ -223,14 +208,17 @@ export const AuthProvider = ({ children }) => {
       loadUserProfile,
       loadActiveAvatar,
       logout,
-      refreshTokens,
+      // refreshTokens,
       loginWithEmail,
       registerWithEmail,
       verifyEmailCode,
       resendEmailCode,
-      loginWithTelegramWebApp,
-      loginWithTelegramWidget,
+      startTelegramBotLogin,
+      pollTelegramBotLogin,
       hasRole,
+      requestPasswordReset,
+      verifyResetCode,
+      resetPassword,
     }),
     [
       user,
@@ -240,14 +228,17 @@ export const AuthProvider = ({ children }) => {
       loadUserProfile,
       loadActiveAvatar,
       logout,
-      refreshTokens,
+      // refreshTokens,
       loginWithEmail,
       registerWithEmail,
       verifyEmailCode,
       resendEmailCode,
-      loginWithTelegramWebApp,
-      loginWithTelegramWidget,
+      startTelegramBotLogin,
+      pollTelegramBotLogin,
       hasRole,
+      requestPasswordReset,
+      verifyResetCode,
+      resetPassword,
     ]
   );
 

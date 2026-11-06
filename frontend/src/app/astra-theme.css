@@ -1,0 +1,527 @@
+/* ============================================================
+   ASTRA — visual world tokens
+   "Neon oni night-market": semi-black plum grounds washed with
+   hot-pink light; the horned mascot is the brand. Signature
+   device: the horn notch — a diagonal cut on the top-right
+   corner of committed surfaces (tiles, primary buttons, badges).
+   Голоса: Mon Trappist — заголовки (прописными), Unbounded — деньги,
+   кнопки и бейджи, Golos Text — связный текст.
+   ============================================================ */
+
+/* ============================================================
+   MON TRAPPIST — голос ЗАГОЛОВКОВ и только их.
+   Лежит в репозитории (src/shared/fonts), а не на Google Fonts:
+   шрифт прислан файлом. Лицензия SIL OFL 1.1 разрешает вкладывать
+   его в продукт — копия рядом, MonTrappist-OFL.txt.
+
+   В наборе РОВНО ОДНО начертание — Black. Диапазон 100..900 объявлен
+   намеренно: так браузер считает, что весь диапазон покрыт, и НЕ
+   подрисовывает жирность сам. Синтетический bold размазывает и без
+   того плотные штрихи, а кириллица от него страдает сильнее латиницы.
+   На заголовках потеря градаций веса ничего не стоит: их отличает
+   кегль, а не насыщенность.
+
+   Кириллица проверена по cmap: А-Я и а-я целиком, Ё/ё, ₽, тире,
+   «ёлочки», −, ×, … — подмен из системного шрифта нет.
+   ============================================================ */
+@font-face {
+    font-family: "Mon Trappist";
+    src:
+        url("../shared/fonts/MonTrappist-Black.woff2") format("woff2"),
+        url("../shared/fonts/MonTrappist-Black.woff") format("woff");
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    /* v3 — ash canvas (owner-pinned 2026-08-09): near-black ash grounds,
+       color lives ONLY in the asset accents. Three-depth tonal ladder. */
+    --astra-bg: #0B0B0D;
+    --astra-bg-elev: #121214;
+    --astra-card: #18181B;
+    --astra-card-2: #1F1F23;
+    --astra-line: rgba(236, 234, 238, 0.08);
+    --astra-line-strong: rgba(236, 234, 238, 0.18);
+
+    /* Ink — ash grays, never pure white */
+    --astra-ink: #ECEAEE;
+    --astra-ink-dim: #A5A2AB;
+    --astra-ink-faint: #75727C;
+
+    /* Asset palette (owner-pinned): hot pink is THE action color and appears
+       only where the product means «act/buy»; violet is the quiet secondary
+       (badges, selected-quiet, links); soft pink carries prices; deep plum
+       is shade/glow material. Everything else stays ash. */
+    --astra-pink: #FF0198;      /* the signal: borders, prices, marks, focus */
+    /* ЗАЛИВКА кнопок — на полтона глубже сигнального розового: владелец
+       просит БЕЛЫЙ текст на розовом, а белое на #FF0198 даёт 3.7:1.
+       #DD0184 держит 4.76:1 и на глаз остаётся тем же розовым. */
+    --astra-pink-fill: #DD0184;
+    --astra-on-pink: #FFFFFF;   /* белые чернила на розовых заливках */
+    /* Ховер обязан держать те же 4.5:1 с белым, что и покой: #F0179A давал
+       3.97:1 — светлее #E30189 подниматься нельзя. */
+    --astra-pink-bright: #E30189;
+    --astra-soft: #FF89D6;      /* prices, tints */
+    --astra-violet: #8C61EC;    /* secondary interactive */
+    --astra-violet-wash: rgba(140, 97, 236, 0.13);
+    /* Скидка — собственный цвет, не розовый: пурпур, белый текст 6.1:1 */
+    --astra-drop: #7A3BD6;
+    --astra-deep: #720050;      /* shade, pressed */
+    --astra-magenta: #C4017A;   /* mid-step between pink and deep (404) */
+
+    /* Кольцо фокуса полей — нейтральное: розовая подсветка ввода убрана
+       по требованию владельца, но видимость фокуса сохраняется. */
+    --astra-focus-field: rgba(236, 234, 238, 0.55);
+
+    /* Gradient tokens kept for compatibility — v3 favors FLAT accent fills
+       (Block-Market philosophy: the accent is a signal, not a decoration).
+       Near-flat pair, used only by primary faces / active selection. */
+    --astra-grad-a: #FF0198;
+    --astra-grad-b: #E80189;
+    --astra-grad-c: #C4017A;
+    --astra-grad: linear-gradient(160deg, var(--astra-grad-a) 0%, var(--astra-grad-c) 100%);
+    --astra-grad-soft: linear-gradient(160deg, rgba(255, 1, 152, 0.12) 0%, rgba(114, 0, 80, 0.05) 100%);
+
+    /* Paper for the mascot's inner patches (surface it sits on) */
+    --astra-paper: var(--astra-bg-elev);
+
+    /* Glass */
+    --astra-glass: rgba(14, 14, 16, 0.64);
+    --astra-glass-strong: rgba(16, 16, 20, 0.9);
+    --astra-glass-line: rgba(236, 234, 238, 0.1);
+    --astra-blur: saturate(1.3) blur(16px);
+
+    /* Depth — РОВНО ОДИН мягкий слой на поверхность: широкий радиус,
+       низкая непрозрачность, без стопок и без цветных ореолов. */
+    --astra-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.55);
+    --astra-shadow-sm: 0 10px 30px -14px rgba(0, 0, 0, 0.45);
+    /* Цветных ореолов (--astra-glow*) здесь БОЛЬШЕ НЕТ: розовое свечение под
+       кнопкой — это второй слой тени, а раунд 6 оставил ровно один. */
+
+    /* Shape v4 — скругления подняты к поисковой строке (решение владельца).
+       Ориентир один: пилюля поиска в шапке, высота 44px, --astra-r-pill.
+       На такой высоте пилюля даёт 22px по углам — отсюда и берётся мера
+       для органов управления (r-md): кнопка, поле и чип высотой 44px
+       получают ровно тот же силуэт, что и поиск.
+
+       Крупные поверхности к пилюле НЕ приводятся: у панели 280x212
+       радиус 999px схлопнулся бы в половину меньшей стороны (106px), и
+       карточка превратилась бы в лепёшку. Им дана та же мягкость по
+       возрастанию: 24 у карточек, 28 у плиток и панелей.
+       Было (v3): 6 / 8 / 10 / 12. */
+    --astra-r-xl: 28px; /* tiles, panels */
+    --astra-r-lg: 24px; /* cards */
+    --astra-r-md: 22px; /* controls — силуэт поисковой пилюли на 44px */
+    --astra-r-sm: 10px; /* small chrome: бейджи, мелкие метки */
+    --astra-r-pill: 999px; /* avatars and genuinely round things only */
+
+    /* ВНИМАНИЕ: «рогатый» срез сейчас НЕ ВИДЕН НИГДЕ. Скруглённый угол
+       вырезает больше, чем диагональный срез, когда радиус >= среза, а
+       после v4 это верно для всех носителей насечки без исключения:
+       кнопка 22 против 10, бейдж 10 против 7, панель поиска 28 против 22,
+       выпадашка профиля 24 против 18. Сам механизм оставлен на месте:
+       он по-прежнему обрезает outline и box-shadow, и на нём держатся
+       .astra-ring и .dropdown-shadow — снимать его заодно со скруглением
+       значило бы тронуть фокус и тени там, где владелец об этом не просил.
+       Чтобы насечка вернулась, радиус носителя должен стать МЕНЬШЕ среза. */
+    --astra-notch: 14px; /* horn-cut size */
+
+    /* Type — ТРИ голоса, у каждого своя работа (решение владельца):
+         --astra-heading  Mon Trappist, ТОЛЬКО заголовки и ТОЛЬКО прописными;
+         --astra-display  Unbounded — деньги, кнопки, бейджи, мелкие титры;
+         --astra-body     Golos Text — весь связный текст.
+       Заголовочный голос вынесен отдельным токеном, а не подменой display:
+       display занят не только заголовками (цена, кнопка, бейдж), и подмена
+       утащила бы Mon Trappist туда, где владелец его не просил. */
+    --astra-heading: "Mon Trappist", "Unbounded", -apple-system, "Segoe UI", sans-serif;
+
+    /* Кегль заголовков — одним множителем (решение владельца: ×2).
+       Каждое правило заголовка держит СВОЙ базовый размер и умножает его
+       здесь: font-size: calc((24px) * var(--astra-heading-scale)). Поэтому
+       clamp() и брейкпоинты продолжают работать — множится вся кривая
+       целиком, а не подменяется одним числом. Поменять «во сколько раз»
+       можно тут, в одной строке. */
+    --astra-heading-scale: 2;
+    --astra-display: "Unbounded", "Golos Text", -apple-system, "Segoe UI", sans-serif;
+    --astra-body: "Golos Text", -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    /* Status */
+    --astra-ok: #3DDC97;
+    --astra-warn: #FFC14D;
+    --astra-err: #FF4D5E;
+
+    /* Motion v3 — ONE easing, three durations (150 / 300 / 800ms),
+       reveal-once staggers 60ms capped at 6 (Block-Market grammar). */
+    --astra-ease: cubic-bezier(0.3, 0.7, 0.2, 1);
+    --astra-t-color: 500ms;
+    --astra-t-move: 400ms;
+    --astra-t-enter: 800ms;
+}
+
+/* ---------- reveal-once-on-scroll ---------- */
+.astra-reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+        opacity var(--astra-t-enter) var(--astra-ease),
+        transform var(--astra-t-enter) var(--astra-ease);
+    transition-delay: var(--reveal-delay, 0ms);
+}
+
+.astra-reveal.is-revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ---------- press feedback (all interactive chrome) ---------- */
+.astra-press:active {
+    transform: scale(0.98);
+    transition-duration: 80ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .astra-reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+    }
+}
+
+/* ---------- signature horn notch ---------- */
+.astra-notch {
+    clip-path: polygon(
+        0 0,
+        calc(100% - var(--astra-notch)) 0,
+        100% var(--astra-notch),
+        100% 100%,
+        0 100%
+    );
+}
+
+.astra-notch-sm {
+    --astra-notch: 10px;
+    clip-path: polygon(
+        0 0,
+        calc(100% - var(--astra-notch)) 0,
+        100% var(--astra-notch),
+        100% 100%,
+        0 100%
+    );
+}
+
+/* ---------- glass panel ---------- */
+.astra-glass-panel {
+    background: var(--astra-glass);
+    -webkit-backdrop-filter: var(--astra-blur);
+    backdrop-filter: var(--astra-blur);
+    border: 1px solid var(--astra-glass-line);
+}
+
+/* ---------- primary button — плоская розовая заливка, БЕЛЫЙ текст.
+     Ховер сдержанный: только смена заливки, без подскока и без ореола. ---------- */
+.astra-btn {
+    --astra-notch: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    cursor: pointer;
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+    font-family: var(--astra-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.01em;
+    clip-path: polygon(0 0, calc(100% - var(--astra-notch)) 0, 100% var(--astra-notch), 100% 100%, 0 100%);
+    border-radius: var(--astra-r-md);
+    text-decoration: none;
+    box-shadow: none;
+    transition: background var(--astra-t-color) var(--astra-ease);
+}
+
+.astra-btn:hover { background: var(--astra-pink-bright); }
+.astra-btn:active { transform: scale(0.985); transition-duration: 80ms; }
+.astra-btn:focus-visible { outline: 2px solid var(--astra-ink); outline-offset: 3px; }
+.astra-btn:disabled {
+    background: var(--astra-card-2);
+    color: var(--astra-ink-dim);
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* secondary (outline on dark) — ховер в собственной ясеневой гамме,
+   без розовой рамки: розовый остаётся сигналом действия, а не подсветкой.
+
+   Форма и голос — ТЕ ЖЕ, что у первичной кнопки: r-md (силуэт поисковой
+   пилюли на 44px) и кнопочный шрифт --astra-display. Раньше призрак носил
+   r-sm и текстовый Golos — и владелец трижды ловил это как разнобой:
+   на экране поддержки, затем на кнопках попапа, затем на CTA «Сотрудничества».
+   Кнопки различаются ЗАЛИВКОЙ (розовая/прозрачная), не формой и не шрифтом. */
+.astra-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 22px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--astra-ink);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    font-family: var(--astra-display);
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
+
+.astra-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.075);
+    border-color: rgba(236, 234, 238, 0.3);
+}
+
+.astra-btn-ghost:focus-visible { outline: 2px solid var(--astra-ink); outline-offset: 3px; }
+
+/* ---------- badges — flat signals, notch kept as the brand bite ---------- */
+.astra-badge {
+    --astra-notch: 7px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    font-family: var(--astra-display);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--astra-on-pink);
+    background: var(--astra-pink-fill);
+    clip-path: polygon(0 0, calc(100% - var(--astra-notch)) 0, 100% var(--astra-notch), 100% 100%, 0 100%);
+    border-radius: var(--astra-r-sm);
+}
+
+.astra-badge--new {
+    background: var(--astra-violet-wash);
+    color: #B9A3F5;
+    border: 1px solid rgba(140, 97, 236, 0.35);
+}
+
+/* Скидка носит СВОЙ цвет (пурпур), а не розовый действия */
+.astra-badge--drop { background: var(--astra-drop); color: #fff; }
+
+/* ---------- chips — скругление 8px, не «таблетка» ---------- */
+.astra-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border-radius: var(--astra-r-md);
+    border: 1px solid var(--astra-line);
+    background: var(--astra-card);
+    color: var(--astra-ink-dim);
+    font-family: var(--astra-body);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition:
+        color var(--astra-t-color) var(--astra-ease),
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
+
+.astra-chip:hover {
+    color: var(--astra-ink);
+    background: var(--astra-card-2);
+    border-color: var(--astra-line-strong);
+}
+
+.astra-chip.is-active {
+    background: var(--astra-pink-fill);
+    border-color: transparent;
+    color: var(--astra-on-pink);
+    box-shadow: none;
+}
+
+.astra-chip.is-active:hover { background: var(--astra-pink-bright); }
+
+.astra-chip:focus-visible { outline: 2px solid var(--astra-ink); outline-offset: 2px; }
+
+/* ---------- поля ввода: НИКАКОЙ подсветки при вводе ----------
+   Владелец убрал и розовую, и серую реакцию: поле, в которое печатают,
+   не должно подсвечиваться само. Мышиный клик не меняет ничего.
+   Единственное исключение — обход с КЛАВИАТУРЫ (:focus-visible): без
+   видимого индикатора фокус пропадает и по табу невозможно понять, где
+   ты находишься. Ставим тонкий ясеневый контур, а не заливку. */
+.astra-field:focus,
+input.astra-field:focus,
+textarea.astra-field:focus,
+select.astra-field:focus {
+    outline: none;
+    border-color: inherit;
+    box-shadow: none;
+    background-image: none;
+}
+
+/* Кольцо — ТОЛЬКО когда пользователь идёт с клавиатуры. :focus-visible
+   здесь не работает: спецификация обязывает его совпадать с текстовым
+   полем и при клике мышью, поэтому подсветка возвращалась. Режим ввода
+   помечает <html data-modality> (frontend/src/index.js). */
+:root[data-modality="keyboard"] .astra-field:focus,
+:root[data-modality="keyboard"] input.astra-field:focus,
+:root[data-modality="keyboard"] textarea.astra-field:focus,
+:root[data-modality="keyboard"] select.astra-field:focus {
+    outline: 1px solid var(--astra-focus-field);
+    outline-offset: 0;
+    box-shadow: none;
+}
+
+/* Тап по полю на мобильном тоже не должен вспыхивать серым */
+html {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ---------- полоса прокрутки, скрытая внутри контейнера ---------- */
+.astra-no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.astra-no-scrollbar::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
+
+/* ---------- marquee ---------- */
+@keyframes astra-marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+/* ---------- skeleton shimmer ---------- */
+.astra-skeleton {
+    background: linear-gradient(100deg, var(--astra-card) 40%, var(--astra-card-2) 50%, var(--astra-card) 60%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite linear;
+    border-radius: var(--astra-r-sm);
+}
+
+/* ---------- shared focus ---------- */
+.astra-focusable:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 3px;
+}
+
+/* ---------- grain / texture (Grainient & TextureOverlay adaptations) ---------- */
+/* Film grain via feTurbulence — sits on panels at whisper opacity */
+.astra-grain {
+    position: relative;
+}
+
+.astra-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+/* Dotted texture for quiet panel depth */
+.astra-texture-dots {
+    background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+    background-size: 9px 9px;
+}
+
+/* ---------- focus ring host for notched (clip-path) controls ----------
+   clip-path clips outlines; put the notch on the child and this class on
+   the unclipped wrapper so keyboard focus stays visible. */
+.astra-ring {
+    display: inline-flex;
+    border-radius: var(--astra-r-sm);
+}
+
+.astra-ring:focus-within {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 3px;
+}
+
+/* Keyboard-only where :has() exists — mouse clicks don't flash the ring */
+@supports selector(:has(*)) {
+    .astra-ring:focus-within {
+        outline: none;
+    }
+
+    .astra-ring:has(:focus-visible) {
+        outline: 2px solid var(--astra-pink);
+        outline-offset: 3px;
+    }
+}
+
+/* ---------- section titles ---------- */
+.astra-h {
+    font-weight: 700;
+    color: var(--astra-ink);
+    margin: 0;
+}
+
+/* ============================================================
+   ЗАГОЛОВКИ — Mon Trappist, ПРОПИСНЫМИ. Единственное место, где живёт
+   заголовочная гарнитура; всё остальное осталось на Unbounded/Golos.
+
+   Почему список селекторов собран здесь, а не разложен по файлам
+   страниц: правила страниц подключаются ПОЗЖЕ темы, и при равной
+   специфичности выигрывали бы они. Префикс :root поднимает вес на один
+   класс и делает этот блок единственной точкой правды — добавить
+   заголовок значит дописать сюда строку, а не искать её по пятнадцати
+   файлам.
+
+   Трекинг: у остальных заголовков он был отрицательным (-0.01…-0.03em) —
+   так набирают строчные. Прописные от минуса слипаются, поэтому здесь он
+   переопределён для всех сразу. Значение уполовинено с 0.02em до 0.01em
+   (решение владельца): на удвоенном кегле прежний разряд читался уже как
+   разрядка, а не как воздух между буквами — em растёт вместе с кеглем.
+   ============================================================ */
+:root .astra-h,
+:root .srch-title,
+:root .srch-state-title,
+:root .cqb-title,
+:root .basket-title,
+:root .basket-state-title,
+:root .basket-empty-title,
+:root .basket-summary-title,
+:root .about-value-card h3,
+:root .coop-value-card h3,
+:root .coop-step-body h3,
+:root .profile-title,
+:root .orders-page h1,
+:root .about-title,
+:root .about-section-title,
+:root .coop-title,
+:root .coop-section-title,
+:root .not-found-title,
+:root .astra-auth-title,
+:root .search-modal-title,
+:root .mm-steam-title,
+:root .mm-rules-title,
+:root .steam-refill-hero h1,
+:root .steam-refill-info-title,
+:root .seller-chat-head h1,
+:root .support-chat .chat-header h2,
+:root .astra-footer__title,
+:root .orders-title,
+:root .profile-card h2,
+:root .profile-card-head h2,
+:root .profile-avatars-head h2,
+:root .about-cta-inner h2,
+:root .coop-cta-inner h2,
+:root .legal-content .about-section h2 {
+    font-family: var(--astra-heading);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+}

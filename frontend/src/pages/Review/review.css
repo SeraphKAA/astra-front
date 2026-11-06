@@ -1,0 +1,773 @@
+/* ============================================================
+   Review page — ASTRA v3 «Ash and Signal»
+   Все цвета, радиусы, шрифты и анимации приведены к единой системе.
+   ============================================================ */
+
+.review-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 24px 16px 48px;
+  box-sizing: border-box;
+  background: var(--astra-bg, #0B0B0D);
+  min-height: 100vh;
+}
+
+.review-content {
+  width: 100%;
+  max-width: 1200px;
+  border-radius: var(--astra-r-xl, 28px);
+  padding: 24px;
+  background: var(--astra-card, #18181B);
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+  color: var(--astra-ink, #ECEAEE);
+}
+
+.review-title {
+  font-family: var(--astra-heading, "Mon Trappist", "Unbounded", sans-serif);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  font-size: calc((28px) * var(--astra-heading-scale, 1));
+  font-weight: 700;
+  margin: 0 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+  color: var(--astra-ink, #ECEAEE);
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.review-header .review-title {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* Кнопка создания отзыва */
+.btn-create-review {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  cursor: pointer;
+  background: var(--astra-pink-fill, #DD0184);
+  color: var(--astra-on-pink, #FFFFFF);
+  font-family: var(--astra-display, "Unbounded", "Golos Text", sans-serif);
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: var(--astra-r-md, 22px);
+  text-decoration: none;
+  transition: background var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
+}
+.btn-create-review:hover {
+  background: var(--astra-pink-bright, #E30189);
+}
+.btn-create-review:focus-visible {
+  outline: 2px solid var(--astra-ink, #ECEAEE);
+  outline-offset: 3px;
+}
+
+/* Статистика */
+.review-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 40px;
+  /* background: var(--astra-card-2, #1F1F23); */
+  /* border-radius: var(--astra-r-lg, 24px); */
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  align-items: center;
+  /* border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08)); */
+}
+.stat-item {
+  display: flex;
+  flex-direction: column;
+}
+.stat-label {
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+  color: var(--astra-ink-dim, #A5A2AB);
+}
+.stat-value {
+  font-family: var(--astra-display, "Unbounded", "Golos Text", sans-serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--astra-ink, #ECEAEE);
+}
+.stat-distribution {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.dist-item {
+  display: flex;
+  gap: 6px;
+  background: var(--astra-bg-elev, #121214);
+  padding: 4px 12px;
+  border-radius: var(--astra-r-sm, 10px);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+  color: var(--astra-ink-dim, #A5A2AB);
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+}
+
+/* Фильтры */
+.review-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  background: var(--astra-card-2, #1F1F23);
+  padding: 16px;
+  border-radius: var(--astra-r-lg, 24px);
+  align-items: center;
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+}
+.review-filters input,
+.review-filters select {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+  border-radius: var(--astra-r-md, 22px);
+  background: var(--astra-bg-elev, #121214);
+  color: var(--astra-ink, #ECEAEE);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+  transition: border-color var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.review-filters input:focus,
+.review-filters select:focus {
+  outline: none;
+  border-color: var(--astra-pink, #FF0198);
+}
+.review-filters button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--astra-ink, #ECEAEE);
+  border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+  border-radius: var(--astra-r-md, 22px);
+  font-family: var(--astra-display, "Unbounded", "Golos Text", sans-serif);
+  font-weight: 600;
+  font-size: 14px;
+  transition: background var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1)),
+              border-color var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
+  box-sizing: border-box;
+  max-width: 100%;
+}
+.review-filters button:hover {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(236, 234, 238, 0.3);
+}
+.review-filters button:focus-visible {
+  outline: 2px solid var(--astra-ink, #ECEAEE);
+  outline-offset: 3px;
+}
+
+/* Сетка */
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Карточка отзыва */
+.review-card {
+  background: var(--astra-card-2, #1F1F23);
+  border-radius: var(--astra-r-lg, 24px);
+  padding: 16px 18px;
+  border-left: 4px solid var(--astra-pink, #FF0198);
+  transition: transform var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1)),
+              box-shadow var(--astra-t-move, 300ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1)),
+              border-color var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
+  display: flex;
+  flex-direction: column;
+  animation: reviewFadeIn 0.4s ease forwards;
+  opacity: 0;
+  transform: translateY(10px);
+  cursor: pointer;
+}
+@keyframes reviewFadeIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+.review-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--astra-shadow-sm, 0 10px 30px -14px rgba(0, 0, 0, 0.45));
+  border-color: var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+}
+
+.review-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+}
+.review-author {
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--astra-ink, #ECEAEE);
+}
+
+/* Звёзды */
+.rating-stars,
+.review-rating-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.star-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--astra-pink, #FF0198);
+  flex-shrink: 0;
+}
+.star-icon.full {
+  fill: var(--astra-pink, #FF0198);
+}
+.star-icon.half {
+  fill: var(--astra-pink, #FF0198);
+}
+.star-icon.empty {
+  color: var(--astra-ink-faint, #75727C);
+  stroke: var(--astra-pink, #FF0198);
+  fill: none;
+}
+
+.review-status {
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: var(--astra-r-sm, 10px);
+  background: var(--astra-card-2, #1F1F23);
+  color: var(--astra-ink-dim, #A5A2AB);
+  text-transform: capitalize;
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+}
+.review-status.status-approved {
+  background: rgba(61, 220, 151, 0.15);
+  color: var(--astra-ok, #3DDC97);
+  border-color: rgba(61, 220, 151, 0.3);
+}
+.review-status.status-rejected {
+  background: rgba(255, 77, 94, 0.15);
+  color: var(--astra-err, #FF4D5E);
+  border-color: rgba(255, 77, 94, 0.3);
+}
+.review-status.status-pending {
+  background: rgba(255, 193, 77, 0.15);
+  color: var(--astra-warn, #FFC14D);
+  border-color: rgba(255, 193, 77, 0.3);
+}
+.review-status.status-deleted {
+  background: rgba(117, 114, 124, 0.15);
+  color: var(--astra-ink-faint, #75727C);
+  border-color: rgba(117, 114, 124, 0.3);
+  text-decoration: line-through;
+}
+
+.review-text {
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--astra-ink-dim, #A5A2AB);
+  margin: 6px 0 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  flex: 1;
+}
+
+/* Кнопки внутри карточки (если понадобятся) */
+.review-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.review-card-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 14px;
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+  border-radius: var(--astra-r-sm, 10px);
+  background: transparent;
+  color: var(--astra-ink-dim, #A5A2AB);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1)),
+              border-color var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
+}
+.review-card-actions button:hover {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+}
+.review-card-actions button:focus-visible {
+  outline: 2px solid var(--astra-ink, #ECEAEE);
+  outline-offset: 2px;
+}
+
+/* Специфичные кнопки модерации */
+.btn-moderate.approve {
+  background: rgba(61, 220, 151, 0.15);
+  color: var(--astra-ok, #3DDC97);
+  border-color: rgba(61, 220, 151, 0.3);
+}
+.btn-moderate.approve:hover {
+  background: rgba(61, 220, 151, 0.25);
+}
+.btn-moderate.reject {
+  background: rgba(255, 77, 94, 0.15);
+  color: var(--astra-err, #FF4D5E);
+  border-color: rgba(255, 77, 94, 0.3);
+}
+.btn-moderate.reject:hover {
+  background: rgba(255, 77, 94, 0.25);
+}
+.btn-restore {
+  background: rgba(140, 97, 236, 0.15);
+  color: var(--astra-violet, #8C61EC);
+  border-color: rgba(140, 97, 236, 0.3);
+}
+.btn-restore:hover {
+  background: rgba(140, 97, 236, 0.25);
+}
+.btn-edit {
+  background: rgba(255, 193, 77, 0.15);
+  color: var(--astra-warn, #FFC14D);
+  border-color: rgba(255, 193, 77, 0.3);
+}
+.btn-edit:hover {
+  background: rgba(255, 193, 77, 0.25);
+}
+.btn-delete {
+  background: rgba(255, 77, 94, 0.15);
+  color: var(--astra-err, #FF4D5E);
+  border-color: rgba(255, 77, 94, 0.3);
+}
+.btn-delete:hover {
+  background: rgba(255, 77, 94, 0.25);
+}
+
+/* Форма редактирования внутри карточки */
+.review-edit-form {
+  margin: 8px 0 12px;
+}
+.review-edit-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+  border-radius: var(--astra-r-md, 22px);
+  background: var(--astra-bg-elev, #121214);
+  color: var(--astra-ink, #ECEAEE);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.review-edit-form textarea:focus {
+  outline: none;
+  border-color: var(--astra-pink, #FF0198);
+}
+.review-edit-form div {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.review-edit-form label {
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  color: var(--astra-ink-dim, #A5A2AB);
+  font-size: 14px;
+}
+.review-edit-form input[type="number"] {
+  width: 60px;
+  padding: 6px 10px;
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+  border-radius: var(--astra-r-md, 22px);
+  background: var(--astra-bg-elev, #121214);
+  color: var(--astra-ink, #ECEAEE);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+}
+.review-edit-form button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: var(--astra-r-md, 22px);
+  background: var(--astra-pink-fill, #DD0184);
+  color: var(--astra-on-pink, #FFFFFF);
+  font-family: var(--astra-display, "Unbounded", "Golos Text", sans-serif);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
+}
+.review-edit-form button:hover {
+  background: var(--astra-pink-bright, #E30189);
+}
+.review-edit-form button:last-of-type {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--astra-ink, #ECEAEE);
+  border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+}
+.review-edit-form button:last-of-type:hover {
+  background: rgba(255, 255, 255, 0.075);
+}
+.review-edit-form button:focus-visible {
+  outline: 2px solid var(--astra-ink, #ECEAEE);
+  outline-offset: 3px;
+}
+
+.review-product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--astra-ink-dim);
+}
+
+.review-product-image {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: var(--astra-r-sm);
+}
+
+.review-product-name {
+  font-weight: 500;
+}
+
+/* В модалке */
+.detail-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  margin-left: 0;
+}
+
+.detail-product-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 0;
+}
+
+.detail-product-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: var(--astra-r-sm);
+}
+
+/* Скролл-сентинел */
+.scroll-sentinel {
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--astra-ink-dim, #A5A2AB);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+  padding: 8px 0;
+}
+
+.error,
+.review-error {
+  color: var(--astra-err, #FF4D5E);
+  background: rgba(255, 77, 94, 0.1);
+  padding: 12px 16px;
+  border-radius: var(--astra-r-md, 22px);
+  border: 1px solid rgba(255, 77, 94, 0.3);
+  text-align: center;
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+}
+.review-empty {
+  color: var(--astra-ink-dim, #A5A2AB);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 16px;
+  text-align: center;
+  padding: 40px 0;
+}
+
+/* Модалки создания/редактирования (контент внутри Modal) */
+.review-modal-form,
+.review-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.review-modal-field,
+.review-create-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.review-modal-field label,
+.review-create-field label {
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-weight: 600;
+  color: var(--astra-ink-dim, #A5A2AB);
+  font-size: 14px;
+}
+.review-modal-field input,
+.review-modal-field textarea,
+.review-create-field input,
+.review-create-field textarea {
+  padding: 10px 12px;
+  border-radius: var(--astra-r-md, 22px);
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+  background: var(--astra-bg-elev, #121214);
+  color: var(--astra-ink, #ECEAEE);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+  transition: border-color var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
+}
+.review-modal-field input:focus,
+.review-modal-field textarea:focus,
+.review-create-field input:focus,
+.review-create-field textarea:focus {
+  outline: none;
+  border-color: var(--astra-pink, #FF0198);
+}
+.review-modal-actions,
+.review-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+.review-modal-actions button,
+.review-create-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--astra-r-md, 22px);
+  font-family: var(--astra-display, "Unbounded", "Golos Text", sans-serif);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
+}
+.review-modal-actions button:first-child,
+.review-create-actions button:first-child {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--astra-ink, #ECEAEE);
+  border: 1px solid var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+}
+.review-modal-actions button:first-child:hover,
+.review-create-actions button:first-child:hover {
+  background: rgba(255, 255, 255, 0.075);
+}
+.review-modal-actions button:last-child,
+.review-create-actions button:last-child {
+  background: var(--astra-pink-fill, #DD0184);
+  color: var(--astra-on-pink, #FFFFFF);
+}
+.review-modal-actions button:last-child:hover:not(:disabled),
+.review-create-actions button:last-child:hover:not(:disabled) {
+  background: var(--astra-pink-bright, #E30189);
+}
+.review-modal-actions button:disabled,
+.review-create-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.review-modal-actions button:focus-visible,
+.review-create-actions button:focus-visible {
+  outline: 2px solid var(--astra-ink, #ECEAEE);
+  outline-offset: 3px;
+}
+
+/* Детальная модалка */
+.review-detail .detail-row {
+  display: flex;
+  margin-bottom: 10px;
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+  color: var(--astra-ink, #ECEAEE);
+}
+.review-detail .detail-label {
+  font-weight: 600;
+  min-width: 140px;
+  color: var(--astra-ink-dim, #A5A2AB);
+}
+.review-detail .detail-row p {
+  margin: 0;
+  flex: 1;
+  color: var(--astra-ink, #ECEAEE);
+}
+.review-detail .review-detail-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.review-detail .review-detail-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid var(--astra-line, rgba(236, 234, 238, 0.08));
+  border-radius: var(--astra-r-md, 22px);
+  background: transparent;
+  color: var(--astra-ink-dim, #A5A2AB);
+  font-family: var(--astra-body, "Golos Text", sans-serif);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1)),
+              border-color var(--astra-t-color, 150ms) var(--astra-ease, cubic-bezier(0.3, 0.7, 0.2, 1));
+}
+.review-detail .review-detail-actions button:hover {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: var(--astra-line-strong, rgba(236, 234, 238, 0.18));
+}
+.review-detail .review-detail-actions button:focus-visible {
+  outline: 2px solid var(--astra-ink, #ECEAEE);
+  outline-offset: 2px;
+}
+/* Специфические кнопки в деталях */
+.review-detail .btn-moderate.approve {
+  background: rgba(61, 220, 151, 0.15);
+  color: var(--astra-ok, #3DDC97);
+  border-color: rgba(61, 220, 151, 0.3);
+}
+.review-detail .btn-moderate.approve:hover {
+  background: rgba(61, 220, 151, 0.25);
+}
+.review-detail .btn-moderate.reject {
+  background: rgba(255, 77, 94, 0.15);
+  color: var(--astra-err, #FF4D5E);
+  border-color: rgba(255, 77, 94, 0.3);
+}
+.review-detail .btn-moderate.reject:hover {
+  background: rgba(255, 77, 94, 0.25);
+}
+.review-detail .btn-restore {
+  background: rgba(140, 97, 236, 0.15);
+  color: var(--astra-violet, #8C61EC);
+  border-color: rgba(140, 97, 236, 0.3);
+}
+.review-detail .btn-restore:hover {
+  background: rgba(140, 97, 236, 0.25);
+}
+.review-detail .btn-edit {
+  background: rgba(255, 193, 77, 0.15);
+  color: var(--astra-warn, #FFC14D);
+  border-color: rgba(255, 193, 77, 0.3);
+}
+.review-detail .btn-edit:hover {
+  background: rgba(255, 193, 77, 0.25);
+}
+.review-detail .btn-delete {
+  background: rgba(255, 77, 94, 0.15);
+  color: var(--astra-err, #FF4D5E);
+  border-color: rgba(255, 77, 94, 0.3);
+}
+.review-detail .btn-delete:hover {
+  background: rgba(255, 77, 94, 0.25);
+}
+
+/* ========== АДАПТИВНОСТЬ ========== */
+@media (max-width: 1024px) {
+  .review-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .review-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .review-content {
+    padding: 16px;
+  }
+  .review-stats {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .stat-distribution {
+    margin-left: 0;
+    justify-content: center;
+  }
+  .review-filters {
+    flex-direction: column;
+  }
+  .review-filters input,
+  .review-filters select,
+  .review-filters button {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+  .review-title {
+    font-size: calc((24px) * var(--astra-heading-scale, 1));
+  }
+  .review-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .btn-create-review {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-card {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .review-card,
+  .review-card-actions button,
+  .review-modal-actions button,
+  .review-create-actions button,
+  .review-detail .review-detail-actions button,
+  .review-filters input,
+  .review-filters select,
+  .review-filters button {
+    transition: none;
+  }
+}

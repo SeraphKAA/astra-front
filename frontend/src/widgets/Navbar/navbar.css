@@ -1,3 +1,802 @@
+/* ============================================================
+   ASTRA — top bar, v3 «ash and signal»
+   Один компактный ряд (~64px):
+       инертный локап | gooey-поиск | Поддержка · Корзина · профиль
+
+   Liquid glass: поверхность бара — .navbar-glass (внутренний
+   абсолютный слой с .astra-liquid), НЕ сам .navbar: backdrop-filter
+   создал бы containing block для fixed-потомков, а оверлей поиска
+   внутри шапки — position: fixed. Transform-анимации на стеклянных
+   элементах запрещены: двигаются только нестеклянные обёртки.
+
+   Раунд 5 (владелец):
+   #1  Поддержка и Корзина вернулись в бар иконками — и гостю, и
+       авторизованному; пункты дропдауна при этом сохранены.
+   #12 Поиск — порт GooeySearch.tsx: пилюля раскрывается по ширине,
+       пузырь отлипает на 8px, оба живут в одном goo-фильтре.
+   #13 Панель результатов — сплошной ясень без linzy: зеркальный
+       артефакт .astra-liquid владелец забраковал.
+   #14 Видимого крестика нет; выход — Escape, клик по затемнению и
+       один визуально скрытый (проявляющийся по фокусу) выход.
+
+   Раунд 6 (владелец отменяет часть раунда 5):
+   #5  Бренд снова КЛИКАБЕЛЕН — ссылка на /menu. Ховер сдержанный,
+       в ясеневой семье (подложка), розовый ховер логотипа не вернулся.
+   #2  Свёрнутая пилюля показывает запрос БЕЗ кавычек.
+   #3  Список результатов прокручивается без видимого ползунка.
+   Фундамент: поля ввода не подсвечиваются по клику — кольцо рисует
+   только :focus-visible; тени — ровно один мягкий слой.
+   ============================================================ */
+
+/* Убираем стандартные стили ссылок (глобально, как и раньше —
+   другие страницы полагаются на это правило) */
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.navbar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    /* Шапка — стековый контекст для своего поискового диалога: она должна
+       стоять НАД плавающим fx-слоем (EdgeBlur 2400 / подвал 2401),
+       но ПОД оверлеем быстрой покупки (4000) и тостами (5000). */
+    z-index: 3200;
+    box-sizing: border-box;
+
+    color: var(--astra-ink);
+    background: transparent;
+    border-bottom: 1px solid var(--astra-line);
+}
+
+/* liquid-glass слой бара: во всю площадь; кромки и тени панельного
+   пресета для полосы не нужны.
+   z-index здесь ЛОКАЛЬНЫЕ (внутри стекового контекста .navbar): поле
+   ввода поиска переехало в саму пилюлю, поэтому содержимое бара обязано
+   лежать НАД затемняющим оверлеем (3000), а не под ним. */
+.navbar-glass {
+    position: absolute;
+    inset: 0;
+    z-index: 3001;
+    pointer-events: none;
+}
+
+.navbar-glass.astra-liquid {
+    border: none;
+    border-radius: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Линзу с бара снимаем: при открытом поиске его фоном становится
+   затемнение, и по кромкам оживал тот самый зеркальный артефакт,
+   который владелец забраковал. Полосе линза ничего не даёт. */
+.navbar-glass.astra-liquid::after {
+    content: none;
+}
+
+/* скрытые defs goo-фильтра */
+.nav-goo-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+/* ---------- единственный ряд ---------- */
+.navbar-inner {
+    position: relative;
+    z-index: 3002; /* локально: над оверлеем поиска (3000) */
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 28px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: clamp(12px, 2.5vw, 28px);
+    min-height: 64px;
+}
+
+/* ---------- визуально скрытое (локальная утилита виджета) ---------- */
+.nav-vh {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Скрытый выход из поиска проявляется, когда на него приходит фокус:
+   невидимая фокусируемая кнопка — это «пропавший фокус» для тех, кто
+   ходит с клавиатуры, а индикатор снимать нельзя. */
+.nav-vh-focusable:focus {
+    position: static;
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    margin: 0 0 10px;
+    padding: 0 14px;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+}
+
+/* ---------- бренд: маскот + словомарка, ССЫЛКА на /menu ----------
+     Раунд 5 сделал локап инертным; раунд 6 владелец это отменил — бренд
+     снова ведёт на главную. Но розовый ховер НЕ вернулся: подсветка —
+     сдержанная ясеневая подложка, чернила локапа не меняются, подъёма нет.
+     Одно доступное имя даёт aria-label ссылки, оба SVG — aria-hidden. */
+.nav-brand {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 13px;
+    flex-shrink: 0;
+    min-height: 44px;
+    color: var(--astra-ink);
+    /* внутренние патчи маскота = поверхность бара */
+    --astra-paper: var(--astra-bg-elev);
+    text-decoration: none;
+    border-radius: var(--astra-r-lg);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Подложка ховера — псевдоэлемент, а НЕ padding: так зазор маскот↔
+   словомарка (gap: 13px) и позиция локапа в баре не сдвигаются ни на
+   пиксель. Ни тени, ни ореола, ни translate. */
+.nav-brand::before {
+    content: "";
+    position: absolute;
+    inset: -6px -10px;
+    border-radius: var(--astra-r-xl);
+    background: rgba(255, 255, 255, 0);
+    pointer-events: none;
+    transition: background var(--astra-t-color) var(--astra-ease);
+}
+
+.nav-brand:hover::before {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.nav-brand:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 4px;
+}
+
+/* position: relative — чтобы абсолютная подложка рисовалась ПОД арт-ом,
+   а не поверх него (макет от этого не меняется) */
+.nav-brand-mark {
+    position: relative;
+    display: block;
+    height: 30px;
+    width: 30px;
+    aspect-ratio: 1;
+    flex-shrink: 0;
+}
+
+.nav-brand-word {
+    position: relative;
+    display: block;
+    height: 18px;
+    width: auto;
+    aspect-ratio: 1180 / 280;
+    flex-shrink: 0;
+}
+
+.nav-brand-photo {
+    position: relative;
+    display: block;
+    /* Высота задаёт масштаб, ширина — производная (auto) */
+    height: 50px;
+    width: auto;
+    /* Реальные пропорции ассета: 9988 × 4209. Используется до загрузки
+       картинки — иначе бренд прыгал бы по высоте в первом кадре. */
+    aspect-ratio: 9988 / 4209;
+    max-width: 100%;
+    flex-shrink: 0;
+    object-fit: contain;
+    /* на PNG --astra-paper не нужен — это токен для внутренних патчей SVG */
+}
+/* ============================================================
+   центр — GOOEY-ПОИСК (порт GooeySearch.tsx на React 18 + CSS).
+
+   Геометрия дублируется на двух слоях одинаковой раскладки:
+     .gooey-goo   — только силуэты (пилюля + пузырь), прогоняется
+                    через #astra-goo: feGaussianBlur 5 → feColorMatrix
+                    альфа 20/-10 → feComposite atop. Между фигурами
+                    тянется «шейка» — они разлепляются, а не разъезжаются.
+     .gooey-layer — форма с полем/кнопкой, БЕЗ фильтра: текст резкий.
+   Габарит .gooey фиксирован (обе раскладки absolute), поэтому раскрытие
+   пилюли не двигает ни локап, ни правый кластер.
+   На фильтрованном слое нет ни backdrop-filter, ни transform-анимаций —
+   он анимирует только width и margin своих детей.
+   ============================================================ */
+.nav-center {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.gooey {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    min-width: 0;
+    height: 44px;
+}
+
+.gooey-goo,
+.gooey-layer {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gooey-goo {
+    filter: url(#astra-goo);
+    pointer-events: none;
+}
+
+.gooey-layer {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+/* тела фигур сплошные: полупрозрачные заливки альфа-матрица goo съедает */
+/* Свёрнутая ширина — доля полосы, а не константа: на 1280 это 268px, а на
+   узком десктопе пилюля ужимается, чтобы раскрытие всегда читалось как рост,
+   а не как «плюс десять пикселей». */
+.gooey-goo-pill,
+.gooey-pill {
+    position: relative;
+    flex: none;
+    box-sizing: border-box;
+    width: min(320px, max(148px, 52%));
+    height: 44px;
+    border-radius: var(--astra-r-pill); /* санкционированное исключение radii v3 */
+    transition: width var(--astra-t-move) var(--astra-ease);
+}
+
+.gooey-goo-pill {
+    background: var(--astra-card);
+    transition:
+        width var(--astra-t-move) var(--astra-ease),
+        background var(--astra-t-color) var(--astra-ease);
+}
+
+/* раскрытие: пилюля растёт, освобождая пузырю 8px + его 44px */
+.gooey.is-open .gooey-goo-pill,
+.gooey.is-open .gooey-pill {
+    width: calc(100% - 52px);
+}
+
+/* пузырь: свёрнутый — сидит ВНУТРИ правого края пилюли (одна капля),
+   раскрытый — отлипает на 8px за её край и goo рвётся в перемычку */
+.gooey-goo-bubble,
+.gooey-bubble {
+    flex: none;
+    box-sizing: border-box;
+    width: 44px;
+    height: 44px;
+    margin-left: -44px;
+    border-radius: var(--astra-r-pill);
+    transition: margin-left var(--astra-t-move) var(--astra-ease);
+}
+
+.gooey-goo-bubble {
+    background: var(--astra-card-2);
+}
+
+.gooey.is-open .gooey-goo-bubble,
+.gooey.is-open .gooey-bubble {
+    margin-left: 8px;
+}
+
+/* резкая волосяная кромка поверх goo-силуэта — она же индикатор фокуса */
+.gooey-face {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--astra-r-pill);
+    border: 1px solid var(--astra-line);
+    box-sizing: border-box;
+    pointer-events: none;
+    transition: border-color var(--astra-t-color) var(--astra-ease);
+}
+
+/* ховер — только смена поверхности: ни подскока, ни ореола, ни розовой рамки */
+.gooey:hover .gooey-face {
+    border-color: var(--astra-line-strong);
+}
+
+.gooey:hover .gooey-goo-pill {
+    background: var(--astra-card-2);
+}
+
+/* Фокус — РОВНО ОДИН 1px ясеневый контур на кромке пилюли, и только с
+   КЛАВИАТУРЫ. Раньше здесь стоял :focus-within с box-shadow-кольцом:
+   поле подсвечивалось от простого клика мышью, а кольцо было вторым,
+   жёстким слоем поверх рамки. Оба запрета фундамента сняты разом.
+   Селектор — общий сиблинг: .gooey-face стоит в разметке ПОСЛЕ поля.
+
+   Гейт по модальности обязателен: одного :focus-visible мало. По
+   спецификации он ВСЕГДА совпадает с текстовым полем — даже когда в поле
+   ткнули мышью, — поэтому кромка пилюли светлела от обычного клика в
+   поиск. Это самое частое поле на сайте, и запрет владельца («никакой
+   подсветки при клике») нарушался чаще всего именно здесь. */
+:root[data-modality="keyboard"] .gooey-input:focus-visible ~ .gooey-face,
+:root[data-modality="keyboard"] .gooey-trigger:focus-visible ~ .gooey-face {
+    border-color: var(--astra-focus-field);
+}
+
+/* свёрнутое состояние — кнопка-подпись */
+.gooey-trigger {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 0 52px 0 20px;
+    border: 0;
+    background: transparent;
+    border-radius: var(--astra-r-pill);
+    color: var(--astra-ink-dim);
+    font-family: var(--astra-body);
+    font-size: 16px; /* >=16px — iOS не зумит */
+    text-align: left;
+    cursor: text;
+    transition: color var(--astra-t-color) var(--astra-ease);
+}
+
+.gooey:hover .gooey-trigger {
+    color: var(--astra-ink);
+}
+
+/* кольцо рисует .gooey-face (иначе оно резалось бы о пилюлю) */
+.gooey-trigger:focus-visible {
+    outline: none;
+}
+
+.gooey-trigger-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* короткая подпись — там, где длинная уже не помещается целиком */
+.gooey-trigger-label--short {
+    display: none;
+}
+
+@media (max-width: 1000px) {
+    .gooey-trigger-label--full {
+        display: none;
+    }
+
+    .gooey-trigger-label--short {
+        display: block;
+    }
+}
+
+/* раскрытое состояние — настоящее поле.
+   Поведение .astra-field скопировано вручную (кольцо рисует .gooey-face,
+   прямоугольный outline внутри пилюли выглядел бы поломкой): клик мышью
+   не меняет НИЧЕГО — ни рамки, ни фона, ни тени. */
+.gooey-input {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0 20px;
+    border: 0;
+    background: transparent;
+    outline: none;
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-size: 16px; /* >=16px — iOS не зумит */
+}
+
+.gooey-input:focus {
+    outline: none;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.gooey-input::placeholder {
+    color: var(--astra-ink-dim);
+}
+
+/* нативный крестик у type=search не нужен: очистка — «Очистить» и Escape */
+.gooey-input::-webkit-search-cancel-button,
+.gooey-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* пузырь на контентном слое: свёрнутый — просто глиф, раскрытый —
+   кнопка отправки в 44px */
+.gooey-bubble {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    /* кромка — настоящая рамка, а не inset-тень: box-sizing: border-box,
+       поэтому 44px пузыря от неё не меняются, а слоёв теней не заводится */
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--astra-ink-dim);
+    cursor: pointer;
+    transition:
+        margin-left var(--astra-t-move) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
+
+/* свёрнутый пузырь — просто глиф на правом торце пилюли: клики проваливаются
+   на кнопку-триггер под ним */
+.gooey:not(.is-active) .gooey-bubble {
+    pointer-events: none;
+}
+
+.gooey.is-active .gooey-bubble {
+    color: var(--astra-ink);
+    border-color: var(--astra-line);
+}
+
+.gooey-bubble:hover {
+    color: var(--astra-ink);
+}
+
+.gooey-bubble:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 3px;
+}
+
+.gooey-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+/* «вуаль» — работает только в узком режиме (см. медиазапрос) */
+.gooey-veil {
+    display: none;
+}
+
+/* ---------- правый кластер: Поддержка · Корзина · профиль ---------- */
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    position: relative;
+    margin-left: auto;
+}
+
+/* аккаунт вынесен в свою обёртку: дропдаун позиционируется по ней, а
+   клик по иконкам Поддержки/Корзины считается «снаружи» меню */
+.nav-account {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-left: 6px;
+}
+
+/* иконка-кнопка бара: ясеневая хромировка, ховер — только фон */
+.nav-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    border-radius: var(--astra-r-md); /* 8px — лестница 6/8/10/12 */
+    background: transparent;
+    color: var(--astra-ink-dim);
+    cursor: pointer;
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+    position: relative;
+}
+
+.nav-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--astra-ink);
+}
+
+.nav-icon-btn:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+}
+
+/* текущий раздел — светлее, без розовой рамки */
+.nav-icon-btn.is-active {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--astra-ink);
+}
+
+.nav-icon-glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-icon-glyph svg {
+    display: block;
+}
+
+/* ассеты приходят с зашитыми stroke="white" / opacity="0.7" — в баре они
+   должны слушаться currentColor и состояний кнопки */
+.nav-icon-glyph svg [stroke] {
+    stroke: currentColor;
+}
+
+.nav-icon-glyph svg [opacity] {
+    opacity: 1;
+}
+
+.nav-icon-glyph--support svg {
+    width: 22px;
+    height: 22px;
+}
+
+.nav-icon-glyph--basket svg {
+    width: 22px;
+    height: 20px;
+}
+
+/* гостевая кнопка «Войти»: белые чернила на --astra-pink-fill даёт .astra-btn;
+   notch съедает outline, поэтому кольцо на обёртке .astra-ring */
+.nav-login-ring {
+    flex-shrink: 0;
+    border-radius: var(--astra-r-sm);
+}
+
+.nav-login-btn {
+    padding: 12px 24px;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+/* ---------- кнопка-аватар ---------- */
+.profile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 2px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-pill); /* аватар — легитимная пилюля */
+    cursor: pointer;
+    transition:
+        border-color var(--astra-t-color) var(--astra-ease),
+        background var(--astra-t-color) var(--astra-ease);
+}
+
+/* ховер — светлее, не темнее; рамка остаётся в ясеневой семье */
+.profile:hover {
+    border-color: var(--astra-line-strong);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.profile:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+}
+
+/* открытое меню = активное состояние выбора */
+.profile.is-dropdown-open {
+    border-color: var(--astra-pink);
+}
+
+.avatar-large {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: block;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.profile .avatar-large {
+    width: 38px;
+    height: 38px;
+}
+
+/* заглушка без фото: авторский маскот-аватар (цвета зашиты в ассете) */
+.avatar-fallback {
+    overflow: hidden;
+    background: var(--astra-bg);
+}
+
+.avatar-fallback-art {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* ============================================================
+   дропдаун профиля — liquid glass с рог-нотчем.
+   Transform живёт на обёртке .dropdown (без стекла); стеклянная
+   панель анимирует ТОЛЬКО opacity — так blur не попадает под
+   transform и не режется квадратом в Chromium.
+   ============================================================ */
+.dropdown {
+    --astra-t-move: 180ms;
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: min(300px, calc(100vw - 24px));
+    z-index: 40;
+    transform: translateY(-12px) scale(0.97);
+    transform-origin: top right;
+    pointer-events: none;
+    transition: transform var(--astra-t-move) var(--astra-ease);
+    will-change: transform;
+}
+
+.dropdown.is-open {
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+}
+
+.dropdown.is-closing {
+    transform: translateY(-8px) scale(0.98);
+    pointer-events: none;
+    transition-duration: var(--astra-t-color);
+}
+
+/* тень на сиблинге: clip-path срезал бы box-shadow самой панели.
+   Слой РОВНО один и берётся из токена — своих «глубоких» стопок здесь
+   больше нет. */
+.dropdown-shadow {
+    position: absolute;
+    inset: 12px 6px -10px 6px;
+    border-radius: var(--astra-r-lg);
+    box-shadow: var(--astra-shadow);
+    opacity: 0;
+    transition: opacity var(--astra-t-move) var(--astra-ease);
+    pointer-events: none;
+}
+
+.dropdown.is-open .dropdown-shadow { opacity: 1; }
+.dropdown.is-closing .dropdown-shadow { opacity: 0; transition-duration: var(--astra-t-color); }
+
+.dropdown-panel {
+    position: relative;
+    box-sizing: border-box;
+    padding: 12px;
+    border-radius: var(--astra-r-lg);
+    /* clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%); */
+    opacity: 0;
+    transition: opacity var(--astra-t-move) var(--astra-ease);
+}
+
+/* заливку и blur даёт .astra-liquid/--deep; свой drop-shadow панели
+   не нужен (clip его всё равно срезает, тень — на сиблинге) */
+.dropdown-panel.astra-liquid {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Линза с панели профиля СНЯТА — тот же зеркальный артефакт, что владелец
+   забраковал на поиске и попапе покупки: displacement-фильтр по кромке
+   отражает контент под панелью (аватар, текст шапки) зеркальной полосой.
+   Базовое стекло (blur + saturate) остаётся — уходит только преломление. */
+.dropdown-panel.astra-liquid::after {
+    content: none;
+}
+
+.dropdown.is-open .dropdown-panel { opacity: 1; }
+.dropdown.is-closing .dropdown-panel { opacity: 0; transition-duration: var(--astra-t-color); }
+
+/* шапка пользователя */
+.profile-header {
+    margin-bottom: 10px;
+    opacity: 0;
+    transform: translateY(-6px);
+    filter: blur(5px);
+    transition:
+        opacity var(--astra-t-move) var(--astra-ease) 0.04s,
+        transform var(--astra-t-move) var(--astra-ease) 0.04s,
+        filter var(--astra-t-move) var(--astra-ease) 0.04s;
+}
+
+.dropdown.is-open .profile-header {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+.dropdown.is-closing .profile-header {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition-delay: 0s;
+    transition-duration: var(--astra-t-color);
+}
+
+.dropdown-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: var(--astra-r-sm);
+    text-decoration: none;
+    color: inherit;
+    transition: background var(--astra-t-color) var(--astra-ease);
+}
+
+/* ховер — светлее (люминанс вверх), розовый бережём для действий */
+.dropdown-user:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.dropdown-user:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+}
+
+.dropdown-user-meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.username {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--astra-ink);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* баланс — денежная величина, несёт мягко-розовый (цены) */
+.user-balance {
+    font-size: 13px;
+    color: var(--astra-soft);
+    margin-top: 2px;
+}
+
+/* меню */
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
 .navbar-item {
     text-decoration: none;
     color: inherit;
@@ -5,390 +804,199 @@
     align-items: center;
 }
 
-.navbar-item.active {
-    /* Стиль для активной ссылки */
-    position: relative;
+.navbar-item:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+    border-radius: var(--astra-r-sm);
 }
 
-.navbar-item.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    border-radius: 2px;
-}
-
-/* Убираем стандартные стили ссылок */
-a {
-    text-decoration: none;
-    color: inherit;
-}
-
-.navbar {
-    /* position: fixed; */
-    position: sticky;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    /* Явно задаем ширину */
-    z-index: 1000;
-
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    /* background: #0e0e0e; */
-    color: white;
-    gap: 20px;
-    padding: 15px 60px 15px 60px;
-    
-
-    /* Чтобы контент не выходил за пределы */
-    box-sizing: border-box;
-}
-
-.navbar-icon {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-}
-
-.divider-navbar {
-    height: 1px;
-    background: linear-gradient(90deg,
-            transparent,
-            #51515a,
-            transparent);
-    /* margin: 10px 0; */
-}
-
-.logo-navbar {
-    width: 121px;
-    flex-shrink: 0;
-
-    display: flex;
-    align-items: center;
-
-    line-height: 0;
-    padding-top: 10px;
-}
-
-.logo-navbar img {
+.dropdown .navbar-item {
     display: block;
-    width: 100%;
-    height: auto;
 }
-
-.nav-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-shrink: 0;
-    position: relative;
-}
-
-.nav-search-btn {
-    border: none;
-    color: white;
-}
-
-.profile {
-    cursor: pointer;
-    border-radius: 50%;
-    transition: transform var(--duration-fast) var(--ease-spring), box-shadow var(--duration-normal) ease;
-}
-
-
-.auth-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 14px;
-    border-radius: 10px;
-    background: #1c1c1f;
-    color: #fff;
-    font-weight: 700;
-}
-
-.avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-}
-
-.dropdown {
-    position: absolute;
-    top: 70px;
-    right: 0;
-    width: 260px;
-    background: #1c1c1f;
-    border-radius: 15px;
-    padding: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    z-index: 9999;
-    opacity: 0;
-    transform: translateY(-14px) scale(0.95);
-    transform-origin: top right;
-    pointer-events: none;
-    transition:
-        opacity 0.28s var(--ease-out-smooth),
-        transform 0.28s var(--ease-out-smooth),
-        box-shadow 0.28s var(--ease-out-smooth);
-    will-change: opacity, transform;
-}
-
-.dropdown.is-open {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
-    box-shadow:
-        0 16px 40px rgba(0, 0, 0, 0.45),
-        0 0 0 1px rgba(226, 121, 155, 0.12);
-}
-
-.dropdown.is-closing {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.97);
-    pointer-events: none;
-    transition-duration: 0.22s;
-}
-
-.profile-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-    opacity: 0;
-    transform: translateY(-6px);
-    transition:
-        opacity 0.25s var(--ease-out-smooth) 0.05s,
-        transform 0.25s var(--ease-out-smooth) 0.05s;
-}
-
-.dropdown.is-open .profile-header {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.dropdown.is-closing .profile-header {
-    opacity: 0;
-    transform: translateY(-4px);
-    transition-delay: 0s;
-    transition-duration: 0.15s;
-}
-
-.avatar-large {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    margin-right: 12px;
-    margin-left: 12px;
-    display: block;
-    object-fit: cover;
-    flex-shrink: 0;
-}
-
-.avatar-initials {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #E2799B; /* или любой другой цвет */
-    color: white;
-    font-weight: bold;
-    font-size: 28px;
-    text-transform: uppercase;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    line-height: 1;
-}
-
-.username {
-    font-weight: bold;
-}
-
-.user-id {
-    font-size: 12px;
-    color: gray;
-}
-
-.user-balance {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.78);
-    margin-top: 2px;
-}
-
-.menu {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.navbar-spec-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    color: white;
-
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-    background-color: #1c1c1f;
-}
-
-.navbar-spec-item:hover {
-    background: #2a2a2e;
-}
-
-
-
 
 .menu-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px;
-    border-radius: 8px;
+    gap: 12px;
+    padding: 11px 12px;
+    min-height: 44px;
+    box-sizing: border-box;
+    border-radius: var(--astra-r-sm);
+    font-family: var(--astra-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--astra-ink);
     cursor: pointer;
     transition:
-        background var(--duration-fast) ease,
-        transform var(--duration-fast) var(--ease-spring),
-        color var(--duration-fast) ease;
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
 }
 
+/* ховер — люминанс вверх, без сдвигов */
 .menu-item:hover {
-    background: #2a2a2e;
-    transform: translateX(3px);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.menu-item svg {
+    flex-shrink: 0;
+}
+
+/* активный пункт — розовое состояние выбора (сигнал действия) */
+.navbar-item.active .menu-item {
+    background: rgba(255, 1, 152, 0.12);
+    color: var(--astra-pink);
+}
+
+.divider-navbar {
+    height: 1px;
+    margin: 4px 0;
+    background: var(--astra-line-strong);
 }
 
 .dropdown.is-open .menu > * {
-    animation: dropdownItemIn 0.32s var(--ease-out-smooth) backwards;
+    animation: dropdownItemIn var(--astra-t-move) var(--astra-ease) backwards;
 }
 
-.dropdown.is-open .menu > *:nth-child(1) { animation-delay: 0.06s; }
-.dropdown.is-open .menu > *:nth-child(2) { animation-delay: 0.09s; }
-.dropdown.is-open .menu > *:nth-child(3) { animation-delay: 0.12s; }
-.dropdown.is-open .menu > *:nth-child(4) { animation-delay: 0.15s; }
-.dropdown.is-open .menu > *:nth-child(5) { animation-delay: 0.18s; }
-.dropdown.is-open .menu > *:nth-child(6) { animation-delay: 0.21s; }
-.dropdown.is-open .menu > *:nth-child(7) { animation-delay: 0.24s; }
-.dropdown.is-open .menu > *:nth-child(8) { animation-delay: 0.27s; }
+/* Шаг каскада уменьшен с 40ms до 15ms: последний пункт приходит
+   на 180 + 6×15 ≈ 270ms, а не на 540ms. Пункты всё ещё «наливаются»
+   по очереди, но без ощущения тормозов. */
+.dropdown.is-open .menu > *:nth-child(1) { animation-delay: 0.015s; }
+.dropdown.is-open .menu > *:nth-child(2) { animation-delay: 0.03s;  }
+.dropdown.is-open .menu > *:nth-child(3) { animation-delay: 0.045s; }
+.dropdown.is-open .menu > *:nth-child(4) { animation-delay: 0.06s;  }
+.dropdown.is-open .menu > *:nth-child(5) { animation-delay: 0.075s; }
+.dropdown.is-open .menu > *:nth-child(6) { animation-delay: 0.09s;  }
+.dropdown.is-open .menu > *:nth-child(n + 7) { animation-delay: 0.1s; }
 
+@keyframes dropdownItemIn {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+        filter: blur(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+        filter: blur(0);
+    }
+}
+
+/* выход — опасное действие остаётся красным */
 .nav-logout-btn {
     width: 100%;
     border: none;
-    color: #fff;
     background: transparent;
+    color: var(--astra-err);
     font-size: 14px;
-    font-family: inherit;
+    font-family: var(--astra-body);
+    font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 10px;
-}
-
-.nav-notifications-btn {
-    width: 100%;
-    border: none;
-    color: #fff;
-    background: transparent;
-    font-size: 14px;
-    font-family: inherit;
+    gap: 12px;
     text-align: left;
 }
 
-.notifications-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-    background: #9aa0a6;
-    flex: 0 0 auto;
+.nav-logout-btn:hover {
+    background: rgba(255, 77, 94, 0.12);
+    color: var(--astra-err);
 }
 
-.notifications-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 6px;
-    margin-bottom: 6px;
-    padding: 10px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.04);
+.nav-logout-btn:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
 }
 
-.notification-item {
-    border-radius: 10px;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.notification-title {
-    font-weight: 700;
-    font-size: 13px;
-    margin-bottom: 2px;
-}
-
-.notification-text {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.78);
-}
-
-.notification-info {
-    border-color: rgba(154, 160, 166, 0.28);
-}
-
-.notification-success {
-    border-color: rgba(76, 175, 80, 0.35);
-}
-
-.notification-error {
-    border-color: rgba(244, 67, 54, 0.35);
-}
-
-
-.search-wrapper {
-    position: relative;
-    width: 40%;
-}
-
+/* ============================================================
+   панель результатов поиска.
+   Затемнение и блюр живут ТОЛЬКО на оверлее; сама панель — сплошная
+   ясеневая поверхность с волосяной кромкой. Liquid-glass снят: его
+   линза (::after) давала зеркальный артефакт, забракованный владельцем
+   в попапе покупки.
+   ============================================================ */
 .search-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(4, 4, 8, 0.72);
-    z-index: 1200;
+    background: rgba(5, 4, 8, 0.62);
+    -webkit-backdrop-filter: blur(10px) saturate(1.1);
+    backdrop-filter: blur(10px) saturate(1.1);
+    /* Above the floating fx layer (EdgeBlur 2400 / подвал 2401),
+       below the quick-buy dialog (4000) and toasts (5000).
+       Содержимое бара (3001/3002) остаётся НАД этим слоем: поле ввода
+       теперь в пилюле. */
+    z-index: 3000;
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    padding: 78px 12px 24px;
+    padding: 84px 12px 24px;
+    box-sizing: border-box;
     opacity: 0;
-    transition: opacity 0.25s ease;
+    transition: opacity var(--astra-t-move) var(--astra-ease);
     will-change: opacity;
 }
 
-.search-modal-overlay.is-open {
-    opacity: 1;
-}
+.search-modal-overlay.is-open { opacity: 1; }
+.search-modal-overlay.is-closing { opacity: 0; }
 
-.search-modal-overlay.is-closing {
-    opacity: 0;
-}
-
+/* обёртка для движения */
 .search-modal {
-    width: min(720px, calc(100vw - 24px));
-    background: #1a1a1c;
-    border-radius: 14px;
-    padding: 0;
+    width: min(680px, 100%);
+    transform: translateY(-16px) scale(0.985);
+    transition: transform var(--astra-t-move) var(--astra-ease);
+    will-change: transform;
+}
+
+.search-modal.is-open {
+    transform: translateY(0) scale(1);
+}
+
+.search-modal.is-closing {
+    transform: translateY(-16px) scale(0.985);
+}
+
+/* сплошной ясень: без линзы, без backdrop-filter, без drop-shadow */
+.search-modal-panel {
+    position: relative;
     box-sizing: border-box;
-    transform: translateY(-24px) scale(0.98);
-    opacity: 0;
-    transition: transform 0.25s ease, opacity 0.25s ease;
-    border: 1px solid #2a2a2e;
+    padding: 18px;
+    border-radius: var(--astra-r-xl);
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    box-shadow: none;
+    /* clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%); */
     overflow: hidden;
-    will-change: transform, opacity;
+    opacity: 0;
+    transition: opacity var(--astra-t-move) var(--astra-ease);
+}
+
+.search-modal.is-open .search-modal-panel { opacity: 1; }
+.search-modal.is-closing .search-modal-panel { opacity: 0; transition-duration: var(--astra-t-color); }
+
+/* авторский момент: контент вплывает из лёгкого блюра, каскад 40мс */
+.search-modal .search-modal-header,
+.search-modal .search-modal-body {
+    opacity: 0;
+    transform: translateY(-6px);
+    filter: blur(6px);
+    transition:
+        opacity var(--astra-t-move) var(--astra-ease),
+        transform var(--astra-t-move) var(--astra-ease),
+        filter var(--astra-t-move) var(--astra-ease);
+}
+
+.search-modal .search-modal-body { transition-delay: 0.04s; }
+
+.search-modal.is-open .search-modal-header,
+.search-modal.is-open .search-modal-body {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+.search-modal.is-closing .search-modal-header,
+.search-modal.is-closing .search-modal-body {
+    transition-delay: 0s;
+    transition-duration: var(--astra-t-color);
 }
 
 .search-modal-header {
@@ -396,61 +1004,52 @@ a {
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 12px 12px 0 16px;
+    min-height: 44px;
 }
 
 .search-modal-title {
     margin: 0;
-    font-size: 1.1rem;
+    font-family: var(--astra-display);
+    font-size: calc((16px) * var(--astra-heading-scale, 1));
     font-weight: 700;
-    color: #f2f2f2;
+    letter-spacing: 0.01em;
+    color: var(--astra-ink);
 }
 
 .search-modal-header-actions {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
 }
 
 .search-modal-text-btn {
     background: none;
     border: none;
-    color: #8ab4ff;
+    color: var(--astra-ink-dim);
+    font-family: var(--astra-body);
     font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
-    padding: 6px 8px;
-    border-radius: 8px;
+    padding: 0 12px;
+    min-height: 44px;
+    border-radius: var(--astra-r-sm);
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
 }
 
 .search-modal-text-btn:hover {
-    background: rgba(138, 180, 255, 0.1);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--astra-ink);
 }
 
-.search-modal-close {
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: 10px;
-    background: #242426;
-    color: #e8e8e8;
-    font-size: 22px;
-    line-height: 1;
-    cursor: pointer;
-}
-
-.search-modal-close:hover {
-    background: #2e2e32;
-}
-
-.search-modal .search-modal-input {
-    margin: 8px 12px 0 12px;
-    margin-top: 14px;
-    width: calc(100% - 24px);
-    box-sizing: border-box;
+.search-modal-text-btn:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
 }
 
 .search-modal-body {
-    padding: 12px 12px 14px 12px;
+    padding-top: 12px;
     min-height: 120px;
     max-height: min(60vh, 520px);
     overflow-y: auto;
@@ -458,164 +1057,53 @@ a {
 }
 
 .search-modal-hint {
-    color: #8a8a8f;
+    color: var(--astra-ink-dim);
+    font-family: var(--astra-body);
     font-size: 14px;
     line-height: 1.45;
     padding: 8px 4px 0 4px;
 }
 
+.search-modal-foot {
+    margin: 12px 2px 0;
+    font-family: var(--astra-body);
+    font-size: 12px;
+    color: var(--astra-ink-dim);
+}
+
+/* загрузка */
+.search-loading-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.search-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--astra-ink-dim);
+    font-size: 13px;
+}
+
 .search-loading-inline {
-    position: static;
-    margin: 0;
-    background: transparent;
-    border-radius: 0;
     justify-content: flex-start;
     padding: 8px 4px;
 }
 
-.search-dropdown-panel {
-    position: static;
-    max-height: none;
-    margin-top: 0;
-    background: #141416;
-    border: 1px solid #2a2a2e;
-    border-radius: 10px;
-    overflow-x: hidden;
-}
-
-.search-not-found-panel {
-    background: #141416;
-    border: 1px solid #2a2a2e;
-    border-radius: 10px;
-    margin-top: 0;
-}
-
-.search-modal.is-open {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-}
-
-.search-modal.is-closing {
-    transform: translateY(-24px) scale(0.98);
-    opacity: 0;
-}
-
-.search-modal-input {
-    font-size: 15px;
-}
-
-.search-modal .search-loading {
-    position: static;
-    margin-top: 8px;
-}
-
-.search-modal .search-dropdown {
-    position: static;
-    margin-top: 8px;
-    max-height: 60vh;
-}
-
-.search {
-    width: 100%;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: none;
-    background: #1c1c1e;
-    color: white;
-}
-
-/* dropdown */
-.search-dropdown {
-    position: absolute;
-    top: 45px;
-    width: 100%;
-    background: #1a1a1c;
-    border-radius: 12px;
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: 9999;
-    margin-top: 8px;
-}
-
-.search-item {
-    display: flex;
-    gap: 10px;
-    padding: 10px;
-    cursor: pointer;
-    color: inherit;
-}
-
-.search-item-card {
-    align-items: center;
-    border-bottom: 1px solid #2a2a2e;
-    text-decoration: none;
-    box-sizing: border-box;
-    width: calc(100% - 2px);
-}
-
-.search-item-card:last-child {
-    border-bottom: none;
-}
-
-.search-item-text {
-    flex: 1;
-    min-width: 0;
-}
-
-.search-item-meta {
-    font-size: 12px;
-    color: #7a7a80;
-    margin: 2px 0 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.search-item-img-fallback {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #2a2a2e, #1a1a1c);
-    flex-shrink: 0;
-}
-
-.search-item:hover {
-    background: #2a2a2d;
-}
-
-.search-item img {
-    width: 48px;
-    height: 48px;
-    object-fit: cover;
-    border-radius: 8px;
-    flex-shrink: 0;
-}
-
-.search-loading {
-    position: absolute;
-    top: 45px;
-    left: 0;
-    right: 0;
-    background: #1a1a1c;
-    border-radius: 12px;
-    padding: 12px;
-    text-align: center;
-    color: #888;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    z-index: 9999;
+.search-skeleton-row {
+    height: 68px;
+    border-radius: var(--astra-r-sm);
 }
 
 .spinner {
     width: 16px;
     height: 16px;
-    border: 2px solid #2a2a2e;
-    border-top-color: #888;
+    border: 2px solid rgba(255, 255, 255, 0.14);
+    border-top-color: var(--astra-ink-dim);
     border-radius: 50%;
     display: inline-block;
+    flex-shrink: 0;
     animation: spin 0.6s linear infinite;
 }
 
@@ -625,11 +1113,133 @@ a {
     }
 }
 
-/* Стили для сообщения "Ничего не найдено" */
+/* результаты — карточки с малым нотчем; фокус-кольцо на нестриженом
+   родителе (.search-item-card), нотч на внутренней поверхности */
+.search-dropdown-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Карточка — <button> (страницы товара больше нет, открывается попап
+   быстрой покупки), поэтому сбрасываем нативную хромировку кнопки. */
+.search-item-card {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: var(--astra-r-sm);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.search-item-card:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+}
+
+/* пока хук тянет карточку товара — курсор ожидания, арт чуть тише */
+.search-item-card.is-pending {
+    cursor: progress;
+}
+
+.search-item-card.is-pending .search-item-surface {
+    opacity: 0.7;
+}
+
+.search-item-surface {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px 10px 10px;
+    min-height: 44px;
+    box-sizing: border-box;
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-sm);
+    /* clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); */
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
+
+/* ховер — светлее (люминанс вверх поверх той же ясеневой ступени) */
+.search-item-card:hover .search-item-surface {
+    background:
+        linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)),
+        var(--astra-card-2);
+    border-color: var(--astra-line-strong);
+}
+
+.search-item-surface img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: var(--astra-r-md);
+    flex-shrink: 0;
+}
+
+.search-item-img-fallback {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--astra-r-md);
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.search-item-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.search-item-text .product-name {
+    font-family: var(--astra-body);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--astra-ink);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.search-item-meta {
+    font-size: 12px;
+    color: var(--astra-ink-dim);
+    margin: 2px 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* цена — мягко-розовая по правилам мира v3 */
+.search-item-text .price {
+    font-family: var(--astra-body);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--astra-soft);
+}
+
+/* пусто */
 .search-not-found {
-    padding: 20px;
+    padding: 24px 16px;
     text-align: center;
-    color: #888;
+    color: var(--astra-ink-dim);
+}
+
+.search-not-found-panel {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-sm);
 }
 
 .search-not-found-icon {
@@ -639,10 +1249,10 @@ a {
     width: 56px;
     height: 56px;
     margin: 0 auto 12px;
-    border-radius: 14px;
-    background: rgba(226, 121, 155, 0.1);
-    border: 1px solid rgba(226, 121, 155, 0.2);
-    color: var(--accent, #e2799b);
+    border-radius: var(--astra-r-lg);
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line);
+    color: var(--astra-ink-dim);
 }
 
 .search-not-found-icon-svg {
@@ -654,72 +1264,223 @@ a {
 .search-not-found p {
     margin: 0 0 5px 0;
     font-size: 16px;
-    color: #ccc;
+    font-weight: 600;
+    color: var(--astra-ink);
 }
 
 .search-not-found .hint {
-    font-size: 12px;
-    color: #a59d9d;
+    font-size: 13px;
+    color: var(--astra-ink-dim);
     display: block;
 }
 
-.price {
-    font-size: 12px;
-    color: gray;
+/* ============================================================
+   адаптив — один ряд на всех ширинах, узлы только ужимаются
+   ============================================================ */
+@media (max-width: 768px) {
+    .navbar-inner {
+        padding: 0 14px;
+        gap: 10px;
+        min-height: 60px;
+    }
+
+    /* ужимаем пропорционально — но зазор остаётся зазором */
+    .nav-brand {
+        gap: 11px;
+    }
+
+    .nav-brand-mark {
+        height: 27px;
+        width: 27px;
+    }
+
+    .nav-brand-word {
+        height: 16px;
+    }
+
+    .search-modal-overlay {
+        padding: 72px 8px 16px;
+    }
+
+    .search-modal-panel {
+        padding: 14px;
+    }
 }
 
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
+/* ---------- узкий режим поиска ----------
+   В центре бара уже нет места на раскрытую пилюлю, поэтому свёрнутое
+   состояние — круг 44px, а раскрытая пилюля уходит в position: fixed
+   поверх всей полосы. Габарит .gooey при этом НЕ меняется — бар не
+   переливается ни на пиксель. Вуаль прячет локап и правый кластер под
+   сплошным ясенем, чтобы они не выглядывали из-под пилюли.
+   Оба слоя (.gooey-goo с фильтром и .gooey-layer с формой) переносятся
+   целиком: fixed-потомок внутри filter спозиционировался бы по фильтру. */
+@media (max-width: 720px) {
+    .gooey {
+        width: 44px;
+        max-width: 44px;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    .gooey-goo-pill,
+    .gooey-pill {
+        width: 44px;
+    }
+
+    .gooey-trigger {
+        padding: 0;
+    }
+
+    .gooey-trigger-label {
+        display: none;
+    }
+
+    .gooey.is-open > .gooey-goo,
+    .gooey.is-open > .gooey-layer {
+        position: fixed;
+        top: 8px;
+        right: 10px;
+        bottom: auto;
+        left: 10px;
+        width: auto;
+        height: 44px;
+        z-index: 6;
+    }
+
+    .gooey.is-open .gooey-veil {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: var(--astra-bg);
+        z-index: 5;
     }
 }
 
-@keyframes dropdownItemIn {
-    from {
-        opacity: 0;
-        transform: translateX(-8px);
+@media (max-width: 480px) {
+    .navbar-inner {
+        padding: 0 10px;
+        gap: 8px;
+        min-height: 56px;
     }
 
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-@media (max-width: 1024px) {
-    .navbar {
-        padding: 12px 16px;
-        gap: 12px;
-        flex-wrap: wrap;
+    .nav-brand {
+        gap: 9px;
     }
 
-    .logo-navbar {
-        width: 95px;
-        padding-top: 0;
+    .nav-brand-mark {
+        height: 24px;
+        width: 24px;
     }
 
-    .search-wrapper {
-        order: 3;
-        width: 100%;
+    .nav-brand-word {
+        height: 14px;
     }
 
     .nav-right {
-        margin-left: auto;
-        gap: 8px;
+        gap: 2px;
     }
 
-    .navbar-spec-item {
-        padding: 8px;
+    .nav-account {
+        margin-left: 4px;
     }
 
-    .support-nav-text {
-        display: none;
+    .nav-login-btn {
+        padding: 12px 16px;
     }
+
+    .gooey.is-open > .gooey-goo,
+    .gooey.is-open > .gooey-layer {
+        top: 6px;
+    }
+
+    .gooey.is-open .gooey-veil {
+        height: 56px;
+    }
+}
+
+/* ============================================================
+   reduced motion — глобально длительности зануляются в app;
+   здесь дополнительно снимаем блюр-престейты, каскад и морфинг
+   пилюли, чтобы читаемость и форма не зависели от переходов
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+
+    .profile-header,
+    .search-modal .search-modal-header,
+    .search-modal .search-modal-body {
+        filter: none !important;
+        transform: none !important;
+    }
+
+    .dropdown.is-open .menu > * {
+        animation: none !important;
+    }
+
+    .gooey-goo-pill,
+    .gooey-pill,
+    .gooey-goo-bubble,
+    .gooey-bubble,
+    .gooey-face,
+    .nav-brand::before {
+        transition: none !important;
+    }
+}
+
+
+.nav-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 18px;
+    box-sizing: border-box;
+    border-radius: 9px;               /* половина высоты — всегда «pill» */
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+    font-family: var(--astra-display);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 0 0 2px var(--astra-card);
+    pointer-events: none;
+}
+
+/* 1 цифра — идеальный круг 18×18 */
+.nav-badge--1 {
+    width: 18px;
+    letter-spacing: 0;                  /* фантомный пробел не нужен */
+    font-variant-numeric: normal;       /* пропорциональный «1», а не tabular */
+    padding-right: 1px;                 /* оптический сдвиг на ~0.5px влево */
+}
+
+/* 2 цифры — чуть шире, по 5px воздуха с каждой стороны */
+.nav-badge--2 {
+    min-width: 20px;
+    padding: 0 4px;
+}
+
+/* 3+ («99+») — самый широкий; 6px на сторону, чтобы «+» не прилипал */
+.nav-badge--3 {
+    min-width: 20px;
+    padding: 0 4px;
+}
+
+.nav-icon-btn > .nav-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    box-shadow: 0 0 0 2px var(--astra-bg-elev);
+    opacity: 0.85;
+}
+
+.nav-icon-btn > .nav-badge--1 {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    box-shadow: 0 0 0 2px var(--astra-bg-elev);
+    opacity: 0.85;
+    padding-right: 0;
 }

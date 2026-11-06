@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../../shared/ui/Button/Button";
 import { useAuth } from "../../app/auth/AuthContext";
 import { useToast } from "../../shared/ui/Toast/ToastProvider";
-import { initRobokassaPayment } from "../../entities/order/api/orderApi";
+import { openPayment } from "../../widgets/PaymentDialog";
 import {
   checkSteamUsername,
   createSteamRefillOrder,
@@ -11,12 +11,16 @@ import {
   quoteSteamRefill,
 } from "../../entities/steamRefill/api/steamRefillApi";
 import {
-  SteamCurrencyHelpModal,
+  SteamCurrencyHelpDisclosure,
   SteamLoginHelpModal,
+  SteamCurrencyHelpModal,
   SteamRefillImportantInfo,
   useSteamRefillInfoModals,
 } from "./SteamRefillInfo";
 import "./steam_refill.css";
+
+/** aria-controls раскрывающейся справки о валюте. */
+const CURRENCY_HELP_ID = "steam-refill-currency-help";
 
 const REGION_LABELS = {
   RU: "Россия",
@@ -43,23 +47,6 @@ const normalizeMoneyInput = (v) => {
   return `${parts[0]}.${parts.slice(1).join("").slice(0, 2)}`;
 };
 
-const submitRobokassaForm = (actionUrl) => {
-  const formEl = document.createElement("form");
-  formEl.method = "POST";
-  formEl.action = actionUrl;
-  formEl.style.display = "none";
-  formEl.target = "_blank";
-
-  document.body.appendChild(formEl);
-  formEl.submit();
-  window.setTimeout(() => {
-    try {
-      document.body.removeChild(formEl);
-    } catch {
-      /* ignore */
-    }
-  }, 1000);
-};
 
 const formatMoney = (n, fractionDigits = 2) => {
   const num = Number(n);
@@ -82,6 +69,7 @@ const convertAmountBetweenCurrencies = (amount, fromCurrency, toCurrency, rates)
 
 const SteamRefillPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated } = useAuth();
   const { pushToast } = useToast();
 
@@ -96,6 +84,49 @@ const SteamRefillPage = () => {
   const [paying, setPaying] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromoCode, setAppliedPromoCode] = useState("");
+
+  /* Приём эстафеты с главной (вкладка «Пополнение Steam»): логин, сумма,
+     ВАЛЮТА и промокод. Валюта обязана ехать вместе с суммой — иначе «$10»
+     превращается в «10 ₽». Сумма дополнительно переживает редирект гостя
+     через /sign_in в sessionStorage. Один раз, только в пустые поля. */
+  useEffect(() => {
+    const handoff = location.state || {};
+
+    let rawAmount = handoff.amount;
+    let amountFromStorage = false;
+    if (rawAmount == null) {
+      try {
+        rawAmount = sessionStorage.getItem("astra:steam-amount");
+        amountFromStorage = rawAmount != null;
+      } catch {
+        rawAmount = null;
+      }
+    }
+    const amountNum = Number(rawAmount);
+    if (Number.isFinite(amountNum) && amountNum > 0) {
+      setCreditAmount((prev) => (prev ? prev : normalizeMoneyInput(String(amountNum))));
+      if (amountFromStorage) {
+        try {
+          sessionStorage.removeItem("astra:steam-amount");
+        } catch {
+          /* приватный режим — не страшно */
+        }
+      }
+    }
+
+    const currency = String(handoff.currency || "").toUpperCase();
+    if (CURRENCIES.some((c) => c.code === currency)) {
+      setCreditCurrency(currency);
+    }
+
+    const login = typeof handoff.login === "string" ? handoff.login.trim() : "";
+    if (login) setUsername((prev) => (prev ? prev : login));
+
+    const promo = typeof handoff.promo === "string" ? handoff.promo.trim() : "";
+    if (promo) setPromoCode((prev) => (prev ? prev : promo));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const quoteRequestIdRef = useRef(0);
   const appliedPromoRef = useRef(appliedPromoCode);
   const {
@@ -103,8 +134,8 @@ const SteamRefillPage = () => {
     currencyHelpOpen,
     openLoginHelp,
     closeLoginHelp,
-    openCurrencyHelp,
     closeCurrencyHelp,
+    toggleCurrencyHelp,
   } = useSteamRefillInfoModals();
 
   const trimmedLogin = username.trim();
@@ -302,17 +333,7 @@ const SteamRefillPage = () => {
         regional_currency: checkState.result?.regional_currency || undefined,
         ...(appliedPromoCode ? { promocode: appliedPromoCode } : {}),
       });
-      const paymentData = await initRobokassaPayment(order.public_id);
-      if (
-        paymentData?.payment_method === "POST" &&
-        paymentData?.payment_action_url
-      ) {
-        submitRobokassaForm(paymentData.payment_action_url);
-        return;
-      }
-
-      pushToast({ type: "success", message: "Заказ оплачен" });
-      navigate("/orders");
+      openPayment({ purpose: "orders", order_public_ids: [order.public_id], onConfirmed: () => navigate("/orders") });
     } catch (e) {
       pushToast({ type: "error", message: e?.message || "Не удалось оформить заказ" });
     } finally {
@@ -332,7 +353,7 @@ const SteamRefillPage = () => {
           <h1>Пополнение Steam</h1>
           <p>
             Укажите Steam login и сумму зачисления в рублях, тенге или долларах.
-            Курс конвертации актуален на момент расчёта. Комиссия сервиса 5% добавляется к оплате в ₽.
+            Курс конвертации актуален на момент расчёта. Комиссия сервиса 11% добавляется к оплате в ₽.
           </p>
         </header>
 
@@ -346,6 +367,7 @@ const SteamRefillPage = () => {
             </div>
             <input
               id="steam-refill-login"
+              className="astra-field"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -406,7 +428,7 @@ const SteamRefillPage = () => {
             <label htmlFor="steam-refill-amount" className="steam-refill-amount-panel-value">
               <input
                 id="steam-refill-amount"
-                className="steam-refill-amount-panel-input"
+                className="steam-refill-amount-panel-input astra-field"
                 type="text"
                 inputMode="decimal"
                 value={creditAmount}
@@ -423,7 +445,13 @@ const SteamRefillPage = () => {
               <span className="steam-refill-amount-panel-hint">
                 Зачисление на кошелёк Steam в {CURRENCIES.find((c) => c.code === creditCurrency)?.label?.toLowerCase()}
               </span>
-              <button type="button" className="steam-refill-micro-link" onClick={openCurrencyHelp}>
+              <button
+                type="button"
+                className="steam-refill-micro-link"
+                aria-expanded={currencyHelpOpen}
+                aria-controls={CURRENCY_HELP_ID}
+                onClick={toggleCurrencyHelp}
+              >
                 О валюте
               </button>
             </div>
@@ -434,10 +462,12 @@ const SteamRefillPage = () => {
           {isAuthenticated ? (
             <div className="steam-refill-promo">
               <input
+                className="astra-field"
                 type="text"
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
                 placeholder="Промокод"
+                aria-label="Промокод"
               />
               <button type="button" onClick={onApplyPromo} disabled={quoteLoading}>
                 Применить
@@ -465,7 +495,7 @@ const SteamRefillPage = () => {
                 <span>Зачисление на Steam</span>
                 <strong>
                   {/* !!! quote.credit_amount || quote.net_rub */}
-                  {formatMoney(quote.net_rub, quote.credit_currency === "USD" ? 2 : 2)}{" "}
+                  {formatMoney(quote.credit_amount || amountNum, quote.credit_currency === "USD" ? 2 : 2)}{" "}
                   {CURRENCY_SYMBOLS[quote.credit_currency] || quote.credit_currency}
                 </strong>
               </div>

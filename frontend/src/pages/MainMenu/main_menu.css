@@ -1,421 +1,1598 @@
-.content {
-    padding: 30px;
-    padding-bottom: 32px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* background-color: #ffffff; */
-    border-radius: 16px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    margin: 0px auto;
-    
-    /* width: 90%; */
-    /* Ширина чуть больше, чем navbar */
-    /* width: 900px; */
-    /* Ограничение максимальной ширины */
-    /* height: 100vh; */
-    /* Высота на всю страницу */
-    box-sizing: border-box;
-    /* Учитываем padding в размерах */
-    flex: 1;
-    /*overflow-y: auto;*/
-}
+/* ============================================================
+   ASTRA main page v3 — «ash and signal», линейность astrashop.app:
+   одна колонка 1200–1280, ОДИН таббед-блок «Категории», затем
+   «Рекомендованные товары». Розовый живёт только там, где действие:
+   пузырь активной вкладки и CTA. Всё остальное — ясеневые серые на
+   трёхступенчатой лестнице глубины.
 
-.cont-items {
-  display: flex;
-  flex-wrap: wrap; /* позволяет элементам переноситься */
-  gap: 16px; /* отступы между элементами */
-}
+   Раунд 5: заливки под белые чернила — --astra-pink-fill (#DD0184)
+   вместо сигнального #FF0198; скидка ушла в собственный пурпур
+   --astra-drop; фокус полей нейтральный (--astra-focus-field);
+   розовых ореолов не осталось.
+   ============================================================ */
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 20px;
-}
+/* ---------- layout ---------- */
 
-.avatar {
-    width: 50px;
-    height: 50px;
-    /* background-color: #e0e0e0; */
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 14px;
-    color: #666;
-}
-
-.avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-    image-rendering: auto;
-    /* или 'crisp-edges' / 'pixelated' — зависит от ситуации */
-}
-
-
-.user-info {
-    text-align: right;
-}
-
-.nickname {
-    font-size: 16px;
-    font-weight: bold;
-    color: #000;
-    text-align: center;
-}
-
-
-
-.photo-container {
-
-    /* background-color: #f5f5f5; */
-    border-radius: 16px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-}
-
-.photo-container img {
-    width: 120%;
-    /* Увеличен размер изображения */
-    height: 120%;
-    /* Увеличен размер изображения */
-    object-fit: cover;
-    border-radius: 16px;
-}
-
-
-.main-menu {
+.main-menu.mm-root {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
     width: 100%;
     box-sizing: border-box;
-    padding-top: 8px;
+    overflow-x: clip;
+    background: var(--astra-bg);
 }
 
-.main-menu-content {
+.mm-page {
     width: 100%;
-    max-width: 100%;
-}
-
-.mainmenu-section-title {
-    width: 100%;
-    text-align: left;
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 12px 0 8px;
-    color: #fff;
-    animation: fadeInUp var(--duration-slow) var(--ease-out-smooth);
-}
-
-.mainmenu-subtitle {
-    margin-top: 20px;
-}
-
-.mainmenu-l1-tabs {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 30px 28px 96px;
+    box-sizing: border-box;
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    width: 100%;
-    margin: 12px 0 0;
-    justify-content: center;
-    align-items: stretch;
+    flex-direction: column;
+    gap: 56px;
 }
 
-.mainmenu-l1-tab {
-    border: 1px solid #3a3a3f;
-    background: #1c1c1f;
-    color: #ddd;
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 20px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+.mm-section {
+    width: 100%;
+    min-width: 0;
+}
+
+/* якоря садятся под липкую шапку */
+#sec-featured,
+#sec-recommended {
+    scroll-margin-top: 84px;
+}
+
+.mm-head {
+    margin: 0 0 16px;
+}
+
+.mm-h {
+    font-size: calc((24px) * var(--astra-heading-scale, 1));
     line-height: 1.2;
-    min-height: 36px;
-    flex: 1 1 180px;
-    max-width: 260px;
-    white-space: normal;
-    word-break: break-word;
-    transition:
-        background var(--duration-normal) ease,
-        border-color var(--duration-normal) ease,
-        color var(--duration-normal) ease,
-        transform var(--duration-fast) var(--ease-spring),
-        box-shadow var(--duration-normal) ease;
 }
 
-.mainmenu-l1-tab:hover:not(.is-active) {
-    background: #252528;
-    border-color: rgba(226, 121, 155, 0.3);
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.mainmenu-l1-tab:active {
-    transform: translateY(0) scale(0.97);
-}
-
-.mainmenu-l1-tab.is-active {
-    border-color: var(--accent);
-    color: #fff;
-    background: rgba(226, 121, 155, 0.14);
-    box-shadow: 0 0 0 1px rgba(226, 121, 155, 0.2);
-}
-
-.mainmenu-l1-tab:focus-visible {
-    outline: 2px solid rgba(226, 121, 155, 0.55);
-    outline-offset: 2px;
-}
-
-.cont-items.mainmenu-l1,
-.cont-items.mainmenu-l2,
-.cont-items.mainmenu-products {
-    width: 100%;
-    justify-content: center;
-}
-
-.mainPhoto {
-    display: block;
-    width: 100%;
-    height: auto;
-    margin: 0;
-    vertical-align: middle;
-    user-select: none;
-    pointer-events: none;
-}
-
-.mainPhoto-banner {
-    position: relative;
-    display: block;
-    width: 80%;
-    margin: 20px auto;
+.mm-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
     padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.mm-page .astra-chip {
+    min-height: 44px;
+}
+
+.mm-page .astra-btn,
+.mm-page .astra-btn-ghost {
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+/* loading / error / empty blocks */
+.mm-state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 26px 24px;
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+}
+
+/* 14px, а не 15: копия и описания в системе говорят одним кеглем,
+   15px был ступенью вне рампы */
+.mm-state-text {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+}
+
+/* ============================================================
+   TAB ROW — один скользящий розовый пузырь под активной вкладкой
+   (transform + width, 300мс, одна кривая); активная подпись —
+   БЕЛЫЕ чернила --astra-on-pink на заливке --astra-pink-fill
+   (#DD0184 держит 4.74:1, сигнальный #FF0198 давал бы 3.7:1).
+   Ряд не липкий, живёт в блоке.
+   ============================================================ */
+
+.mm-tabrow {
+    border-bottom: 1px solid var(--astra-line);
+}
+
+.mm-tabscroll {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.mm-tabscroll::-webkit-scrollbar {
+    display: none;
+}
+
+.mm-tabtrack {
+    position: relative;
+    display: flex;
+    gap: 4px;
+    width: max-content;
+    padding: 4px;
+}
+
+.mm-tabbubble {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    width: 0;
+    border-radius: var(--astra-r-md);
+    background: var(--astra-pink-fill);
+    /* без ореола: подсветок в v3 больше нет */
+    box-shadow: none;
+    opacity: 0;
+    transition:
+        transform var(--astra-t-move) var(--astra-ease),
+        width var(--astra-t-move) var(--astra-ease),
+        opacity var(--astra-t-color) var(--astra-ease);
+    will-change: transform, width;
+}
+
+.mm-tabbubble.is-ready {
+    opacity: 1;
+}
+
+.mm-tabbtn {
+    position: relative;
+    z-index: 1;
+    min-height: 44px;
+    padding: 10px 18px;
     border: none;
     background: transparent;
-    border-radius: 18px;
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink-dim);
+    font-family: var(--astra-body);
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
     cursor: pointer;
-    overflow: hidden;
-    box-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.35),
-        0 0 0 1px rgba(226, 121, 155, 0.18);
-    transition:
-        transform 0.22s ease,
-        box-shadow 0.22s ease;
+    /* цвет едет с той же скоростью, что и пузырь — кросс-фейд синхронный */
+    transition: color var(--astra-t-move) var(--astra-ease);
 }
 
-.mainPhoto-banner::before {
+.mm-tabbtn:hover {
+    color: var(--astra-ink);
+}
+
+.mm-tabbtn.is-active {
+    color: var(--astra-on-pink);
+}
+
+/* кольцо фокуса — чернильное: розовое на розовом пузыре не читается */
+.mm-tabbtn:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+/* приглушённая строка-описание активной вкладки (TextSwap) */
+.mm-tabdesc {
+    margin: 14px 0 0;
+    min-height: 21px;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+    overflow: hidden;
+}
+
+.mm-tabdesc .fx-textswap {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: bottom;
+}
+
+/* ============================================================
+   PANELS — direction-aware смена: уходящая уезжает на ±24px по
+   направлению движения с fade + blur 4px, входящая — с
+   противоположной стороны; высота контейнера анимируется ЯВНЫМ
+   height (не max-height: max-height не удерживает контейнер выше
+   естественной высоты, и сжатие схлопывалось скачком — см.
+   CategoryTabs.jsx). Класс .is-animating ставится только на время
+   анимации, чтобы в покое не резать тени и фокус-кольца.
+   ============================================================ */
+
+.mm-panels {
+    position: relative;
+    margin: 0 -6px;
+}
+
+.mm-panels.is-animating {
+    overflow: hidden;
+    /* impeccable-disable-next-line layout-transition -- max-height не удерживает контейнер выше естественной высоты: сжатие схлопывалось скачком, поэтому высота едет явным height (CategoryTabs.jsx). Класс живёт только на время анимации. */
+    transition: height var(--astra-t-move) var(--astra-ease);
+}
+
+.mm-panel {
+    box-sizing: border-box;
+    padding: 20px 6px 6px;
+}
+
+.mm-panel--in {
+    animation: mm-panel-in var(--astra-t-move) var(--astra-ease);
+}
+
+.mm-panel--out {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+    animation: mm-panel-out var(--astra-t-move) var(--astra-ease) forwards;
+}
+
+@keyframes mm-panel-in {
+    from {
+        opacity: 0;
+        transform: translateX(calc(var(--mm-dir, 1) * 24px));
+        filter: blur(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+        filter: blur(0);
+    }
+}
+
+@keyframes mm-panel-out {
+    to {
+        opacity: 0;
+        transform: translateX(calc(var(--mm-dir, 1) * -24px));
+        filter: blur(4px);
+    }
+}
+
+/* Вкладка Steam: на панели liquid-glass (backdrop-filter) — вход и
+   выход только через fade, без transform/blur у предка стекла. */
+.mm-panel--flat.mm-panel--in {
+    animation-name: mm-panel-in-flat;
+}
+
+.mm-panel--flat.mm-panel--out {
+    animation-name: mm-panel-out-flat;
+}
+
+@keyframes mm-panel-in-flat {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes mm-panel-out-flat {
+    to {
+        opacity: 0;
+    }
+}
+
+/* ============================================================
+   SKELETON POLICY — скелетон это сигнал «данные задерживаются»,
+   а не обязательный этап. Быстрый ответ идёт сразу в обычное
+   появление; если серый слой всё же успел показаться, он гаснет
+   ПОВЕРХ входящего контента (кросс-фейд 300мс, одна кривая).
+   ============================================================ */
+
+.mm-swap {
+    position: relative;
+    min-width: 0;
+}
+
+/* Тихое ожидание НИЧЕГО не резервирует. Честно угадать высоту будущей
+   сетки нельзя — она зависит от числа категорий (обычно ~500px), а
+   прежние 140–200px были дырой заведомо не того размера: контент всё
+   равно прыгал, только дважды. Ждём мы не дольше порога
+   useDelayedPending (260мс), и ждём молча. */
+.mm-swap--quiet {
+    min-height: 0;
+}
+
+.mm-swap-in {
+    animation: mm-swap-in var(--astra-t-move) var(--astra-ease);
+}
+
+/* Кросс-фейд работает, только если обе стороны идут ОДНО движение.
+   Плитки внутри подмены не разыгрывают reveal (800мс + стаггер до
+   300мс) — иначе призрак уже растворился, а половина плиток ещё
+   невидима. Их состояние «проявлено» проставляется в PendingSwap
+   до первого кадра; здесь снимаем переезд, чтобы даже повторный вход
+   не пытался ехать поверх фейда слоя. */
+.mm-swap-in .astra-reveal {
+    transition: none;
+}
+
+/* уходящий скелетон: слой поверх, кликов не ловит, высоту не растит */
+.mm-swap-ghost {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    animation: mm-swap-out var(--astra-t-move) var(--astra-ease) forwards;
+}
+
+@keyframes mm-swap-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes mm-swap-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+/* ============================================================
+   TILE GRID — равные квадраты (радиус --astra-r-xl / 28px), подпись
+   под плиткой, ховер: подъём + светлее рамка (яркость только ВВЕРХ)
+   ============================================================ */
+
+.mm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px 16px;
+}
+
+.mm-cell {
+    min-width: 0;
+}
+
+.mm-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    min-width: 0;
+    min-height: 44px;
+    text-align: center;
+    border-radius: var(--astra-r-xl);
+    transition: transform var(--astra-t-color) var(--astra-ease);
+}
+
+.mm-tile:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 3px;
+}
+
+.mm-tile-art {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--astra-r-xl);
+    background: var(--astra-card);
+    overflow: hidden;
+    transition:
+        transform var(--astra-t-color) var(--astra-ease),
+        box-shadow var(--astra-t-move) var(--astra-ease);
+}
+
+/* внутренняя волосяная рамка над артом; на ховере — светлее */
+.mm-tile-art::after {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(
-        180deg,
-        transparent 55%,
-        rgba(0, 0, 0, 0.45) 100%
-    );
-    opacity: 0.85;
+    box-shadow: inset 0 0 0 1px var(--astra-line);
     pointer-events: none;
+    transition: box-shadow var(--astra-t-color) var(--astra-ease);
+}
+
+.mm-tile:hover .mm-tile-art {
+    transform: translateY(-4px);
+    box-shadow: var(--astra-shadow-sm);
+}
+
+.mm-tile:hover .mm-tile-art::after {
+    box-shadow: inset 0 0 0 1px var(--astra-line-strong);
+}
+
+.mm-tile-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mm-tile-avatar {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.mm-tile-label {
+    font-family: var(--astra-body);
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--astra-ink-dim);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color var(--astra-t-color) var(--astra-ease);
+}
+
+.mm-tile:hover .mm-tile-label {
+    color: var(--astra-ink);
+}
+
+/* бейдж «Скоро» на синтетической плитке */
+.mm-tile-soon {
+    position: absolute;
+    top: 10px;
+    left: 10px;
     z-index: 1;
 }
 
-.mainPhoto-banner::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    border: 2px solid rgba(226, 121, 155, 0.35);
-    pointer-events: none;
-    z-index: 2;
-    transition: border-color 0.22s ease;
+/* quick-buy запрос в полёте по этой плитке */
+.mm-tile.is-pending {
+    cursor: progress;
 }
 
-.mainPhoto-banner:hover {
-    transform: translateY(-3px) scale(1.01);
-    box-shadow:
-        0 12px 32px rgba(226, 121, 155, 0.28),
-        0 0 0 2px rgba(226, 121, 155, 0.45);
+.mm-tile.is-pending .mm-tile-art {
+    opacity: 0.6;
 }
 
-.mainPhoto-banner:hover::after {
-    border-color: rgba(226, 121, 155, 0.75);
+/* синтетическая «Скоро»: завершённая, но инертная */
+.mm-tile--soon {
+    cursor: default;
 }
 
-.mainPhoto-banner:active {
-    transform: translateY(-1px) scale(0.995);
+.mm-tile--soon .mm-tile-art {
+    opacity: 0.55;
 }
 
-.mainPhoto-banner:focus-visible {
-    outline: 2px solid #e2799b;
-    outline-offset: 4px;
+.mm-tile--soon:hover .mm-tile-art {
+    transform: none;
+    box-shadow: none;
 }
 
-.mainPhoto-banner-cta {
-    position: absolute;
-    right: 14px;
-    bottom: 14px;
-    z-index: 3;
-    display: inline-flex;
+.mm-tile--soon:hover .mm-tile-art::after {
+    box-shadow: inset 0 0 0 1px var(--astra-line);
+}
+
+.mm-tile--soon:hover .mm-tile-label {
+    color: var(--astra-ink-dim);
+}
+
+/* скелетоны плиток */
+.mm-tile-skel {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    color: #fff;
-    background: linear-gradient(135deg, rgba(226, 121, 155, 0.95), rgba(201, 95, 132, 0.95));
-    box-shadow: 0 4px 16px rgba(226, 121, 155, 0.4);
-    pointer-events: none;
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    gap: 10px;
+    min-width: 0;
 }
 
-.mainPhoto-banner:hover .mainPhoto-banner-cta {
-    transform: translateX(2px);
-    box-shadow: 0 6px 20px rgba(226, 121, 155, 0.5);
+.mm-tile-skel-art {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--astra-r-xl);
 }
 
-.mainPhoto-banner-arrow {
-    display: inline-block;
-    transition: transform 0.22s ease;
+/* «таблетка» осталась только у аватаров — скелетон идёт по лестнице */
+.mm-tile-skel-label {
+    width: 64%;
+    height: 13px;
+    border-radius: var(--astra-r-sm);
 }
 
-.mainPhoto-banner:hover .mainPhoto-banner-arrow {
-    transform: translateX(3px);
+/* ---------- раскрываемая сетка «Показать все (N)» ---------- */
+
+.mm-expand {
+    min-width: 0;
 }
 
-/* Превью категорий и товаров на главной — не больше 256×256 */
-.mainmenu-l2 .category_image_wrap,
-.mainmenu-products .product_image_wrap {
-    width: min(100%, 256px);
-    max-width: 256px;
-    max-height: 256px;
-    margin-left: auto;
-    margin-right: auto;
+.mm-expand-clip.is-animating {
+    overflow: hidden;
+    /* impeccable-disable-next-line layout-transition -- то же, что у .mm-panels: «Свернуть» на max-height схлопывалось скачком (TileGrid.jsx). Класс живёт только на время анимации. */
+    transition: height var(--astra-t-move) var(--astra-ease);
 }
 
-.mainmenu-l2 .category_image,
-.mainmenu-products .product_image {
-    max-width: 256px;
-    max-height: 256px;
+.mm-more {
+    display: flex;
+    justify-content: center;
+    margin-top: 18px;
 }
 
-.divider-mainmenu {
-    margin: 20px 0px;
-    height: 1px;
-    width: 80%;
-    background: linear-gradient(90deg,
-            transparent,
-            #51515a,
-            transparent);
-    /* margin: 10px 0; */
+.mm-more-btn {
+    min-width: 200px;
 }
 
-/* Десктоп: квадратные превью до 256×256 */
-@media (min-width: 601px) {
-    .mainmenu-l2 .mini-category,
-    .mainmenu-products .mini-product {
-        max-height: none;
-    }
+/* ============================================================
+   STEAM TOP-UP PANEL — ясеневое liquid-glass, радиус --astra-r-xl
+   (28px), единственный цвет — плоская розовая CTA. Поля повторяют
+   страницу /steam-refill: логин, сумма + валюта, промокод.
+   ============================================================ */
 
-    .mainmenu-l2 .category_image_wrap,
-    .mainmenu-products .product_image_wrap {
-        aspect-ratio: 1 / 1;
-        height: auto;
-    }
+.mm-steamwrap {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    min-width: 0;
+}
 
-    .mainmenu-l2 .category_image,
-    .mainmenu-products .product_image {
-        width: 100%;
-        height: 100%;
-        min-height: 0;
-    }
+.mm-individual .mm-field:has(textarea) .mm-input {
+    height: auto;
+    min-height: 104px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
 
-    /* .mainPhoto {
-        width: 88%;
-        max-width: 960px;
-    } */
+.mm-individual-textarea {
+    min-height: 78px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.mm-individual .mm-steam-title {
+    overflow-wrap: anywhere;
 }
 
 @media (max-width: 600px) {
-    .content {
-        width: 100%;
-        min-height: unset;
-        padding: 15px;
-        border-radius: 12px;
-    }
-
-    .header {
-        flex-direction: column;
-        align-items: center;
-        margin-bottom: 15px;
-    }
-
-    .avatar {
-        width: 40px;
-        height: 40px;
-        font-size: 12px;
-    }
-
-
-    .user-info {
-        text-align: center;
-    }
-
-    .nickname {
-        font-size: 14px;
-    }
-
-    .mainmenu-l1-tabs {
-        justify-content: stretch;
-    }
-
-    .mainmenu-l1-tab {
-        font-size: 16px;
-        padding: 10px 12px;
-        min-height: 44px;
-        flex-basis: 160px;
-        max-width: none;
-    }
-
-    .mainPhoto-banner {
-        width: 95%;
-        margin: 12px auto 16px;
-    }
-
-    .mainPhoto-banner-cta {
-        display: none;
-    }
-
-    .photo-container {
-        height: 300px;
-    }
-
-    .Upper-text {
-        font-size: 24px;
+    .mm-individual .mm-steam-info {
+        flex-wrap: wrap;
     }
 }
 
+.mm-steam {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    padding: 28px 32px;
+    box-sizing: border-box;
+    border-radius: var(--astra-r-xl);
+    min-width: 0;
+}
+
+.mm-steam-info {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+}
+
+/* глиф на приподнимающейся подложке (чистый CSS-transform) */
+.mm-steam-glyphwrap {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex: 0 0 auto;
+    perspective: 300px;
+}
+
+.mm-steam-plate {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--astra-r-lg);
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line);
+    transform: rotate(9deg) translate(4px, 5px);
+    transition: transform var(--astra-t-move) var(--astra-ease);
+}
+
+.mm-steam-glyph {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--astra-r-lg);
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line-strong);
+    color: var(--astra-ink);
+    transition:
+        transform var(--astra-t-move) var(--astra-ease),
+        box-shadow var(--astra-t-move) var(--astra-ease);
+}
+
+.mm-steam:hover .mm-steam-plate {
+    transform: rotate(14deg) translate(7px, 8px);
+}
+
+.mm-steam:hover .mm-steam-glyph {
+    transform: translateY(-5px) rotateX(8deg);
+    box-shadow: var(--astra-shadow-sm);
+}
+
+.mm-steam-copy {
+    min-width: 0;
+}
+
+.mm-steam-title {
+    font-size: calc((20px) * var(--astra-heading-scale, 1));
+}
+
+.mm-steam-sub {
+    margin: 8px 0 0;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+}
+
+.mm-steam-form {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    min-width: 0;
+}
+
+/* два поля в ряд на широком экране, стопкой — на узком */
+.mm-steam-fields {
+    display: grid;
+    /* min(320px, 100%) — колонка не может стать шире контейнера, иначе
+       на узких экранах панель вылезала бы за край */
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+    gap: 22px 26px;
+    align-items: start;
+}
+
+.mm-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.mm-field-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+}
+
+.mm-field-label {
+    font-family: var(--astra-body);
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--astra-ink);
+}
+
+/* тихая подсказка-раскрытие: не действие покупки — значит, не розовая */
+.mm-microlink {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 4px;
+    margin-right: -4px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: var(--astra-body);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--astra-ink-dim);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--astra-line-strong);
+    transition:
+        color var(--astra-t-color) var(--astra-ease),
+        text-decoration-color var(--astra-t-color) var(--astra-ease);
+}
+
+.mm-microlink:hover {
+    color: var(--astra-ink);
+    text-decoration-color: currentColor;
+}
+
+.mm-microlink:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+    border-radius: var(--astra-r-sm);
+}
+
+/* общее поле ввода: колодец ясеня; фокус НЕЙТРАЛЬНЫЙ — розовая
+   подсветка ввода убрана, но индикатор остаётся заметным */
+.mm-input,
+.mm-amount {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 52px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    min-width: 0;
+    background: var(--astra-bg-elev);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    box-shadow: none;
+    transition:
+        border-color var(--astra-t-color) var(--astra-ease),
+        box-shadow var(--astra-t-color) var(--astra-ease);
+}
+
+/* Колодец НЕ подсвечивается от мыши: та же политика, что у .astra-field
+   в теме. :focus-visible здесь не годится — спецификация обязывает его
+   срабатывать и на клик по текстовому полю, поэтому опираемся на режим
+   ввода из frontend/src/index.js. Клавиатурный обход без индикатора
+   оставлять нельзя: внутренний input сам гасит outline. */
+:root[data-modality="keyboard"] .mm-input:focus-within,
+:root[data-modality="keyboard"] .mm-amount:focus-within {
+    border-color: var(--astra-focus-field);
+    box-shadow: 0 0 0 1px var(--astra-focus-field);
+}
+
+/* forced-colors: box-shadow не рисуется — возвращаем контур */
+@media (forced-colors: active) {
+    :root[data-modality="keyboard"] .mm-input:focus-within,
+    :root[data-modality="keyboard"] .mm-amount:focus-within {
+        outline: 2px solid Highlight;
+        outline-offset: 1px;
+    }
+}
+
+.mm-input.has-error,
+.mm-amount.has-error {
+    border-color: var(--astra-err);
+}
+
+.mm-input-el,
+.mm-amount-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--astra-body);
+    /* iOS не зумит поле от 16px */
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--astra-ink);
+}
+
+.mm-input-el::placeholder,
+.mm-amount-input::placeholder {
+    color: var(--astra-ink-dim);
+    font-weight: 400;
+}
+
+/* Символ валюты — денежный голос: Unbounded, и 16px вровень с полем,
+   которое он подписывает (15px был ступенью вне рампы) */
+.mm-amount-suffix {
+    flex: 0 0 auto;
+    font-family: var(--astra-display);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--astra-ink-dim);
+}
+
+.mm-field-error {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--astra-err);
+}
+
+.mm-field-hint {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--astra-ink-dim);
+}
+
+.mm-steam-currencies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.mm-steam-currencies .astra-chip {
+    padding: 9px 16px;
+}
+
+/* ---------- справка (логин / валюта) ----------
+   Встроенного поповера в SteamTopUp.jsx больше нет: справка переехала
+   в общие модалки SteamLoginHelpModal / SteamCurrencyHelpModal
+   (../SteamRefill/SteamRefillInfo). Эти классы остаются разметкой их
+   СОДЕРЖИМОГО, поэтому живут здесь, а не удалены вместе с поповером. */
+
+.mm-help {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 4px;
+    padding: 16px 18px;
+    box-sizing: border-box;
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+    animation: mm-help-in var(--astra-t-move) var(--astra-ease);
+}
+
+@keyframes mm-help-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Закрытие — обратный морф той же кривой, для случая, когда хозяин
+   разметки держит узел чуть дольше состояния (приём PopoverRoot):
+   иначе справка исчезала бы рывком, а открывалась плавно. */
+.mm-help.is-closing {
+    pointer-events: none;
+    animation: mm-help-out var(--astra-t-move) var(--astra-ease) forwards;
+}
+
+@keyframes mm-help-out {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+}
+
+.mm-help-title {
+    margin: 0;
+    font-family: var(--astra-display);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: -0.01em;
+    color: var(--astra-ink);
+}
+
+.mm-help-text {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+}
+
+.mm-help-text strong {
+    color: var(--astra-ink);
+    font-weight: 600;
+}
+
+.mm-help-link {
+    padding: 14px 2px;
+    margin: -14px -2px;
+    color: var(--astra-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color var(--astra-t-color) var(--astra-ease);
+}
+
+/* --astra-pink-bright на --astra-card даёт 4.44:1 — берём сигнальный
+   --astra-pink (4.79:1), чтобы строчная ссылка держала порог */
+.mm-help-link:hover {
+    color: var(--astra-pink);
+}
+
+.mm-help-link:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+    border-radius: var(--astra-r-sm);
+}
+
+.mm-help-list {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+}
+
+.mm-help-list strong {
+    color: var(--astra-ink);
+    font-weight: 600;
+}
+
+.mm-help-img {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+    border-radius: var(--astra-r-sm);
+    border: 1px solid var(--astra-line);
+}
+
+.mm-help-warn {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--astra-warn);
+}
+
+.mm-help-close {
+    padding: 9px 18px;
+    min-height: 44px;
+}
+
+/* ---------- промокод: едет дальше, здесь не проверяется ---------- */
+
+.mm-field--promo {
+    max-width: 460px;
+}
+
+.mm-promo {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    min-width: 0;
+}
+
+.mm-promo .mm-input {
+    flex: 1 1 auto;
+}
+
+.mm-promo-btn {
+    flex: 0 0 auto;
+    height: 52px;
+}
+
+.mm-promo-note {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+}
+
+/* ---------- подвал панели: комиссия слева, одна CTA справа ---------- */
+
+.mm-steam-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    padding-top: 18px;
+    border-top: 1px solid var(--astra-line);
+}
+
+.mm-steam-note {
+    margin: 0;
+    max-width: 46ch;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--astra-ink-dim);
+}
+
+/* Сумма к оплате внутри сноски — деньги говорят своим голосом:
+   Unbounded 700 в --astra-soft и НА СТУПЕНЬ крупнее копии вокруг
+   (16px против 13px). Набирать цену кеглем подписи нельзя: шрифт
+   один на всю систему, и отличают деньги только размер и розовый.
+   tabular-nums — чтобы цифровые барабаны SlidingNumber не дёргали
+   ширину строки при смене выбранного товара. */
+.mm-steam-total {
+    font-family: var(--astra-display);
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.01em;
+    color: var(--astra-soft);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.mm-steam-cta .astra-btn {
+    padding-left: 34px;
+    padding-right: 34px;
+}
+
+/* ============================================================
+   «Важная информация» — правила владельца под формой: ясеневая
+   карточка, нумерованный список, ссылка на реальный /support
+   ============================================================ */
+
+.mm-rules {
+    padding: 24px 28px;
+    box-sizing: border-box;
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-xl);
+    min-width: 0;
+}
+
+.mm-rules-title {
+    font-size: calc((18px) * var(--astra-heading-scale, 1));
+}
+
+.mm-rules-list {
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: mm-rule;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mm-rules-list li {
+    counter-increment: mm-rule;
+    position: relative;
+    padding-left: 34px;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--astra-ink-dim);
+}
+
+.mm-rules-list li::before {
+    content: counter(mm-rule);
+    position: absolute;
+    left: 0;
+    top: 1px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    box-sizing: border-box;
+    border-radius: var(--astra-r-sm);
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line);
+    font-family: var(--astra-display);
+    font-weight: 600;
+    font-size: 11px;
+    /* ink-faint не держит 4.5:1 на card-2 — номер правила читаемый */
+    color: var(--astra-ink-dim);
+}
+
+.mm-rules-list strong {
+    color: var(--astra-ink);
+    font-weight: 600;
+}
+
+.mm-rules-foot {
+    margin: 16px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--astra-line);
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+}
+
+/* строчная ссылка: вертикальный паддинг растит зону нажатия до ~44px,
+   не трогая высоту строки (inline-элемент) */
+.mm-rules-link {
+    padding: 14px 2px;
+    margin: -14px -2px;
+    color: var(--astra-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color var(--astra-t-color) var(--astra-ease);
+}
+
+/* тот же расчёт, что и у .mm-help-link: 4.79:1 вместо 4.44:1 */
+.mm-rules-link:hover {
+    color: var(--astra-pink);
+}
+
+.mm-rules-link:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 2px;
+    border-radius: var(--astra-r-sm);
+}
+
+/* ============================================================
+   RECOMMENDED PRODUCTS — карточки Kupikod, цвета v3:
+   цена Unbounded 700 в --astra-soft, NEW — фиолетовый wash,
+   −N% — БЕЛЫЕ чернила на пурпуре --astra-drop (скидка носит свой
+   цвет, розовый остаётся сигналом действия), радиус --astra-r-lg (24px)
+   ============================================================ */
+
+.mm-prods {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 14px;
+}
+
+/* карточка-кнопка: открывает попап быстрой покупки, поэтому сбрасываем
+   кнопочные дефолты — грамматика вида остаётся прежней */
+.mm-prod {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-width: 0;
+    min-height: 44px;
+    width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-lg);
+    overflow: hidden;
+    text-decoration: none;
+    transition:
+        transform var(--astra-t-color) var(--astra-ease),
+        box-shadow var(--astra-t-move) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
+
+.mm-prod:hover {
+    transform: translateY(-3px);
+    border-color: var(--astra-line-strong);
+    box-shadow: var(--astra-shadow-sm);
+}
+
+.mm-prod:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 3px;
+}
+
+/* quick-buy запрос в полёте по этой карточке */
+.mm-prod.is-pending {
+    cursor: progress;
+}
+
+.mm-prod.is-pending .mm-prod-media {
+    opacity: 0.6;
+}
+
+.mm-prod-media {
+    position: relative;
+    display: block;
+    aspect-ratio: 1 / 1;
+    background: var(--astra-card-2);
+    overflow: hidden;
+}
+
+.mm-prod-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mm-prod-avatar {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* NEW поверх картинки: wash компонуется на плотной тёмной подложке,
+   иначе полупрозрачный фиолетовый не держит контраст на любом арте */
+.mm-prod-new {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background:
+        linear-gradient(0deg, var(--astra-violet-wash), var(--astra-violet-wash)),
+        rgba(14, 13, 18, 0.92);
+}
+
+.mm-prod-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px 14px;
+}
+
+.mm-prod-pricerow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+}
+
+.mm-prod-price {
+    font-family: var(--astra-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--astra-soft);
+}
+
+/* Зачёркнутая старая цена — та же типографика, что у текущей цены
+   (Unbounded 700), только мельче и тише: деньги везде говорят одним
+   голосом, разница читается кеглем и цветом, а не сменой шрифта. */
+.mm-prod-old {
+    font-family: var(--astra-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: -0.01em;
+    color: var(--astra-ink-dim);
+    text-decoration: line-through;
+}
+
+.mm-prod-name {
+    font-family: var(--astra-body);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--astra-ink-dim);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.mm-prod-skel {
+    height: 246px;
+    border-radius: var(--astra-r-lg);
+}
+
+/* ---------- выбор подарка во вкладке «Подарок Steam» ----------
+   Сетка карточек-радио: арт 1:1 слева, имя + цена справа. Та же
+   ясеневая гамма, что у полей; выбор — плоская розовая заливка
+   --astra-pink-fill с БЕЛЫМ текстом, ровно как у активной пилюли в
+   быстрой покупке, и на ховере он не светлеет: --astra-pink-bright
+   под белым уронил бы уже сделанный выбор до 3.97:1. */
+
+.mm-gift-products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.mm-gift-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 64px;
+    padding: 8px 12px;
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    background: var(--astra-card);
+    color: var(--astra-ink-dim);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        border-color var(--astra-t-color) var(--astra-ease),
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+}
+
+.mm-gift-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(236, 234, 238, 0.3);
+    color: var(--astra-ink);
+}
+
+.mm-gift-card:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+.mm-gift-card.is-active {
+    background: var(--astra-pink-fill);
+    border-color: transparent;
+    color: var(--astra-on-pink);
+}
+
+.mm-gift-card.is-active:hover {
+    background: var(--astra-pink-fill);
+}
+
+.mm-gift-card-art {
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--astra-r-sm);
+    overflow: hidden;
+    background: var(--astra-card-2);
+    display: grid;
+    place-items: center;
+    color: var(--astra-ink-dim);
+}
+
+.mm-gift-card-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.mm-gift-card.is-active .mm-gift-card-art {
+    background: rgba(255, 255, 255, 0.14);
+    color: var(--astra-on-pink);
+}
+
+.mm-gift-card-glyph svg {
+    width: 28px;
+    height: 28px;
+}
+
+.mm-gift-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.mm-gift-card-name {
+    font-family: var(--astra-body);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mm-gift-card-price {
+    font-family: var(--astra-display);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--astra-soft);
+    white-space: nowrap;
+}
+
+.mm-gift-card.is-active .mm-gift-card-price {
+    color: var(--astra-on-pink);
+}
+
+/* Скелетоны под список — та же политика, что у плиток: серое
+   появляется, только если ответ реально задержался (useDelayedPending),
+   а тихое ожидание НЕ резервирует высоту. Место под список держит
+   PendingSwap (.mm-swap--quiet), отдельной заглушки нет. */
+.mm-gift-skeletons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.mm-gift-skel {
+    display: block;
+    height: 64px;
+    border-radius: var(--astra-r-md);
+}
+
+/* ============================================================
+   Responsive — fluid со ступенями 1024 / 768 / 480 (ступени страниц
+   системы), без горизонтального скролла страницы: таб-ряд скроллится
+   внутри себя
+   ============================================================ */
+
+@media (max-width: 1024px) {
+    .mm-steam {
+        padding: 24px 22px;
+        gap: 22px;
+    }
+}
+
+@media (max-width: 768px) {
+    .mm-page {
+        gap: 40px;
+        padding: 20px 18px 88px;
+    }
+
+    /* На телефоне стекло снимаем: backdrop-filter поверх длинной
+       прокручиваемой страницы — самый дорогой слой на мобильном GPU.
+       Замена не «что-нибудь сплошное», а та же плоская форма, которой
+       система уже пользуется там, где линза была отвергнута (панель
+       результатов поиска, попап быстрой покупки): --astra-card +
+       волосяная рамка + без тени. Рамку вернуть обязательно — её рисовало
+       стекло, и без неё панель теряла край. */
+    .mm-steam.astra-liquid {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        background: var(--astra-card);
+        border: 1px solid var(--astra-line);
+        box-shadow: none;
+    }
+
+    .mm-steam.astra-liquid::before,
+    .mm-steam.astra-liquid::after {
+        content: none;
+    }
+
+    #sec-featured,
+    #sec-recommended {
+        scroll-margin-top: 76px;
+    }
+
+    .mm-grid {
+        gap: 16px 12px;
+    }
+
+    .mm-tabbtn {
+        padding: 10px 14px;
+    }
+
+    .mm-steam-foot {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mm-steam-cta {
+        display: flex;
+    }
+
+    .mm-steam-cta .astra-btn {
+        width: 100%;
+    }
+
+    .mm-field--promo {
+        max-width: none;
+    }
+
+    .mm-rules {
+        padding: 20px 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .mm-page {
+        padding: 14px 12px 80px;
+    }
+
+    .mm-h {
+        font-size: calc((20px) * var(--astra-heading-scale, 1));
+    }
+
+    .mm-grid {
+        grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+        gap: 14px 10px;
+    }
+
+    .mm-tile-label {
+        font-size: 13px;
+    }
+
+    .mm-prods {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .mm-steam {
+        padding: 20px 16px;
+    }
+
+    .mm-steam-info {
+        gap: 14px;
+    }
+
+    .mm-promo {
+        flex-wrap: wrap;
+    }
+
+    .mm-promo .mm-input {
+        flex: 1 1 160px;
+    }
+
+    .mm-help {
+        padding: 14px;
+    }
+
+    .mm-rules {
+        padding: 18px 14px;
+    }
+
+    .mm-more-btn {
+        width: 100%;
+    }
+
+    .mm-gift-products {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================
+   Reduced motion — мгновенные смены, никакой моторики
+   ============================================================ */
+
 @media (prefers-reduced-motion: reduce) {
-    .mainPhoto-banner,
-    .mainPhoto-banner-cta,
-    .mainPhoto-banner-arrow {
+    .mm-tabbubble,
+    .mm-tabbtn,
+    .mm-tile,
+    .mm-tile-art,
+    .mm-tile-art::after,
+    .mm-tile-label,
+    .mm-prod,
+    .mm-steam-plate,
+    .mm-steam-glyph,
+    .mm-amount,
+    .mm-input,
+    .mm-gift-card,
+    .mm-microlink,
+    .mm-help-link,
+    .mm-rules-link,
+    .mm-panels.is-animating,
+    .mm-expand-clip.is-animating {
         transition: none;
     }
 
-    .mainPhoto-banner:hover {
+    .mm-panel--in,
+    .mm-panel--out,
+    .mm-panel--flat.mm-panel--in,
+    .mm-panel--flat.mm-panel--out,
+    .mm-swap-in,
+    .mm-swap-ghost,
+    .mm-help,
+    .mm-help.is-closing {
+        animation: none;
+    }
+
+    /* призрак скелетона без анимации был бы вечным серым слоем */
+    .mm-swap-ghost {
+        display: none;
+    }
+
+    .mm-panel--out {
+        opacity: 0;
+    }
+
+    .mm-tile:hover .mm-tile-art,
+    .mm-prod:hover {
+        transform: none;
+    }
+
+    .mm-steam:hover .mm-steam-plate {
+        transform: rotate(9deg) translate(4px, 5px);
+    }
+
+    .mm-steam:hover .mm-steam-glyph {
         transform: none;
     }
 }

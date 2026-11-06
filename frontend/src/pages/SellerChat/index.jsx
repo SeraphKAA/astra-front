@@ -1,46 +1,167 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../app/auth/AuthContext";
 import { useToast } from "../../shared/ui/Toast/ToastProvider";
-import { assignMeToOrder, changeOrderStatus, getMyAssignedOrders, getUnassignedOrders } from "../../entities/order/api/orderApi";
+import { assignMeToOrder, unassignMeFromOrder, changeOrderStatus, getMyAssignedOrders, getUnassignedOrders } from "../../entities/order/api/orderApi";
 import "./sellerChat.css";
 import { useOrderSocket } from "../../hooks/useOrderSocket";
+import { useUnreadCounts } from "../../app/unread/UnreadContext";
+
+/* Русские имена статусов для интерфейса; в API уходят сырые значения */
+const STATUS_LABELS = {
+    paid: "Оплачен",
+    processing: "В процессе",
+    completed: "Завершён",
+    canceled: "Отменён",
+};
+
+const STATUS_FILTERS = [
+    { key: "all", label: "Все" },
+    { key: "processing", label: "В процессе" },
+    { key: "completed", label: "Завершённые" },
+    { key: "canceled", label: "Отменённые" },
+];
+
+/* created_at -> «ДД.ММ.ГГГГ, ЧЧ:ММ»; нечитаемое значение отдаём как есть */
+const formatDateTime = (value) => {
+    if (!value) return "—";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    const p = (n) => String(n).padStart(2, "0");
+    return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}`;
+};
 
 const SellerChat = () => {
     const { user } = useAuth();
     const { pushToast } = useToast();
-    const [tab, setTab] = useState("unassigned"); // unassigned | mine
+    const { counts } = useUnreadCounts();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const TAB_VALUES = new Set(["unassigned", "mine"]);
+    const STATUS_VALUES = new Set(["all", "processing", "completed", "canceled"]);
+    
+    const initialTab = TAB_VALUES.has(searchParams.get("tab"))
+        ? searchParams.get("tab")
+        : "unassigned";
+
+    const initialStatus = STATUS_VALUES.has(searchParams.get("status"))
+        ? searchParams.get("status")
+        : "all";
+    
+    const [tab, setTab] = useState(initialTab); // unassigned | mine
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
-    const [mineStatusFilter, setMineStatusFilter] = useState("all");
+    const [mineStatusFilter, setMineStatusFilter] = useState(initialStatus);
     const [assigning, setAssigning] = useState(null);
     const [savingStatus, setSavingStatus] = useState(null);
     const [statusDraft, setStatusDraft] = useState({});
+    const [unassigning, setUnassigning] = useState(null);
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError("");
+    const statusMap = {
+        created: "Создан",
+        paid: "Оплачен",
+        processing: "В обработке",
+        completed: "Выполнен",
+        canceled: "Отменён"
+    };
+
+    const typeMap ={
+        manual: "Ручной",
+        processing: "В обработке",
+        success: "Успешно",
+        failed: "Отменён"
+    };
+
+    const userLanguage = navigator.language || 'en';
+    const isRussian = userLanguage.startsWith('ru');
+
+    const getStatusLabel = (status) => {
+        if (!status) return '';
+            const key = status.toLowerCase();
+        if (isRussian && statusMap[key]) {
+            return statusMap[key];
+    }
+        return status;
+    };
+    /* quiet: фоновое обновление БЕЗ смены loading. Смена loading размонтирует
+       весь список ради строки «Загрузка…», а обратный монтаж переигрывает
+       входные анимации карточек — на каждом событии сокета, без действия
+       пользователя. Тихое обновление меняет данные под ногами, и React
+       обновляет карточки по key, не пересоздавая их. Ошибку тихого обновления
+       не показываем: на экране остаются прежние данные, и пугать оператора
+       полосой ошибки из-за фонового толчка не за чем. */
+    const load = useCallback(async ({ quiet = false } = {}) => {
+        if (!quiet) {
+            setLoading(true);
+            setError("");
+        }
         try {
             const data =
                 tab === "mine"
                     ? await getMyAssignedOrders(100, 0)
                     : await getUnassignedOrders(100, 0);
             setOrders(Array.isArray(data) ? data : []);
+            if (quiet) setError("");
         } catch (e) {
-            setError("Не удалось загрузить заказы");
-            setOrders([]);
+            if (!quiet) {
+                setError("Не удалось загрузить заказы");
+                setOrders([]);
+            }
         } finally {
-            setLoading(false);
+            if (!quiet) setLoading(false);
         }
     }, [tab]);
+
+    /* URL → состояние: если пользователь пришёл по ссылке ?tab=mine
+    или кликнул браузерную «назад/вперёд», подхватываем значение. */
+    useEffect(() => {
+        const urlTab = searchParams.get("tab");
+        const urlStatus = searchParams.get("status");
+
+        if (TAB_VALUES.has(urlTab) && urlTab !== tab) {
+            setTab(urlTab);
+        } else if (!urlTab && tab !== "unassigned") {
+            setTab("unassigned");
+        }
+
+        if (STATUS_VALUES.has(urlStatus) && urlStatus !== mineStatusFilter) {
+            setMineStatusFilter(urlStatus);
+        } else if (!urlStatus && mineStatusFilter !== "all") {
+            setMineStatusFilter("all");
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
+    /* состояние → URL: обновляем query, чтобы:
+    - можно было поделиться ссылкой,
+    - работала кнопка «назад» в браузере. */
+    const switchTab = (next) => {
+        if (!TAB_VALUES.has(next)) return;
+        setTab(next);
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set("tab", next);
+        setSearchParams(nextParams, { replace: true });
+    };
+
+    const switchStatusFilter = (next) => {
+        if (!STATUS_VALUES.has(next)) return;
+        setMineStatusFilter(next);
+        const nextParams = new URLSearchParams(searchParams);
+        if (next === "all") {
+            nextParams.delete("status");
+        } else {
+            nextParams.set("status", next);
+        }
+        setSearchParams(nextParams, { replace: true });
+    };
 
     useEffect(() => {
         load();
     }, [tab, load]);
     const handleOrderEvent = useCallback(() => {
-        load();
+        load({ quiet: true });
     }, [load]);
     useOrderSocket(handleOrderEvent, { enabled: true });
 
@@ -77,11 +198,26 @@ const SellerChat = () => {
         try {
             await assignMeToOrder(publicId);
             pushToast({ type: "success", message: `Заказ ${publicId} занят` });
-            await load();
+            /* тихо: список меняется на месте, карточки не переигрывают вход */
+            await load({ quiet: true });
         } catch (e) {
             pushToast({ type: "error", message: "Не удалось занять заказ (возможно, его уже заняли)" });
         } finally {
             setAssigning(null);
+        }
+    };
+
+    const onUnassign = async (publicId) => {
+        if (!publicId) return;
+        setUnassigning(publicId);
+        try {
+            await unassignMeFromOrder(publicId);
+            pushToast({ type: "success", message: `Вы отказались от заказа ${publicId}` });
+            await load(); // обновляем список
+        } catch (e) {
+            pushToast({ type: "error", message: "Не удалось отказаться от заказа" });
+        } finally {
+            setUnassigning(null);
         }
     };
 
@@ -92,13 +228,26 @@ const SellerChat = () => {
         try {
             await changeOrderStatus(publicId, next);
             pushToast({ type: "success", message: `Статус заказа ${publicId} обновлён` });
-            await load();
+            await load({ quiet: true });
         } catch (e) {
             pushToast({ type: "error", message: "Не удалось обновить статус заказа" });
         } finally {
             setSavingStatus(null);
         }
     };
+
+    /* Пусто из-за поиска/фильтра — не то же самое, что пусто на самом деле */
+    const isFiltered = search.trim().length > 0 || (tab === "mine" && mineStatusFilter !== "all");
+    const emptyTitle = isFiltered
+        ? "Ничего не найдено"
+        : tab === "mine"
+            ? "У вас пока нет заказов"
+            : "Свободных заказов нет";
+    const emptySub = isFiltered
+        ? (tab === "mine" ? "Попробуйте изменить запрос или фильтр статуса" : "Попробуйте изменить поисковый запрос")
+        : tab === "mine"
+            ? "Возьмите свободный заказ на вкладке «Свободные»"
+            : "Новые заказы появятся здесь автоматически";
 
     return (
         <div className="seller-chat-page">
@@ -109,27 +258,30 @@ const SellerChat = () => {
                 </div>
             </div>
 
-            <div className="seller-chat-tabs">
-                <button
-                    type="button"
-                    className={`seller-tab ${tab === "unassigned" ? "is-active" : ""}`}
-                    onClick={() => setTab("unassigned")}
-                >
-                    Свободные
-                </button>
-                <button
-                    type="button"
-                    className={`seller-tab ${tab === "mine" ? "is-active" : ""}`}
-                    onClick={() => setTab("mine")}
-                >
-                    Мои
-                </button>
-            </div>
-
-            <div className="seller-chat-controls">
+            <div className="seller-chat-toolbar">
+                <div className="seller-chat-tabs">
+                    <button
+                        type="button"
+                        className={`seller-tab ${tab === "unassigned" ? "is-active" : ""}`}
+                        aria-pressed={tab === "unassigned"}
+                        onClick={() => switchTab("unassigned")}
+                    >
+                        Свободные
+                    </button>
+                    <button
+                        type="button"
+                        className={`seller-tab ${tab === "mine" ? "is-active" : ""}`}
+                        aria-pressed={tab === "mine"}
+                        onClick={() => switchTab("mine")}
+                    >
+                        Мои
+                    </button>
+                </div>
                 <input
                     className="seller-chat-search"
-                    placeholder="Поиск по заказам (public_id, user_id, product_id...)"
+                    type="text"
+                    placeholder="Поиск по номеру, покупателю или товару"
+                    aria-label="Поиск по заказам"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                 />
@@ -137,19 +289,16 @@ const SellerChat = () => {
                     Обновить
                 </button>
             </div>
+
             {tab === "mine" && (
-                <div className="seller-chat-status-tabs">
-                    {[
-                        { key: "all", label: "Все" },
-                        { key: "processing", label: "В процессе" },
-                        { key: "completed", label: "Завершенные" },
-                        { key: "canceled", label: "Отмененные" },
-                    ].map((statusTab) => (
+                <div className="seller-chat-status-tabs" role="group" aria-label="Фильтр по статусу">
+                    {STATUS_FILTERS.map((statusTab) => (
                         <button
                             key={statusTab.key}
                             type="button"
                             className={`seller-tab ${mineStatusFilter === statusTab.key ? "is-active" : ""}`}
-                            onClick={() => setMineStatusFilter(statusTab.key)}
+                            aria-pressed={mineStatusFilter === statusTab.key}
+                            onClick={() => switchStatusFilter(statusTab.key)}
                         >
                             {statusTab.label}
                         </button>
@@ -158,32 +307,60 @@ const SellerChat = () => {
             )}
 
             {loading ? (
-                <div className="seller-chat-muted">Загрузка...</div>
+                <div className="seller-chat-loading">Загрузка…</div>
             ) : error ? (
-                <div className="seller-chat-error">{error}</div>
+                <div className="seller-chat-error" role="alert">
+                    <span>{error}</span>
+                    <button className="seller-chat-btn" type="button" onClick={load}>
+                        Повторить
+                    </button>
+                </div>
             ) : filteredOrders.length === 0 ? (
-                <div className="seller-chat-muted">
-                    {tab === "mine" ? "У вас нет заказов" : "Свободных заказов нет"}
+                <div className="seller-chat-empty">
+                    <div className="seller-chat-empty-title">{emptyTitle}</div>
+                    <div className="seller-chat-empty-sub">{emptySub}</div>
                 </div>
             ) : (
                 <div className="seller-chat-list">
                     {filteredOrders.map((o) => (
-                        <div className="seller-order-card" key={o.public_id || o.id}>
-                            <div className="seller-order-row">
-                                <div className="seller-order-title">Заказ {o.public_id}</div>
+                        <article className="seller-order-card" key={o.public_id || o.id}>
+                            <div className="seller-order-top">
+                                <div className="seller-order-id">
+                                    <span className="seller-order-id-label">Заказ</span>
+                                    <span className="seller-order-id-value text-none">{o.public_id}</span>
+                                </div>
                                 <div className="seller-order-badges">
-                                    {o.status && <span className="seller-badge">{o.status}</span>}
-                                    {o.order_type && <span className="seller-badge">{o.order_type}</span>}
+                                    {o.status && (
+                                        <span className={`seller-status-badge ${STATUS_LABELS[o.status] ? `is-${o.status}` : ""}`}>
+                                            {STATUS_LABELS[o.status] || o.status}
+                                        </span>
+                                    )}
+                                    {o.order_type && <span className="seller-type-badge">{o.order_type === "manual" ? "Ручной" : "Автоматический"}</span>}
                                 </div>
                             </div>
 
-                            <div className="seller-order-grid">
-                                <div><span>user_id:</span> {o.user_id}</div>
-                                <div><span>покупатель:</span> {o.user_nickname || o.user_login || o.user_email || o.user_id}</div>
-                                <div><span>товар:</span> {o.product_name || o.product_id}</div>
-                                <div><span>сумма:</span> {o.total_price} ₽</div>
-                                <div><span>создан:</span> {String(o.created_at).slice(0, 19).replace("T", " ")}</div>
-                            </div>
+                            <dl className="seller-order-meta">
+                                <div className="seller-order-meta-item">
+                                    <dt>Покупатель</dt>
+                                    <dd>{o.user_nickname || o.user_login || o.user_email || `#${o.user_id}`}</dd>
+                                </div>
+                                <div className="seller-order-meta-item">
+                                    <dt>ID покупателя</dt>
+                                    <dd>{o.user_id}</dd>
+                                </div>
+                                <div className="seller-order-meta-item">
+                                    <dt>Товар</dt>
+                                    <dd>{o.product_name || o.product_id}</dd>
+                                </div>
+                                <div className="seller-order-meta-item">
+                                    <dt>Сумма</dt>
+                                    <dd className="seller-order-sum">{o.total_price} ₽</dd>
+                                </div>
+                                <div className="seller-order-meta-item">
+                                    <dt>Создан</dt>
+                                    <dd>{formatDateTime(o.created_at)}</dd>
+                                </div>
+                            </dl>
 
                             <div className="seller-order-actions">
                                 {tab === "unassigned" ? (
@@ -193,25 +370,38 @@ const SellerChat = () => {
                                         onClick={() => onAssign(o.public_id)}
                                         disabled={assigning === o.public_id}
                                     >
-                                        {assigning === o.public_id ? "Занимаю..." : "Занять заказ"}
+                                        {assigning === o.public_id ? "Занимаю…" : "Занять заказ"}
                                     </button>
                                 ) : (
-                                    <div className="seller-order-status">
+                                    <>
                                         {o.requires_manual_processing && (
                                             <NavLink className="seller-chat-link" to={`/order-chat/${o.id}`}>
                                                 Открыть чат
+                                                {counts.seller_orders_by_chat[String(o.id)] > 0 && (() => {
+                                                    const value = counts.seller_orders_by_chat[String(o.id)];
+                                                    const text = value > 99 ? "99+" : String(value);
+                                                    return (
+                                                        <span
+                                                            className={`nav-badge nav-badge--${text.length} seller-chat-link-badge`}
+                                                            aria-label={`Непрочитанных: ${value}`}
+                                                        >
+                                                            {text}
+                                                        </span>
+                                                    );
+                                                })()}
                                             </NavLink>
                                         )}
                                         <select
                                             className="seller-order-select"
+                                            aria-label={`Статус заказа ${o.public_id}`}
                                             value={statusDraft[o.public_id] ?? o.status}
                                             onChange={(e) =>
                                                 setStatusDraft((prev) => ({ ...prev, [o.public_id]: e.target.value }))
                                             }
                                         >
-                                            <option value="processing">processing</option>
-                                            <option value="completed">completed</option>
-                                            <option value="canceled">canceled</option>
+                                            <option value="processing">В процессе</option>
+                                            <option value="completed">Завершён</option>
+                                            <option value="canceled">Отменён</option>
                                         </select>
                                         <button
                                             type="button"
@@ -221,10 +411,19 @@ const SellerChat = () => {
                                         >
                                             {savingStatus === o.public_id ? "Сохраняю..." : "Сохранить"}
                                         </button>
-                                    </div>
+
+                                        <button
+                                            type="button"
+                                            className="seller-chat-btn secondary"
+                                            onClick={() => onUnassign(o.public_id)}
+                                            disabled={unassigning === o.public_id}
+                                        >
+                                            {unassigning === o.public_id ? "Отказываюсь..." : "Отказаться"}
+                                        </button>
+                                    </>
                                 )}
                             </div>
-                        </div>
+                        </article>
                     ))}
                 </div>
             )}
@@ -233,4 +432,3 @@ const SellerChat = () => {
 };
 
 export default SellerChat;
-

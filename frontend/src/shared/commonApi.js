@@ -1,11 +1,9 @@
-import { LS } from "../utilities/utilLocalStorage";
-
 const normalizePublicURL = (value) => {
     if (!value) return "/api";
 
     // In HTTPS mode, calling `http://...` will be blocked as mixed content.
     // If user configured an absolute localhost URL, route through nginx via `/api`.
-    if (typeof window !== "undefined" && window.location?.protocol === "https:") {
+    if (typeof window !== "undefined" && window.location?.protocol === "http:") {
         if (value.startsWith("http://localhost:8000") || value.startsWith("http://127.0.0.1:8000")) {
             return "/api";
         }
@@ -25,7 +23,8 @@ const readPublicURLFromEnv = () => {
     return null;
 };
 
-export const publicURL = normalizePublicURL(readPublicURLFromEnv()) || "/api";
+// export const publicURL = normalizePublicURL(readPublicURLFromEnv()) || "/api";
+export const publicURL = "http://localhost:8000";
 
 /**
  * Старые URL MinIO как http://localhost:9000/bucket/... на HTTPS-странице дают mixed content.
@@ -115,99 +114,164 @@ const buildHttpError = (response, data) => {
     });
 };
 
+// export const apiRequest = async ({
+//     url,
+//     method = "GET",
+//     body = null,
+//     authorized = true,
+// }) => {
+//     const makeRequest = async () => {
+//         const headers = {
+//             Accept: "application/json",
+//         };
+
+//         const token = await LS.get("access_token");
+
+//         if (authorized && token) {
+//             headers["Authorization"] = "Bearer " + token;
+//         }
+
+//         const isFormData = body instanceof FormData;
+
+//         if (body && !isFormData) {
+//             headers["Content-Type"] = "application/json";
+//         }
+
+//         return fetch(publicURL + url, {
+//             method,
+//             headers,
+//             body: body
+//                 ? isFormData
+//                     ? body
+//                     : JSON.stringify(body)
+//                 : null,
+//         });
+//     };
+
+//     let response = await makeRequest();
+
+//     if (response.status === 401 && authorized) {
+//         if (isRefreshing) {
+//             return new Promise((resolve, reject) => {
+//                 failedQueue.push({ resolve, reject });
+//             }).then(async () => {
+//                 const res = await makeRequest();
+//                 const d = await res.json().catch(() => null);
+//                 if (!res.ok) {
+//                     throw buildHttpError(res, d);
+//                 }
+//                 return d;
+//             });
+//         }
+
+//         isRefreshing = true;
+
+//         try {
+//             const refreshToken = await LS.get("refresh_token");
+
+//             const refreshResponse = await fetch(
+//                 publicURL + "/users/refresh",
+//                 {
+//                     method: "POST",
+//                     headers: { "Content-Type": "application/json" },
+//                     body: JSON.stringify({ refresh_token: refreshToken }),
+//                 }
+//             );
+
+//             if (!refreshResponse.ok) {
+//                 throw new Error("Refresh failed");
+//             }
+
+//             const refreshData = await refreshResponse.json();
+
+//             await LS.set("access_token", refreshData.access_token);
+//             await LS.set("refresh_token", refreshData.refresh_token);
+
+//             processQueue(null, refreshData.access_token);
+
+//             response = await makeRequest();
+//         } catch (err) {
+//             processQueue(err, null);
+
+//             await LS.remove("access_token");
+//             await LS.remove("refresh_token");
+
+//             throw err;
+//         } finally {
+//             isRefreshing = false;
+//         }
+//     }
+
+//     const data = await response.json().catch(() => null);
+
+//     if (!response.ok) {
+//         throw buildHttpError(response, data);
+//     }
+
+//     return data;
+// };
+
 export const apiRequest = async ({
     url,
     method = "GET",
     body = null,
     authorized = true,
 }) => {
-    const makeRequest = async () => {
-        const headers = {
-            Accept: "application/json",
-        };
-
-        const token = await LS.get("access_token");
-
-        if (authorized && token) {
-            headers["Authorization"] = "Bearer " + token;
-        }
-
-        const isFormData = body instanceof FormData;
-
-        if (body && !isFormData) {
-            headers["Content-Type"] = "application/json";
-        }
-
-        return fetch(publicURL + url, {
-            method,
-            headers,
-            body: body
-                ? isFormData
-                    ? body
-                    : JSON.stringify(body)
-                : null,
-        });
+    const headers = {
+        Accept: "application/json",
     };
 
-    let response = await makeRequest();
+    const isFormData = body instanceof FormData;
+    if (body && !isFormData) {
+        headers["Content-Type"] = "application/json";
+    }
 
-    if (response.status === 401 && authorized) {
-        if (isRefreshing) {
-            return new Promise((resolve, reject) => {
-                failedQueue.push({ resolve, reject });
-            }).then(async () => {
-                const res = await makeRequest();
-                const d = await res.json().catch(() => null);
-                if (!res.ok) {
-                    throw buildHttpError(res, d);
-                }
-                return d;
-            });
-        }
+    const response = await fetch(publicURL + url, {
+        method,
+        headers,
+        credentials: "include", // отправка и приём кук
+        body: body
+            ? isFormData
+                ? body
+                : JSON.stringify(body)
+            : null,
+    });
 
-        isRefreshing = true;
-
+    if (response.status === 401) {
+        // Пробуем обновить токены через /users/refresh
         try {
-            const refreshToken = await LS.get("refresh_token");
-
-            const refreshResponse = await fetch(
-                publicURL + "/users/refresh",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ refresh_token: refreshToken }),
-                }
-            );
-
-            if (!refreshResponse.ok) {
+            const refreshResp = await fetch(publicURL + "/users/refresh", {
+                method: "POST",
+                credentials: "include",
+            });
+            if (!refreshResp.ok) {
                 throw new Error("Refresh failed");
             }
-
-            const refreshData = await refreshResponse.json();
-
-            await LS.set("access_token", refreshData.access_token);
-            await LS.set("refresh_token", refreshData.refresh_token);
-
-            processQueue(null, refreshData.access_token);
-
-            response = await makeRequest();
-        } catch (err) {
-            processQueue(err, null);
-
-            await LS.remove("access_token");
-            await LS.remove("refresh_token");
-
-            throw err;
-        } finally {
-            isRefreshing = false;
+            // Куки обновятся автоматически, повторяем исходный запрос
+            const retryResponse = await fetch(publicURL + url, {
+                method,
+                headers,
+                credentials: "include",
+                body: body
+                    ? isFormData
+                        ? body
+                        : JSON.stringify(body)
+                    : null,
+            });
+            const retryData = await retryResponse.json().catch(() => null);
+            if (!retryResponse.ok) {
+                throw buildHttpError(retryResponse, retryData);
+            }
+            return retryData;
+        } catch (refreshError) {
+            // Если рефреш не удался – выбрасываем ошибку, фронт должен выйти
+            throw new Error("Сессия истекла");
         }
     }
 
     const data = await response.json().catch(() => null);
-
     if (!response.ok) {
         throw buildHttpError(response, data);
     }
-
     return data;
 };

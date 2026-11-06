@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../../shared/ui/Button/Button';
 import { Modal } from '../../shared/ui/Modal/Modal';
 import { Input } from '../../shared/ui/Input/Input';
-import { getFirstCategory, createCategory, deleteCategory, getCategoryTree, getAllCategories, duplicateCategorySettings } from '../../entities/category/api/categoryApi';
+import { getFirstCategory, createCategory, updateCategory, deleteCategory, getCategoryTree, getAllCategories, duplicateCategorySettings } from '../../entities/category/api/categoryApi';
 import { createCategoryFaq, deleteCategoryFaq, getCategoryFaqByCategoryId, updateCategoryFaq } from '../../entities/faq/api/faqApi';
 import {
     createCategoryAdditionalInfo,
@@ -42,6 +42,16 @@ const CATEGORY_DUPLICATE_FIELDS = [
     { key: 'additional_info', label: 'Доп. информация' },
     { key: 'checkout_schema', label: 'Данные для заказа' },
 ];
+
+const CATEGORY_STATUS_OPTIONS = [
+    { value: 'active', label: 'Активна' },
+    { value: 'soon',   label: 'Скоро' },
+    { value: 'hidden', label: 'Скрыта' },
+];
+
+const CATEGORY_STATUS_LABELS = Object.fromEntries(
+    CATEGORY_STATUS_OPTIONS.map((o) => [o.value, o.label])
+);
 
 const findAllCategoryNode = (roots) => {
     if (!Array.isArray(roots) || roots.length === 0) return null;
@@ -86,6 +96,13 @@ const buildHasChildrenMap = (nodes, map = {}) => {
     return map;
 };
 
+const enrichTree = (nodes) =>
+    (nodes || []).map((node) => ({
+        ...node,
+        has_children: Array.isArray(node.children) && node.children.length > 0,
+        children: enrichTree(node.children),
+    }));
+
 export const CategoriesPage = () => {
     const { pushToast } = useToast();
     const [categories, setCategories] = useState([]);
@@ -107,6 +124,7 @@ export const CategoriesPage = () => {
     const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [checkoutError, setCheckoutError] = useState("");
     const [checkoutEditing, setCheckoutEditing] = useState(null);
+    const [fullCategories, setFullCategories] = useState([]);
     const [checkoutForm, setCheckoutForm] = useState({
         profile_type: "",
         title: "",
@@ -118,6 +136,8 @@ export const CategoriesPage = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [formData, setFormData] = useState({
         name: '',
+        description: '',
+        status: 'active',
         parent_id: null
     });
     const [imageFile, setImageFile] = useState(null);
@@ -160,6 +180,7 @@ export const CategoriesPage = () => {
             ]);
             const allNode = findAllCategoryNode(allData);
             const hasChildrenMap = buildHasChildrenMap(allNode?.children || []);
+            setFullCategories(enrichTree(allNode?.children || []));
             const categoriesList = (firstData.children || []).map((category) => ({
                 ...category,
                 children: [],
@@ -228,17 +249,27 @@ export const CategoriesPage = () => {
         e.preventDefault();
         try {
             if (editingCategory) {
-                // console.log("editing category");
+                await updateCategory(editingCategory.id, {
+                    name: formData.name,
+                    description: formData.description || null,
+                    status: formData.status,
+                    parent_id: formData.parent_id,
+                });
+                pushToast({type: `success`, message: "Успешно обновлена категория"})
             } else {
                 const newCategory = await createCategory(formData);
                 setNewCategoryId(newCategory.id);
                 setTimeout(() => setNewCategoryId(null), 500);
+                pushToast({type: `success`, message: "Успешно создана категория"})
             }
             await fetchCategories(expandedCategories);
             setModalOpen(false);
             resetForm();
         } catch (error) {
-            // console.error('Error saving category:', error);
+            pushToast({
+                type: 'error',
+                message: getApiErrorMessage(error, 'Не удалось сохранить категорию'),
+            });
         }
     };
 
@@ -251,7 +282,10 @@ export const CategoriesPage = () => {
                 setExpandedCategories(nextExpanded);
                 await fetchCategories(nextExpanded);
             } catch (error) {
-                // console.error('Error deleting category:', error);
+                pushToast({
+                    type: 'error',
+                    message: getApiErrorMessage(error, 'Не удалось сохранить категорию'),
+                });
             }
         }
     };
@@ -309,13 +343,15 @@ export const CategoriesPage = () => {
 
     const resetForm = () => {
         setEditingCategory(null);
-        setFormData({ name: '', parent_id: null });
+        setFormData({ name: '',  description: '', status: 'active', parent_id: null });
     };
 
     const openEditModal = (category) => {
         setEditingCategory(category);
         setFormData({
             name: category.name,
+            description: category.description || '',
+            status: 'active',
             parent_id: category.parent_id
         });
         setModalOpen(true);
@@ -586,7 +622,8 @@ export const CategoriesPage = () => {
 
     const renderCategoryRow = (category, level = 0) => {
         const hasChildren = category.has_children === true;
-        const isExpanded = expandedCategories.has(category.id);
+        const isSearching = Boolean(q);
+        const isExpanded = isSearching ? true : expandedCategories.has(category.id);
         const isLoading = loadingChildren[category.id];
         const paddingLeft = level * 8;
         const isNew = newCategoryId === category.id;
@@ -595,7 +632,7 @@ export const CategoriesPage = () => {
             <React.Fragment key={category.id}>
                 <tr className={`${styles.categoryRow} ${isNew ? styles.newRow : ''}`} data-level={level}>
                     <td style={{ paddingLeft: `${paddingLeft + 16}px` }}>
-                        {hasChildren && (
+                        {hasChildren && !isSearching ? (
                             <button
                                 type="button"
                                 className={`${styles.expandButton} ${isExpanded ? styles.expanded : ''}`}
@@ -605,6 +642,8 @@ export const CategoriesPage = () => {
                             >
                                 <ExpandIcon expanded={isExpanded} />
                             </button>
+                        ) : (
+                            <span className={styles.expandPlaceholder} />
                         )}
                         {!hasChildren && <span className={styles.expandPlaceholder} />}
                         <span className={styles.categoryIdCell}>{category.id}</span>
@@ -633,6 +672,19 @@ export const CategoriesPage = () => {
                         )}
                     </td>
                     <td className={styles.categoryName}>{category.name}</td>
+                    <td>
+                        <span
+                            className={`${styles.badge} ${
+                                category.status === 'active'
+                                    ? styles.active
+                                    : category.status === 'soon'
+                                        ? styles.soon
+                                        : styles.inactive
+                            }`}
+                        >
+                            {CATEGORY_STATUS_LABELS[category.status] || '—'}
+                        </span>
+                    </td>
                     <td>{category.parent_id || 'Корневая'}</td>
                     <td>
                         <div className={styles.actionButtons}>
@@ -734,7 +786,8 @@ export const CategoriesPage = () => {
             })
             .filter(Boolean);
     };
-    const visibleCategories = filterTree(categories);
+    const source = q ? fullCategories : categories;
+    const visibleCategories = filterTree(source);
 
     return (
         <div>
@@ -758,6 +811,7 @@ export const CategoriesPage = () => {
                             <th>ID</th>
                             <th>Изображение</th>
                             <th>Название</th>
+                            <th>Статус</th>
                             <th>Родительская категория</th>
                             <th>Действия</th>
                         </tr>
@@ -780,7 +834,20 @@ export const CategoriesPage = () => {
             <Modal
                 isOpen={modalOpen}
                 onClose={() => { setModalOpen(false); resetForm(); }}
-                title={editingCategory ? 'Редактировать категорию' : 'Добавить категорию'}
+                title={
+                    <div>
+                        {editingCategory ? 'Редактировать категорию' : 'Добавить категорию'}
+
+                        <button
+                            type="button"
+                            className={styles.modalCloseBtn}
+                            onClick={() => setModalOpen(false)}
+                            aria-label="Закрыть"
+                        >
+                            <span aria-hidden="true">✕</span>
+                        </button>
+                    </div>
+                }
             >
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <Input
@@ -789,6 +856,48 @@ export const CategoriesPage = () => {
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         required
                     />
+                    <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Описание</label>
+                        <textarea
+                            className={styles.formTextarea}
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            rows={4}
+                            maxLength={300}
+                            placeholder="Короткое описание категории. Необязательно."
+                        />
+                    </div>
+
+                    {editingCategory && (
+                        <div className={styles.formGroup}>
+                            <label className={styles.formLabel}>Статус</label>
+                            <select
+                                className={styles.formSelect}
+                                value={formData.status}
+                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                            >
+                                {CATEGORY_STATUS_OPTIONS.map((opt) => (
+                                    <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <span
+                                style={{
+                                    display: 'block',
+                                    marginTop: 6,
+                                    fontSize: 12,
+                                    color: 'rgba(255,255,255,0.45)',
+                                }}
+                            >
+                                {formData.status === 'active'
+                                    ? 'Категория видна в каталоге как обычно.'
+                                    : formData.status === 'soon'
+                                        ? 'Видна в каталоге с плашкой «Скоро».'
+                                        : 'Не показывается покупателям.'}
+                            </span>
+                        </div>
+                    )}
                     <div className={styles.formGroup}>
                         <label className={styles.formLabel}>Родительская категория</label>
                         <select
@@ -892,7 +1001,19 @@ export const CategoriesPage = () => {
             <Modal
                 isOpen={faqModalOpen}
                 onClose={closeFaqModal}
-                title={`FAQ категории ${selectedCategory?.name || ""}`}
+                title={
+                    <div>
+                        {`FAQ категории ${selectedCategory?.name || ""}`}
+                        <button
+                            type="button"
+                            className={styles.modalCloseBtn}
+                            onClick={closeFaqModal}
+                            aria-label="Закрыть"
+                        >
+                            <span aria-hidden="true">✕</span>
+                        </button>
+                    </div>
+                }
             >
                 {faqLoading ? (
                     <div className={styles.loading}>Загрузка...</div>
@@ -944,7 +1065,7 @@ export const CategoriesPage = () => {
                         ))}
 
                         {faqError ? (
-                            <div style={{ color: "#ffb4b4", fontWeight: 700, marginBottom: 10 }}>
+                            <div style={{ color: "#ffc9cf", fontWeight: 700, marginBottom: 10 }}>
                                 {faqError}
                             </div>
                         ) : null}
@@ -966,7 +1087,19 @@ export const CategoriesPage = () => {
             <Modal
                 isOpen={checkoutModalOpen}
                 onClose={closeCheckoutModal}
-                title={`Данные для заказа — ${selectedCategory?.name || ""}`}
+                title={
+                    <div>
+                        {`Данные для заказа — ${selectedCategory?.name || ""}`}
+                        <button
+                            type="button"
+                            className={styles.modalCloseBtn}
+                            onClick={closeCheckoutModal}
+                            aria-label="Закрыть"
+                        >
+                            <span aria-hidden="true">✕</span>
+                        </button>
+                    </div>
+                }
             >
                 {checkoutLoading && !checkoutForm.title ? (
                     <div className={styles.loading}>Загрузка...</div>
@@ -1016,7 +1149,7 @@ export const CategoriesPage = () => {
                             />
                         </div>
                         {checkoutError ? (
-                            <div style={{ color: "#ffb4b4", fontWeight: 700, marginBottom: 10 }}>
+                            <div style={{ color: "#ffc9cf", fontWeight: 700, marginBottom: 10 }}>
                                 {checkoutError}
                             </div>
                         ) : null}

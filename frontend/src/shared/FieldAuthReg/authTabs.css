@@ -1,0 +1,129 @@
+/* ============================================================
+   Ряд вкладок экранов авторизации — один скользящий индикатор.
+
+   Грамматика та же, что у таб-ряда главной: пузырь едет
+   transform + width за 300мс на единственной кривой, подпись
+   активной вкладки кросс-фейдится в белые чернила.
+   Заливка — --astra-pink-fill (#DD0184): белое на #FF0198 даёт
+   3.7:1, на #DD0184 — 4.74:1.
+   ============================================================ */
+
+.astra-auth-tabs {
+    margin: 0 0 18px;
+    /* ряд не переносится: при нехватке ширины скроллится внутри себя */
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.astra-auth-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+/* width: max-content + margin-inline: auto — ряд центрируется, пока
+   влезает, и честно скроллится, когда нет (justify-content: center
+   в скроллере отрезал бы начало ряда). */
+.astra-auth-tabtrack {
+    position: relative;
+    display: flex;
+    gap: 4px;
+    width: max-content;
+    margin-inline: auto;
+    padding: 4px;
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+}
+
+.astra-auth-tabbubble {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    width: 0;
+    border-radius: 18px;
+    background: var(--astra-pink-fill);
+    /* без ореола: ховеры и активные состояния v3 не светятся */
+    box-shadow: none;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        transform var(--astra-t-move) var(--astra-ease),
+        width var(--astra-t-move) var(--astra-ease),
+        opacity var(--astra-t-color) var(--astra-ease);
+    will-change: transform, width;
+}
+
+.astra-auth-tabbubble.is-ready {
+    opacity: 1;
+}
+
+.astra-auth-tab {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 9px 16px;
+    border: none;
+    background: transparent;
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink-dim);
+    font-family: var(--astra-body);
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    /* подпись едет с той же скоростью, что и пузырь — кросс-фейд синхронный */
+    transition: color var(--astra-t-move) var(--astra-ease);
+}
+
+/* ховер в ясеневой гамме: никакой розовой рамки и никакого подскока */
+.astra-auth-tab:hover:not(:disabled):not(.is-active) {
+    color: var(--astra-ink);
+}
+
+.astra-auth-tab.is-active {
+    color: var(--astra-on-pink);
+}
+
+.astra-auth-tab:active:not(:disabled) {
+    transform: scale(0.985);
+    transition-duration: 80ms;
+}
+
+/* кольцо фокуса — чернильное: розовое на розовом пузыре не читается */
+.astra-auth-tab:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+/* Гасим состоянием, а не прозрачностью: 45% превращали подпись в
+   2.4:1, а --astra-ink-faint даёт 3.68:1 — вкладка читалась бы как
+   артефакт рендера. Недоступность несут disabled, курсор и title. */
+.astra-auth-tab:disabled {
+    opacity: 1;
+    color: var(--astra-ink-dim);
+    cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+    .astra-auth-tab {
+        padding: 9px 12px;
+        font-size: 12px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .astra-auth-tabbubble,
+    .astra-auth-tab {
+        transition: none;
+    }
+
+    .astra-auth-tab:active:not(:disabled) {
+        transform: none;
+    }
+}

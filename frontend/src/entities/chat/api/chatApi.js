@@ -67,6 +67,20 @@ export const deleteMessage = (messageId) => {
 };
 
 
+export const markChatRead = async (chatId) => {
+    return apiRequest({
+        url: `/chats/${chatId}/read`,
+        method: "POST",
+    });
+};
+
+export const getUnreadCounts = async () => {
+    return apiRequest({
+        url: `/chats/unread`,
+        method: "GET",
+    });
+};
+
 /* ========================
    ATTACHMENTS
 ======================== */

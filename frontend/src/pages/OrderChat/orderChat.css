@@ -1,543 +1,957 @@
-.order-chat-page {
-    max-width: 1300px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 18px 16px;
-    padding-top: 30px;
-    color: #fff;
-    box-sizing: border-box;
+/* ============================================================
+   Чат по заказу — v3 «Ash and Signal», compact.
+   Та же грамматика, что у техподдержки (SupportChat.css):
+   шапка 56px (назад · «ЗАКАЗ …» + подпись · действия),
+   лента с шагом 6px и разделителями дней, один «док» ввода 52px.
+   Розовый — только «отправить». Своё сообщение — пепел с
+   розовым подтоном и светлыми чернилами.
+
+   Всё оформление теперь под .order-chat. Раньше этот файл задавал
+   ГЛОБАЛЬНЫЕ .chat-header / .chat-messages / .input-row / .send-btn
+   / .attach-btn, и чат поддержки воевал с ними специфичностью.
+   Глобальными остались только правила медиа внутри общего
+   компонента ChatMessage (.message-attachments / .message-image) —
+   их могут использовать и другие чаты.
+   ============================================================ */
+
+/* ---------- оболочка ---------- */
+.order-chat {
     display: flex;
     justify-content: center;
-    animation: fadeIn var(--duration-slow, 0.5s) ease;
+    width: 100%;
+    max-width: 880px;
+    margin: 20px auto 0;
+    box-sizing: border-box;
 }
 
 .order-chat-main {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 160px);
-    background: #0e0e10;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 16px;
-    overflow: hidden;
     width: 100%;
-    max-width: 900px;
     min-width: 0;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+    height: calc(100dvh - 64px - 40px);
+    min-height: 420px;
+    overflow: hidden;
+    background: var(--astra-bg-elev);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-xl);
 }
 
-.order-chat-header-left {
+/* ---------- шапка 56px ---------- */
+.order-chat-head {
     display: flex;
     align-items: center;
-    gap: 12px;
-    min-width: 0;
+    gap: 10px;
+    flex: none;
+    min-height: 56px;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    background: var(--astra-card);
+    border-bottom: 1px solid var(--astra-line);
 }
 
-.order-chat-back-btn {
-    padding: 8px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(226, 121, 155, 0.35);
-    background: rgba(226, 121, 155, 0.1);
-    color: #f5d4e0;
-    cursor: pointer;
-    white-space: nowrap;
-    font-weight: 600;
-    font-size: 13px;
-    transition:
-        background var(--duration-fast, 0.2s) ease,
-        border-color var(--duration-fast, 0.2s) ease,
-        transform var(--duration-fast, 0.2s) ease;
-}
-
-.order-chat-back-btn:hover {
-    background: rgba(226, 121, 155, 0.18);
-    border-color: rgba(226, 121, 155, 0.5);
-}
-
-.order-chat-back-btn:active {
-    transform: scale(0.97);
-}
-
-.chat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 18px 24px;
-    background: #1a1a1c;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.chat-header h2 {
-    color: #fff;
-    font-size: 20px;
-    font-weight: 700;
-    margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.order-chat-order-id-btn {
-    background: none;
-    border: none;
-    padding: 0;
-    color: var(--accent, #e2799b);
-    font-size: 20px;
-    font-weight: 700;
-    cursor: pointer;
-    text-align: left;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    text-decoration-style: dotted;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    transition: color var(--duration-fast, 0.2s) ease;
-}
-
-.order-chat-order-id-btn:hover {
-    color: #f0a8c0;
-}
-
-.connection-status {
-    font-size: 12px;
-}
-
-.status {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 20px;
-}
-
-.status.online {
-    background: rgba(226, 121, 155, 0.12);
-    color: var(--accent, #e2799b);
-}
-
-.chat-messages {
+.order-chat-head-text {
     flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 20px 24px;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    scrollbar-gutter: stable;
-    scroll-behavior: smooth;
-    background:
-        radial-gradient(ellipse at top, rgba(226, 121, 155, 0.04) 0%, transparent 55%),
-        #0e0e10;
+    gap: 3px;
 }
 
-.empty-chat {
-    text-align: center;
-    padding: 32px 20px;
-    margin: auto 0;
-    color: #888;
-    animation: fadeInUp var(--duration-slow, 0.5s) var(--ease-out-smooth, ease);
+.order-chat-head-title {
+    margin: 0;
+    font-family: var(--astra-heading);
+    font-size: calc((9px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--astra-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.empty-chat p:first-child {
-    font-size: 18px;
-    margin-bottom: 8px;
-    color: #d8d8d8;
-    font-weight: 600;
+.order-chat-head-sub {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--astra-ink-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.empty-chat .hint {
-    font-size: 14px;
-    color: #666;
-    line-height: 1.5;
-}
-
-/* ===== Новая зона ввода (как в SupportChat) ===== */
-.chat-input-area {
-    padding: 16px 24px 20px;
-    background: #1a1a1c;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.input-row {
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.input-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.attach-btn {
+.order-chat-icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #0e0e10;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 14px;
+    width: 44px;
+    height: 44px;
+    flex: none;
     padding: 0;
-    height: 48px;
-    width: 48px;
     cursor: pointer;
-    color: #ccc;
-    flex-shrink: 0;
-    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink-dim);
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
 }
 
-.attach-btn:hover:not(:disabled) {
-    border-color: rgba(226, 121, 155, 0.4);
-    background: rgba(226, 121, 155, 0.05);
-    color: #e2799b;
+.order-chat-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--astra-line);
+    color: var(--astra-ink);
 }
 
-.attach-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+.order-chat-icon-btn:active {
+    transform: scale(0.98);
+    transition-duration: 80ms;
 }
 
-.attach-btn svg {
-    width: 22px;
-    height: 22px;
-    display: block;
+.order-chat-icon-btn:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
 }
 
-.input-row textarea {
+/* ---------- лента ---------- */
+.order-chat-feed {
     flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    justify-content: safe flex-end;
+    gap: 6px;
+    padding: 16px 20px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    scroll-behavior: smooth;
+    background: var(--astra-bg);
+}
+
+.order-chat-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: auto;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    color: var(--astra-ink-dim);
+}
+
+.order-chat-day {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 8px 0 4px;
+    color: var(--astra-ink-faint);
+}
+
+.order-chat-day::before,
+.order-chat-day::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--astra-line);
+}
+
+.order-chat-day span {
+    font-family: var(--astra-display);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.order-chat-msg {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     width: 100%;
-    min-width: 0;
-    padding: 14px 16px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    background: #0e0e10;
-    color: #f0f0f0;
-    font-size: 15px;
-    font-family: inherit;
+}
+
+.order-chat-msg--own {
+    align-items: flex-end;
+}
+
+.order-chat .order-chat-msg > .chat-message-shell {
+    max-width: min(72%, 560px);
+    margin: 0;
+}
+
+/* пузыри */
+.order-chat .chat-message {
+    position: relative;
+    padding: 8px 12px 9px;
+    border-radius: var(--astra-r-md);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    box-shadow: none;
+}
+
+.order-chat .chat-message.own {
+    background: #251A20;
+    color: var(--astra-ink);
+    border: 1px solid rgba(255, 1, 152, 0.22);
+    border-bottom-right-radius: 6px;
+}
+
+.order-chat .chat-message.other {
+    background: var(--astra-card);
+    color: var(--astra-ink);
+    border: 1px solid var(--astra-line);
+    border-bottom-left-radius: 6px;
+}
+
+.order-chat .message-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 2px;
+    opacity: 1;
+    font-family: var(--astra-body);
+    font-size: 11px;
+}
+
+.order-chat .message-sender {
+    font-weight: 600;
+    color: var(--astra-ink-dim);
+}
+
+.order-chat .message-sender.clickable {
+    cursor: pointer;
+    color: var(--astra-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--astra-line-strong);
+    text-underline-offset: 3px;
+}
+
+.order-chat .message-sender.clickable:hover {
+    text-decoration-color: currentColor;
+}
+
+.order-chat .message-time {
+    margin-left: auto;
+    opacity: 1;
+    font-size: 11px;
+    color: var(--astra-ink-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+/* время без подписи отправителя — в углу, а не отдельной строкой */
+.order-chat .message-header:not(:has(.message-sender)) {
+    float: right;
+    margin: 3px 0 0 12px;
+}
+
+/* строчный текст рядом с float: иначе пузырь сжимается и рвёт слова */
+.order-chat .message-header:not(:has(.message-sender)) + .message-text {
+    display: inline;
+}
+
+.order-chat .message-attachments {
+    clear: both;
+}
+
+.order-chat .message-text {
+    font-family: var(--astra-body);
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+
+.order-chat .message-actions {
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    box-shadow: var(--astra-shadow-sm);
+}
+
+.order-chat .message-action-btn {
+    color: var(--astra-ink-dim);
+    border-radius: var(--astra-r-md);
+}
+
+.order-chat .message-action-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--astra-ink);
+}
+
+/* пустая лента / ошибка */
+.order-chat-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin: auto 0;
+    padding: 24px 16px;
+    text-align: center;
+}
+
+.order-chat-empty-art {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 6px;
+    border-radius: var(--astra-r-lg);
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    color: var(--astra-ink-dim);
+}
+
+.order-chat-empty-title {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--astra-ink);
+}
+
+.order-chat-empty-hint {
+    margin: 0;
+    max-width: 40ch;
+    font-family: var(--astra-body);
+    font-size: 14px;
     line-height: 1.5;
-    min-height: 48px;
-    max-height: 200px;
+    color: var(--astra-ink-dim);
+    overflow-wrap: anywhere;
+}
+
+.order-chat-retry {
+    margin-top: 8px;
+    min-height: 44px;
+}
+
+/* ---------- композер ---------- */
+.order-chat-composer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: none;
+    padding: 10px 12px 12px;
+    background: var(--astra-card);
+    border-top: 1px solid var(--astra-line);
+}
+
+.order-chat-dock {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    min-height: 52px;
+    box-sizing: border-box;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+    transition: border-color var(--astra-t-color) var(--astra-ease);
+}
+
+.order-chat-dock:hover {
+    border-color: var(--astra-line-strong);
+}
+
+:root[data-modality="keyboard"] .order-chat-dock:has(textarea:focus) {
+    outline: 1px solid var(--astra-focus-field);
+    outline-offset: 0;
+}
+
+.order-chat-dock textarea {
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    min-height: 44px;
+    max-height: 135px;
+    padding: 11px 6px;
     resize: none;
     overflow-y: auto;
-    box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, height 0.1s ease;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-size: 16px;
+    line-height: 1.4;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.input-row textarea:focus {
+.order-chat-dock textarea::-webkit-scrollbar {
+    display: none;
+}
+
+.order-chat-dock textarea::placeholder {
+    color: var(--astra-ink-dim);
+}
+
+.order-chat-dock textarea:focus,
+.order-chat-dock textarea:focus-visible {
     outline: none;
-    border-color: rgba(226, 121, 155, 0.5);
-    box-shadow: 0 0 0 4px rgba(226, 121, 155, 0.1);
+    border: 0;
+    box-shadow: none;
 }
 
-.input-row textarea:disabled {
-    opacity: 0.5;
+.order-chat-dock textarea:disabled {
+    color: var(--astra-ink-dim);
     cursor: not-allowed;
 }
 
-.input-row textarea::placeholder {
-    color: #777;
-    font-weight: 400;
-}
-
-.send-btn {
-    padding: 12px 22px;
-    background: var(--accent, #e2799b);
-    color: white;
-    border: none;
-    border-radius: 14px;
-    cursor: pointer;
-    font-weight: 600;
-    height: 48px;
-    white-space: nowrap;
-    flex-shrink: 0;
-    transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.send-btn:hover:not(:disabled) {
-    background: #eb8fb0;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(226, 121, 155, 0.35);
-}
-
-.send-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* ===== Превью вложений ===== */
-.attachment-previews {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 4px 0;
-    max-width: 100%;
-    justify-content: flex-start;
-    align-self: flex-start;
-    width: 100%;
-}
-
-.attachment-preview {
+.order-chat-attach {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    overflow: hidden;
-    background: rgba(0, 0, 0, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    width: 72px;
-    height: 72px;
-    flex-shrink: 0;
-}
-
-.attachment-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.attachment-preview button {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: none;
-    background: #ff4444;
-    color: #fff;
-    font-size: 14px;
-    line-height: 22px;
-    text-align: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    transition: transform 0.15s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink-dim);
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
 }
 
-.attachment-preview button:hover {
-    transform: scale(1.15);
+.order-chat-attach:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--astra-ink);
 }
 
-.uploading-indicator {
+/* скрепка чуть наклонена; угол постоянный, на ховере и нажатии не меняется */
+.order-chat-attach svg {
+    display: block;
+    transform: rotate(32deg);
+}
+
+.order-chat-attach[aria-disabled="true"],
+.order-chat-attach[aria-disabled="true"]:hover {
+    background: transparent;
+    color: var(--astra-ink-faint);
+    cursor: not-allowed;
+}
+
+/* настоящий input — в порядке табуляции, но невидим */
+.order-chat-attach input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    opacity: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.order-chat-attach:has(:focus-visible) {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+.order-chat-send {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 72px;
-    height: 72px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    color: #aaa;
-    font-size: 12px;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    padding: 0;
+    cursor: pointer;
+    border: 0;
+    border-radius: var(--astra-r-md);
+    background: var(--astra-pink-fill);
+    color: var(--astra-on-pink);
+    box-shadow: none;
+    transition: background var(--astra-t-color) var(--astra-ease);
 }
 
-/* ===== Сообщения в чате (стили для вложений) ===== */
-.message-attachments {
-    margin-top: 8px;
+.order-chat-send:hover:not(:disabled) {
+    background: var(--astra-pink-bright);
+}
+
+.order-chat-send:active:not(:disabled) {
+    transform: scale(0.98);
+    transition-duration: 80ms;
+}
+
+.order-chat-send:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+.order-chat-send:disabled {
+    background: var(--astra-card-2);
+    color: var(--astra-ink-faint);
+    cursor: not-allowed;
+}
+
+.order-chat-send[aria-busy="true"] {
+    background: var(--astra-card-2);
+    color: var(--astra-ink-dim);
+}
+
+/* вложения черновика — те же чипы, что в поддержке */
+.order-chat-chips {
+    list-style: none;
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 6px;
-    border-radius: 10px;
-    overflow: hidden;
+    margin: 0;
+    padding: 0;
 }
 
-.message-image {
+.order-chat-chip {
+    display: inline-flex;
+    align-items: center;
     max-width: 100%;
-    max-height: 260px;
-    width: auto;
-    height: auto;
-    border-radius: 10px;
-    object-fit: contain;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background: rgba(0, 0, 0, 0.06);
-    display: block;
+    min-height: 40px;
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-sm);
 }
 
-.message-image:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.message-attachments:has(.message-image:nth-child(2)) .message-image {
-    max-height: 180px;
-    max-width: calc(50% - 3px);
-}
-
-.message-attachments:has(.message-image:nth-child(3)) .message-image {
-    max-height: 160px;
-    max-width: calc(33.33% - 4px);
-}
-
-.message-attachments:has(.message-image:nth-child(4)) .message-image {
-    max-height: 140px;
-    max-width: calc(50% - 3px);
-}
-
-.message-attachments:has(.message-image:only-child) .message-image {
-    max-height: 300px;
-    max-width: 100%;
-}
-
-/* Для сообщений оппонента (other) */
-.chat-message.other .message-image {
-    background: rgba(255, 255, 255, 0.04);
-}
-
-.chat-message.other .message-image:hover {
-    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.08);
-}
-
-/* ===== Модалки ===== */
-.support-user-modal {
-    display: flex;
-    flex-direction: column;
+.order-chat-chip--loading {
     gap: 8px;
-    color: #ddd;
+    padding: 0 12px;
+    color: var(--astra-ink-dim);
 }
 
-.support-user-orders-title {
-    margin-top: 8px;
+.order-chat-chip-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 40px;
+    padding: 0 2px 0 5px;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink);
+    text-align: left;
+}
+
+.order-chat-chip-open:focus-visible,
+.order-chat-chip-remove:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+.order-chat-chip-thumb {
+    display: block;
+    width: 28px;
+    height: 28px;
+    flex: none;
+    object-fit: cover;
+    border-radius: 6px;
+    background: var(--astra-card);
+}
+
+.order-chat-chip-name {
+    min-width: 0;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--astra-body);
+    font-size: 13px;
     font-weight: 600;
 }
 
-.support-user-orders {
-    max-height: 240px;
-    overflow: auto;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
+.order-chat-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink-dim);
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
 }
 
-.support-user-order-row {
+.order-chat-chip-remove:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--astra-ink);
+}
+
+.order-chat-chip-count {
+    margin-left: auto;
+    font-family: var(--astra-display);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--astra-ink-dim);
+    font-variant-numeric: tabular-nums;
+}
+
+.order-chat-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.order-chat-dots i {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.35;
+    animation: order-chat-dot 1.2s var(--astra-ease) infinite;
+}
+
+.order-chat-dots i:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.order-chat-dots i:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes order-chat-dot {
+    0%, 60%, 100% {
+        opacity: 0.3;
+        transform: none;
+    }
+    30% {
+        opacity: 1;
+        transform: translateY(-2px);
+    }
+}
+
+/* ---------- просмотрщик (рендерится в портале Modal) ---------- */
+.order-chat-viewer {
+    position: relative;
     display: flex;
-    justify-content: space-between;
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    font-size: 13px;
-    transition: background var(--duration-fast, 0.2s) ease;
+    align-items: center;
+    justify-content: center;
+    min-height: 46vh;
+    user-select: none;
 }
 
-.support-user-order-row:hover {
+.order-chat-viewer-image {
+    max-width: 100%;
+    max-height: 68vh;
+    object-fit: contain;
+    border-radius: var(--astra-r-sm);
+}
+
+.order-chat-viewer-nav {
+    position: absolute;
+    top: 50%;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    cursor: pointer;
+    transform: translateY(-50%);
+    background: rgba(11, 11, 13, 0.78);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink);
+    transition: background var(--astra-t-color) var(--astra-ease);
+}
+
+.order-chat-viewer-nav:hover {
+    background: rgba(31, 31, 35, 0.92);
+}
+
+.order-chat-viewer-nav:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+.order-chat-viewer-nav--prev {
+    left: 10px;
+}
+
+.order-chat-viewer-nav--next {
+    right: 10px;
+}
+
+.order-chat-viewer-counter {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 10px;
+    background: rgba(11, 11, 13, 0.78);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-sm);
+    font-family: var(--astra-display);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--astra-ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- профиль покупателя (портал Modal) ---------- */
+.order-chat-profile {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-family: var(--astra-body);
+    font-size: 14px;
+    color: var(--astra-ink);
+}
+
+.order-chat-facts {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    margin: 0;
+    border-top: 1px solid var(--astra-line);
+}
+
+.order-chat-facts dt,
+.order-chat-facts dd {
+    margin: 0;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--astra-line);
+}
+
+.order-chat-facts dt {
+    padding-right: 20px;
+    color: var(--astra-ink-dim);
+}
+
+.order-chat-facts dd {
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.order-chat-orders-title {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--astra-heading);
+    font-size: calc((8px) * var(--astra-heading-scale, 1));
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+}
+
+.order-chat-orders-title span {
+    font-family: var(--astra-display);
+    font-size: 12px;
+    color: var(--astra-ink-faint);
+}
+
+.order-chat-orders {
+    max-height: 260px;
+    overflow: auto;
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-sm);
+}
+
+.order-chat-close-btn {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--astra-ink-dim);
+  font-size: 24px;
+  cursor: pointer;
+  border-radius: var(--astra-r-md);
+  transition: background var(--astra-t-color) var(--astra-ease), color var(--astra-t-color) var(--astra-ease);
+}
+
+.order-chat-close-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--astra-ink);
+}
+
+.order-chat-close-btn:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 2px;
+}
+
+.order-chat-order-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    padding: 0 12px;
+    font-size: 13px;
+    color: var(--astra-ink-dim);
+    border-bottom: 1px solid var(--astra-line);
+}
+
+.order-chat-order-row:last-child {
+    border-bottom: 0;
+}
+
+.order-chat-order-row:hover {
     background: rgba(255, 255, 255, 0.03);
 }
 
-.support-user-order-row:last-child {
-    border-bottom: none;
+.order-chat-order-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--astra-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--astra-line-strong);
+    text-underline-offset: 3px;
 }
 
-/* ===== Адаптив ===== */
-@media (max-width: 480px) {
-    .input-row textarea {
-        padding: 12px 14px;
-        font-size: 14px;
-        min-height: 40px;
-        max-height: 150px;
-        border-radius: 12px;
+.order-chat-order-link:hover {
+    text-decoration-color: currentColor;
+}
+
+.order-chat-order-link:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+    border-radius: var(--astra-r-sm);
+}
+
+.order-chat-order-status {
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* ============================================================
+   Медиа внутри общего ChatMessage — ГЛОБАЛЬНО намеренно:
+   компонент живёт в entities/chat и может стоять на других страницах.
+   ============================================================ */
+.message-attachments {
+    margin-top: 6px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-radius: var(--astra-r-sm);
+    overflow: hidden;
+    max-width: 100%;
+}
+
+.message-image {
+    display: block;
+    max-width: 100%;
+    max-height: min(200px, 30vh);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    cursor: zoom-in;
+    border-radius: var(--astra-r-sm);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.message-attachments:has(.message-image:only-child) {
+    max-width: min(320px, 100%);
+}
+
+.message-attachments:has(.message-image:only-child) .message-image {
+    max-height: min(260px, 38vh);
+    max-width: 100%;
+}
+
+/* Два и больше — сеткой, как было, но тоже без раздувания. */
+.message-attachments:has(.message-image:nth-child(2)) .message-image {
+    max-height: min(160px, 22vh);
+    max-width: calc(50% - 2px);
+}
+
+.message-attachments:has(.message-image:nth-child(3)) .message-image {
+    max-height: min(140px, 20vh);
+    max-width: calc(33.33% - 3px);
+}
+
+.message-attachments:has(.message-image:nth-child(4)) .message-image {
+    max-height: min(120px, 18vh);
+    max-width: calc(50% - 2px);
+}
+
+/* ---------- адаптив ---------- */
+@media (max-width: 768px) {
+    .order-chat {
+        max-width: none;
+        margin: 0;
     }
 
-    .attachment-preview {
-        width: 60px;
-        height: 60px;
+    .order-chat-main {
+        height: calc(100dvh - 60px);
+        min-height: 0;
+        border: 0;
+        border-radius: 0;
     }
-    .attachment-preview button {
-        width: 20px;
-        height: 20px;
-        font-size: 12px;
-        line-height: 20px;
-        top: -4px;
-        right: -4px;
+
+    .order-chat-feed {
+        padding: 12px;
+    }
+
+    .order-chat-composer {
+        padding: 8px 8px 10px;
+    }
+
+    .order-chat .order-chat-msg > .chat-message-shell {
+        max-width: 86%;
+    }
+}
+
+@media (max-width: 480px) {
+    .order-chat-main {
+        height: calc(100dvh - 56px);
+    }
+
+    .order-chat-chip-name {
+        max-width: 96px;
     }
 
     .message-image {
         max-height: 200px;
     }
-    .message-attachments:has(.message-image:nth-child(2)) .message-image {
-        max-height: 140px;
-        max-width: calc(50% - 4px);
-    }
-    .message-attachments:has(.message-image:nth-child(3)) .message-image {
-        max-height: 120px;
-        max-width: calc(33.33% - 4px);
-    }
-    .message-attachments:has(.message-image:nth-child(4)) .message-image {
-        max-height: 100px;
-        max-width: calc(50% - 4px);
-    }
-    .message-attachments:has(.message-image:only-child) .message-image {
-        max-height: 240px;
-    }
 }
 
-@media (max-width: 720px) {
-    .order-chat-page {
-        padding: 30px 8px 88px;
-        padding-top: 50px;
+@media (prefers-reduced-motion: reduce) {
+    .order-chat-feed {
+        scroll-behavior: auto;
     }
 
-    .order-chat-main {
-        height: calc(100vh - 140px);
-        border-radius: 0;
-        border-left: none;
-        border-right: none;
+    .order-chat-icon-btn,
+    .order-chat-dock,
+    .order-chat-attach,
+    .order-chat-send,
+    .order-chat-chip-remove,
+    .order-chat-viewer-nav {
+        transition: none;
     }
 
-    .chat-header {
-        padding: 14px;
-    }
-
-    .order-chat-header-left {
-        gap: 10px;
-    }
-
-    .order-chat-back-btn {
-        padding: 7px 10px;
-        border-radius: 10px;
-        font-size: 13px;
-    }
-
-    .chat-header h2,
-    .order-chat-order-id-btn {
-        font-size: 16px;
-    }
-
-    .chat-messages {
-        padding: 14px;
-    }
-
-    .chat-input-area {
-        padding: 12px 14px 16px;
-    }
-
-    .input-row {
-        gap: 8px;
-    }
-
-    .attach-btn {
-        width: 42px;
-        height: 42px;
-    }
-
-    .send-btn {
-        padding: 10px 16px;
-        height: 42px;
-        font-size: 14px;
-    }
-
-    .input-row textarea {
-        padding: 12px 14px;
-        font-size: 14px;
-        min-height: 42px;
-        max-height: 150px;
+    .order-chat-dots i {
+        animation: none;
+        opacity: 0.7;
     }
 }

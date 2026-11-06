@@ -1,0 +1,43 @@
+/* Быстрое проявление входящей страницы (пожелание владельца №14). */
+
+.fx-pagefade {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+}
+
+.fx-pagefade-in {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    animation: fx-pagefade-in 200ms var(--astra-ease) both;
+}
+
+/* ТОЛЬКО прозрачность. Никакого transform — и это не вкусовщина.
+   Элемент с transform, отличным от none, становится содержащим блоком для
+   ВСЕХ position: fixed внутри себя. Здесь внутри — вся страница, поэтому
+   лёгкий translateY(4px) вместе с fill-mode: both (который оставляет
+   конечный кадр навсегда) переподчинял себе каждый fixed-слой приложения:
+   оверлей попапа переставал быть равным экрану и растягивался на всю высоту
+   документа, а флекс-центровка уносила панель на y≈1237 при экране 844 —
+   на телефоне попап открывался НИЖЕ видимой области. Сдвиг на 4 пикселя
+   такой цены не стоит; владелец просил именно fade. */
+@keyframes fx-pagefade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fx-pagefade-in {
+        animation: none;
+    }
+}

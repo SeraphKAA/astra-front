@@ -62,10 +62,10 @@ export const getFileLimits = () => {
    PRODUCT IMAGES
 ======================== */
 
-export const uploadProductImage = (productId, file, isMain = false) => {
+export const uploadProductImage = (productId, file, imageType = "main") => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("is_main", isMain);
+    formData.append("image_type", imageType);
 
     return apiRequest({
         url: `/files/products/${productId}/images`,
@@ -74,12 +74,23 @@ export const uploadProductImage = (productId, file, isMain = false) => {
     });
 };
 
-export const changeMainProductImage = (imageId, isMain) => {
+// export const changeMainProductImage = (imageId, isMain) => {
+//     const formData = new FormData();
+//     formData.append("is_main", isMain);
+
+//     return apiRequest({
+//         url: `/files/products/images/${imageId}`,
+//         method: "PATCH",
+//         body: formData,
+//     });
+// };
+
+export const changeProductImageType = (imageId, imageType) => {
     const formData = new FormData();
-    formData.append("is_main", isMain);
+    formData.append("image_type", imageType);
 
     return apiRequest({
-        url: `/files/products/images/${imageId}`,
+        url: `/files/products/images/${imageId}/type`,
         method: "PATCH",
         body: formData,
     });

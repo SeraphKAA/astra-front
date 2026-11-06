@@ -16,9 +16,9 @@
 .not-found-hero {
   text-align: center;
   padding: 32px 24px 28px;
-  border-radius: 24px;
+  border-radius: var(--astra-r-xl);
   background:
-    radial-gradient(circle at top, rgba(226, 121, 155, 0.14), transparent 55%),
+    radial-gradient(circle at top, rgba(255, 1, 152, 0.14), transparent 55%),
     rgba(26, 26, 28, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
@@ -31,7 +31,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--accent, #e2799b);
+  color: var(--astra-pink);
 }
 
 .not-found-code {
@@ -40,7 +40,7 @@
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.04em;
-  background: linear-gradient(135deg, #f0a8c0 0%, #e2799b 45%, #d0688a 100%);
+  background: linear-gradient(135deg, var(--astra-soft) 0%, var(--astra-pink) 45%, var(--astra-magenta) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -50,14 +50,14 @@
   width: 52px;
   height: 3px;
   margin: 16px auto 0;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent, #e2799b), transparent);
+  border-radius: var(--astra-r-pill);
+  background: linear-gradient(90deg, var(--astra-pink), transparent);
   opacity: 0.9;
 }
 
 .not-found-title {
   margin: 16px 0 0;
-  font-size: clamp(22px, 4vw, 28px);
+  font-size: calc((clamp(22px, 4vw, 28px)) * var(--astra-heading-scale, 1));
   font-weight: 800;
   letter-spacing: -0.02em;
 }
@@ -75,7 +75,7 @@
   margin: 16px 0 0;
   max-width: 100%;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: var(--astra-r-lg);
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid rgba(255, 255, 255, 0.08);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -100,26 +100,25 @@
   justify-content: center;
   min-height: 44px;
   padding: 0 20px;
-  border-radius: 14px;
+  border-radius: var(--astra-r-md);
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
   transition:
-    background var(--duration-fast, 0.2s) ease,
-    border-color var(--duration-fast, 0.2s) ease,
-    transform var(--duration-fast, 0.2s) var(--ease-spring, ease),
-    box-shadow var(--duration-fast, 0.2s) ease;
+    background var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+    border-color var(--duration-fast, 0.15s) var(--ease-out-smooth, ease),
+    transform var(--duration-fast, 0.15s) var(--ease-out-smooth, ease);
 }
 
+/* Первичная — плоская розовая заливка + БЕЛЫЙ текст, без ореола */
 .not-found-btn-primary {
-  background: linear-gradient(135deg, #e2799b 0%, #d0688a 100%);
-  color: #fff;
-  box-shadow: 0 8px 22px var(--accent-glow, rgba(226, 121, 155, 0.32));
+  background: var(--astra-pink-fill);
+  color: var(--astra-on-pink);
+  box-shadow: none;
 }
 
 .not-found-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px var(--accent-glow, rgba(226, 121, 155, 0.4));
+  background: var(--astra-pink-bright);
 }
 
 .not-found-btn-secondary {
@@ -128,17 +127,27 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* Ховер в ясеневой гамме, без подскока */
 .not-found-btn-secondary:hover {
-  background: rgba(226, 121, 155, 0.1);
-  border-color: rgba(226, 121, 155, 0.28);
-  color: #fff;
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--astra-line-strong);
+  color: var(--astra-ink);
+}
+
+.not-found-btn:active {
+  transform: scale(0.985);
+  transition-duration: 80ms;
+}
+
+.not-found-btn:focus-visible {
+  outline: 2px solid var(--astra-ink);
+  outline-offset: 3px;
 }
 
 .not-found-links {
   text-align: center;
   padding: 18px 20px;
-  border-radius: 18px;
+  border-radius: var(--astra-r-xl);
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   animation: fadeInUp 0.55s var(--ease-out-smooth, ease) 0.14s backwards;
@@ -162,15 +171,15 @@
 }
 
 .not-found-links-row a {
-  color: var(--accent, #e2799b);
+  color: var(--astra-pink);
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
-  transition: color var(--duration-fast, 0.2s) ease;
+  transition: color var(--duration-fast, 0.15s) var(--ease-out-smooth, ease);
 }
 
 .not-found-links-row a:hover {
-  color: #f0a8c0;
+  color: var(--astra-soft);
   text-decoration: underline;
   text-underline-offset: 3px;
 }

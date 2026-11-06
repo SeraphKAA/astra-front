@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Modal } from "../../shared/ui/Modal/Modal";
-import { Button } from "../../shared/ui/Button/Button";
 import { normalizeMediaUrl } from "../../shared/commonApi";
 import { listMyUserProfiles } from "../../entities/userProfile/api/userProfileApi";
 import {
@@ -36,13 +35,14 @@ const FieldInput = ({ field, value, onChange, showErrors }) => {
       <label className="checkout-data-field">
         <span className="checkout-data-field-label">
           {label}
-          {required ? " *" : ""}
+          {required ? <span className="checkout-data-req" aria-hidden="true"> *</span> : ""}
         </span>
         <select
           value={value || ""}
           onChange={(e) => onChange(key, e.target.value)}
           className={inputClassName}
           aria-invalid={hasError}
+          required={required || undefined}
         >
           <option value="">—</option>
           {field.options.map((opt) => (
@@ -51,7 +51,11 @@ const FieldInput = ({ field, value, onChange, showErrors }) => {
             </option>
           ))}
         </select>
-        {hasError ? <span className="checkout-data-field-error">{errorMessage}</span> : null}
+        {hasError ? (
+          <span className="checkout-data-field-error" role="alert">
+            {errorMessage}
+          </span>
+        ) : null}
       </label>
     );
   }
@@ -60,7 +64,7 @@ const FieldInput = ({ field, value, onChange, showErrors }) => {
     <label className="checkout-data-field">
       <span className="checkout-data-field-label">
         {label}
-        {required ? " *" : ""}
+        {required ? <span className="checkout-data-req" aria-hidden="true"> *</span> : ""}
       </span>
       <input
         type={inputType}
@@ -69,11 +73,16 @@ const FieldInput = ({ field, value, onChange, showErrors }) => {
         placeholder={field.placeholder || ""}
         onChange={(e) => onChange(key, e.target.value)}
         aria-invalid={hasError}
+        required={required || undefined}
       />
       {field.help_text ? (
         <span className="checkout-data-field-hint">{field.help_text}</span>
       ) : null}
-      {hasError ? <span className="checkout-data-field-error">{errorMessage}</span> : null}
+      {hasError ? (
+        <span className="checkout-data-field-error" role="alert">
+          {errorMessage}
+        </span>
+      ) : null}
     </label>
   );
 };
@@ -195,13 +204,20 @@ export const CheckoutDataModal = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Проверьте данные для заказа"
+      closeDisabled={isLoading}
+      closeDisabledLabel="Идёт оплата — подождите"
     >
       <p className="checkout-data-intro">
         Убедитесь, что данные верны — они будут использованы для выдачи товара.
         Поля со звёздочкой обязательны.
       </p>
       {prefillLoading ? (
-        <div className="checkout-data-loading">Загрузка сохранённых данных...</div>
+        <div className="checkout-data-loading" role="status" aria-live="polite" aria-busy="true">
+          <span className="astra-skeleton checkout-data-skel checkout-data-skel--wide" aria-hidden="true" />
+          <span className="astra-skeleton checkout-data-skel" aria-hidden="true" />
+          <span className="astra-skeleton checkout-data-skel checkout-data-skel--short" aria-hidden="true" />
+          <span className="checkout-data-loading-text">Загружаем сохранённые данные…</span>
+        </div>
       ) : (
         <div className="checkout-data-groups">
           {(groups || []).map((g) => (
@@ -214,7 +230,7 @@ export const CheckoutDataModal = ({
                     className="checkout-data-icon"
                   />
                 ) : null}
-                <div>
+                <div className="checkout-data-group-meta">
                   <div className="checkout-data-group-title">{g.title || g.profile_type}</div>
                   {g.product_names?.length > 0 ? (
                     <div className="checkout-data-products">
@@ -238,21 +254,35 @@ export const CheckoutDataModal = ({
           ))}
         </div>
       )}
-      {error ? <div className="checkout-data-error">{error}</div> : null}
+      {error ? (
+        <div className="checkout-data-error" role="alert">
+          {error}
+        </div>
+      ) : null}
       {!canSubmit && !prefillLoading && !error ? (
         <div className="checkout-data-hint">Заполните все обязательные поля, чтобы продолжить</div>
       ) : null}
       <div className="checkout-data-actions">
-        <Button type="button" variant="secondary" onClick={onClose} disabled={isLoading}>
-          Отмена
-        </Button>
-        <Button
+        <button
           type="button"
-          onClick={handleConfirm}
-          disabled={!canSubmit}
+          className="astra-btn-ghost astra-press checkout-data-cancel"
+          onClick={onClose}
+          disabled={isLoading}
         >
-          {isLoading ? "Оплата..." : "Подтвердить и оплатить"}
-        </Button>
+          Отмена
+        </button>
+        {/* .astra-ring: clip-path кнопки съедает outline — кольцо на обёртке */}
+        <span className="astra-ring checkout-data-submit-ring">
+          <button
+            type="button"
+            className="astra-btn astra-press checkout-data-submit"
+            onClick={handleConfirm}
+            disabled={!canSubmit}
+            aria-busy={isLoading || undefined}
+          >
+            {isLoading ? "Оплачиваем…" : "Подтвердить и оплатить"}
+          </button>
+        </span>
       </div>
     </Modal>
   );

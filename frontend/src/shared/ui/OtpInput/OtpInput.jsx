@@ -4,6 +4,15 @@ import styles from "./otpInput.module.css";
 
 const toDigits = (v, length) => String(v || "").replace(/\D/g, "").slice(0, length);
 
+/**
+ * Поле одноразового кода: N отдельных ячеек, одна цифра в каждой.
+ *
+ * Раскраска целиком живёт в otpInput.module.css (инлайн-стили убраны —
+ * они не давали страницам переопределять вид без !important).
+ * Доступные имена — по-русски: группа «Одноразовый код», ячейка
+ * «Цифра N из M». Клавиатурное поведение (Backspace, стрелки, вставка,
+ * автопереход) не менялось.
+ */
 export const OtpInput = ({
   value,
   onChange,
@@ -13,29 +22,6 @@ export const OtpInput = ({
   name = "otp",
   className = "",
 }) => {
-  const rootStyle = {
-    display: "flex",
-    gap: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    width: "100%",
-    marginTop: 6,
-  };
-
-  const cellStyle = {
-    width: 44,
-    height: 54,
-    borderRadius: 14,
-    border: "1px solid rgba(255, 255, 255, 0.22)",
-    background: "rgba(18, 18, 18, 0.35)",
-    color: "rgba(255, 255, 255, 0.92)",
-    fontSize: 20,
-    fontWeight: 800,
-    textAlign: "center",
-    outline: "none",
-    boxShadow: "0 10px 26px rgba(0, 0, 0, 0.12)",
-  };
-
   const digits = useMemo(() => {
     const normalized = toDigits(value, length);
     return Array.from({ length }, (_, i) => normalized[i] || "");
@@ -122,12 +108,11 @@ export const OtpInput = ({
 
   return (
     <div
-      className={`${styles.root} ${className}`}
-      style={rootStyle}
+      className={`${styles.root} ${className}`.trim()}
       role="group"
-      aria-label="One-time code"
+      aria-label="Одноразовый код"
     >
-      {/* hidden input for forms/autofill */}
+      {/* скрытое поле для форм и автозаполнения */}
       <input type="hidden" name={name} value={toDigits(value, length)} />
 
       {digits.map((d, idx) => (
@@ -138,7 +123,7 @@ export const OtpInput = ({
             inputsRef.current[idx] = el;
           }}
           className={styles.cell}
-          style={cellStyle}
+          data-otp-cell=""
           type="text"
           inputMode="numeric"
           autoComplete={idx === 0 ? "one-time-code" : "off"}
@@ -149,10 +134,9 @@ export const OtpInput = ({
           onChange={(e) => handleChange(e, idx)}
           onKeyDown={(e) => handleKeyDown(e, idx)}
           onPaste={(e) => handlePaste(e, idx)}
-          aria-label={`Digit ${idx + 1}`}
+          aria-label={`Цифра ${idx + 1} из ${length}`}
         />
       ))}
     </div>
   );
 };
-

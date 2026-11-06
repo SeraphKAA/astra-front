@@ -1,110 +1,275 @@
+/* ============================================================
+   Данные для заказа — v3 «Ash and Signal»
+   Диалог живёт на пепельной карточке общего Modal: группы — тихие
+   колодцы --astra-bg-elev с волосяной рамкой, поля 16px с
+   НЕЙТРАЛЬНЫМ кольцом фокуса (розовый больше не подсвечивает ввод),
+   единственная горячая точка — «Подтвердить и оплатить».
+   ============================================================ */
+
 .checkout-data-intro {
   margin: 0 0 16px;
+  font-family: var(--astra-body);
   font-size: 14px;
-  opacity: 0.85;
+  line-height: 1.55;
+  color: var(--astra-ink-dim);
 }
 
+/* ---------- загрузка сохранённых данных ---------- */
 .checkout-data-loading {
-  padding: 12px 0;
-  opacity: 0.8;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0 8px;
 }
 
+.checkout-data-skel {
+  display: block;
+  height: 46px;
+  width: 100%;
+  border-radius: var(--astra-r-md);
+}
+
+.checkout-data-skel--wide {
+  height: 20px;
+  width: 58%;
+}
+
+.checkout-data-skel--short {
+  width: 72%;
+}
+
+.checkout-data-loading-text {
+  font-family: var(--astra-body);
+  font-size: 13px;
+  color: var(--astra-ink-dim);
+}
+
+/* ---------- группы ---------- */
 .checkout-data-groups {
   display: grid;
-  gap: 20px;
-  max-height: 55vh;
-  overflow-y: auto;
-  padding-right: 4px;
+  gap: 16px;
 }
 
 .checkout-data-group {
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.15);
+  padding: 14px;
+  border: 1px solid var(--astra-line);
+  border-radius: var(--astra-r-lg);
+  background: var(--astra-bg-elev);
 }
 
 .checkout-data-group-head {
   display: flex;
   gap: 12px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.checkout-data-group-meta {
+  min-width: 0;
 }
 
 .checkout-data-icon {
   width: 40px;
   height: 40px;
-  border-radius: 8px;
+  flex: none;
+  border-radius: var(--astra-r-md);
   object-fit: cover;
+  background: var(--astra-card-2);
+  box-shadow: inset 0 0 0 1px var(--astra-line);
 }
 
 .checkout-data-group-title {
-  font-weight: 600;
+  font-family: var(--astra-display);
   font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--astra-ink);
+  overflow-wrap: anywhere;
 }
 
 .checkout-data-products {
-  font-size: 12px;
-  opacity: 0.75;
   margin-top: 4px;
+  font-family: var(--astra-body);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--astra-ink-dim);
+  overflow-wrap: anywhere;
 }
 
+/* ---------- поля ---------- */
 .checkout-data-fields {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .checkout-data-field {
   display: grid;
-  gap: 4px;
+  gap: 6px;
 }
 
 .checkout-data-field-label {
-  font-size: 13px;
-  opacity: 0.9;
+  font-family: var(--astra-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--astra-ink-dim);
 }
 
+.checkout-data-req {
+  color: var(--astra-soft);
+}
+
+/* правило 16px: iOS не зумит ввод */
 .checkout-data-input {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(0, 0, 0, 0.2);
-  color: inherit;
-  font: inherit;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--astra-line);
+  border-radius: var(--astra-r-md);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--astra-ink);
+  font-family: var(--astra-body);
+  font-size: 16px;
+  transition:
+    background var(--astra-t-color) var(--astra-ease),
+    border-color var(--astra-t-color) var(--astra-ease),
+    box-shadow var(--astra-t-color) var(--astra-ease);
+}
+
+select.checkout-data-input {
+  padding-right: 10px;
+  cursor: pointer;
+}
+
+.checkout-data-input::placeholder {
+  color: var(--astra-ink-dim);
+}
+
+.checkout-data-input:hover {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: var(--astra-line-strong);
+}
+
+/* Клик мышью не подсвечивает поле ничем. Клавиатурный обход получает тот же
+   тонкий ясеневый контур, что и остальные поля темы. */
+.checkout-data-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+:root[data-modality="keyboard"] .checkout-data-input:focus {
+  outline: 1px solid var(--astra-focus-field);
+  outline-offset: 0;
 }
 
 .checkout-data-input-error {
-  border-color: rgba(255, 120, 120, 0.75);
-  box-shadow: 0 0 0 2px rgba(255, 120, 120, 0.12);
+  border-color: var(--astra-err);
+  box-shadow: 0 0 0 1px rgba(255, 77, 94, 0.35);
 }
 
-.checkout-data-field-error {
-  font-size: 12px;
-  color: #ffb4b4;
-  font-weight: 600;
-}
-
-.checkout-data-hint {
-  margin-top: 10px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+:root[data-modality="keyboard"] .checkout-data-input-error:focus,
+:root[data-modality="keyboard"] .checkout-data-input-error:focus-visible {
+  border-color: var(--astra-err);
+  box-shadow: 0 0 0 2px rgba(255, 77, 94, 0.35);
 }
 
 .checkout-data-field-hint {
+  font-family: var(--astra-body);
   font-size: 12px;
-  opacity: 0.65;
+  line-height: 1.45;
+  color: var(--astra-ink-dim);
+}
+
+.checkout-data-field-error {
+  font-family: var(--astra-body);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #ffc9cf;
+}
+
+/* ---------- подсказка и ошибка формы ---------- */
+.checkout-data-hint {
+  margin-top: 12px;
+  font-family: var(--astra-body);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--astra-ink-dim);
 }
 
 .checkout-data-error {
-  color: #ffb4b4;
-  font-weight: 600;
   margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--astra-r-md);
+  background: rgba(255, 77, 94, 0.1);
+  border: 1px solid rgba(255, 77, 94, 0.3);
+  font-family: var(--astra-body);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #ffc9cf;
+  overflow-wrap: anywhere;
 }
 
+/* ---------- действия ---------- */
 .checkout-data-actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  margin-top: 16px;
+  align-items: center;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--astra-line);
   flex-wrap: wrap;
+}
+
+.checkout-data-actions .checkout-data-cancel {
+  min-height: 44px;
+}
+
+.checkout-data-actions .checkout-data-cancel:disabled {
+  color: var(--astra-ink-dim);
+  cursor: not-allowed;
+}
+
+.checkout-data-submit-ring {
+  display: inline-flex;
+  border-radius: var(--astra-r-md);
+}
+
+/* розовое кольцо на розовой кнопке не читается — берём ясеневое */
+.checkout-data-submit-ring:focus-within {
+  outline-color: var(--astra-ink);
+}
+
+@supports selector(:has(*)) {
+  .checkout-data-submit-ring:has(:focus-visible) {
+    outline-color: var(--astra-ink);
+  }
+}
+
+.checkout-data-actions .checkout-data-submit {
+  min-height: 48px;
+}
+
+@media (max-width: 480px) {
+  .checkout-data-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .checkout-data-submit-ring,
+  .checkout-data-actions .checkout-data-submit,
+  .checkout-data-actions .checkout-data-cancel {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkout-data-input {
+    transition: none;
+  }
 }

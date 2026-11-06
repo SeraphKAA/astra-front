@@ -1,0 +1,510 @@
+/* ============================================================
+   Страница результатов поиска — v3 «ash and signal».
+   Пепельный холст, волосяные линии, цена мягким розовым. Розовый
+   как ДЕЙСТВИЕ живёт только на кнопке «Найти» и в кольцах фокуса
+   у карточек; скидка носит свой пурпур (.astra-badge--drop),
+   «Новинка» — фиолетовый шёпот. Фокус поля ввода — нейтральное
+   ясеневое кольцо (--astra-focus-field), никакого розового.
+   Моторика: reveal-once на карточках (стаггер 60мс, кап 6).
+
+   Раунд 6 (владелец):
+   #10 Скелетоны — только при задержке ответа (useDelayedPending), и
+       уходят кросс-фейдом, а не подменой.
+   #11 Зачёркнутая старая цена — Unbounded 700, как и живая цена.
+   #4  Карточка открывает попап быстрой покупки; страницы /product/:id
+       больше нет, ссылок на неё здесь не осталось.
+   ============================================================ */
+
+.search-page.srch-root {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: clip;
+    background: var(--astra-bg);
+    font-family: var(--astra-body);
+    color: var(--astra-ink);
+}
+
+.srch-page {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 30px 28px 96px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+/* ---------- шапка: заголовок, эхо запроса, поле, счётчик ---------- */
+
+.srch-head {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.srch-title {
+    margin: 0;
+    font-family: var(--astra-display);
+    font-size: calc((clamp(30px, 4.4vw, 48px)) * var(--astra-heading-scale, 1));
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--astra-ink);
+}
+
+.srch-echo {
+    margin: 0;
+    max-width: 720px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+    overflow-wrap: anywhere;
+}
+
+/* сам запрос — светлыми чернилами, не розовым: розовый = действие */
+.srch-echo-q {
+    color: var(--astra-ink);
+    font-weight: 600;
+}
+
+.srch-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+    max-width: 620px;
+    min-width: 0;
+    margin-top: 4px;
+}
+
+.srch-fieldwrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 240px;
+    min-width: 0;
+}
+
+.srch-field-icon {
+    position: absolute;
+    left: 14px;
+    width: 20px;
+    height: 20px;
+    color: var(--astra-ink-faint);
+    pointer-events: none;
+}
+
+/* 16px — iOS не зумит поле; фокус ясеневый, .astra-field из темы */
+.srch-input {
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+    box-sizing: border-box;
+    padding: 0 48px 0 44px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    font-family: var(--astra-body);
+    font-size: 16px;
+    color: var(--astra-ink);
+    -webkit-appearance: none;
+    appearance: none;
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
+
+.srch-input::placeholder {
+    color: var(--astra-ink-faint);
+}
+
+.srch-input:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* нативный крестик Safari/Chrome убран — свой стоит рядом */
+.srch-input::-webkit-search-cancel-button,
+.srch-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Своего кольца у поля НЕТ: и клик мышью, и клавиатурный обход целиком
+   отданы .astra-field из темы (клик — ничего, :focus-visible — 1px ясеня).
+   Прежний box-shadow 0 0 0 2px был вторым, жёстким слоем и здесь лишний. */
+
+.srch-clear {
+    position: absolute;
+    right: 2px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink-faint);
+    cursor: pointer;
+    transition:
+        color var(--astra-t-color) var(--astra-ease),
+        background var(--astra-t-color) var(--astra-ease);
+}
+
+.srch-clear:hover {
+    color: var(--astra-ink);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.srch-clear:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+.srch-submit-ring {
+    flex: 0 0 auto;
+}
+
+.srch-submit {
+    min-height: 48px;
+    box-sizing: border-box;
+}
+
+.srch-field-error {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--astra-err);
+}
+
+.srch-count {
+    margin: 0;
+    min-height: 20px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--astra-ink-dim);
+}
+
+.srch-count-num {
+    color: var(--astra-ink);
+    font-family: var(--astra-display);
+    font-weight: 700;
+}
+
+/* ---------- состояния: пусто / ошибка / нет запроса ---------- */
+
+.srch-state {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 26px 24px;
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-xl);
+}
+
+.srch-state-title {
+    margin: 0;
+    font-family: var(--astra-display);
+    font-weight: 700;
+    font-size: calc((18px) * var(--astra-heading-scale, 1));
+    letter-spacing: -0.01em;
+    color: var(--astra-ink);
+}
+
+.srch-state-text {
+    margin: 0;
+    max-width: 62ch;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--astra-ink-dim);
+    overflow-wrap: anywhere;
+}
+
+.srch-state-text--error {
+    color: #ffc9cf;
+}
+
+.srch-state .astra-btn-ghost {
+    min-height: 44px;
+    box-sizing: border-box;
+    margin-top: 2px;
+}
+
+/* ---------- подмена «скелетоны → карточки» ----------
+   Скелетоны показываются ТОЛЬКО когда ответ задержался (useDelayedPending);
+   если он пришёл быстро, серых плиток не бывает вовсе. А если они всё-таки
+   успели показаться — уходят не рывком: слой ложится поверх уже
+   проявляющихся карточек и гаснет за один шаг движения. */
+
+.srch-swap {
+    position: relative;
+    min-width: 0;
+}
+
+/* height + overflow: без них 8 серых карточек торчали ниже коротких
+   результатов и растягивали кадр подмены — тот же клип, что у
+   .mm-swap-ghost на главной */
+.srch-skel-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    animation: srch-skel-out var(--astra-t-move) var(--astra-ease) forwards;
+}
+
+@keyframes srch-skel-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* Входящая сторона кросс-фейда: раньше её не было вовсе — призрак гас
+   в пустоту, пока карточки медленно проявлялись своим reveal. Теперь
+   результаты приходят одним слоем за те же 300мс. */
+.srch-swap-in {
+    animation: srch-swap-in var(--astra-t-move) var(--astra-ease);
+}
+
+@keyframes srch-swap-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Внутри подмены карточки не разыгрывают свой reveal (800мс + стаггер):
+   состояние «проявлено» им проставляется до первого кадра (settleReveals
+   в index.jsx), а движение целиком принадлежит слою. */
+.srch-swap-in .astra-reveal {
+    transition: none;
+}
+
+/* быстрый ответ: место под результаты держим молча, без серых плиток */
+.srch-hold {
+    min-height: 120px;
+}
+
+/* ---------- сетка результатов: грамматика Kupikod ---------- */
+
+.srch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 14px;
+    min-width: 0;
+}
+
+.srch-cell {
+    min-width: 0;
+    display: flex;
+}
+
+/* карточка-кнопка: открывает попап быстрой покупки */
+.srch-prod {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 0;
+    box-sizing: border-box;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-lg);
+    overflow: hidden;
+    transition:
+        transform var(--astra-t-color) var(--astra-ease),
+        box-shadow var(--astra-t-move) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease);
+}
+
+.srch-prod:hover {
+    transform: translateY(-3px);
+    border-color: var(--astra-line-strong);
+    box-shadow: var(--astra-shadow-sm);
+}
+
+.srch-prod:focus-visible {
+    outline: 2px solid var(--astra-pink);
+    outline-offset: 3px;
+}
+
+.srch-prod.is-pending {
+    cursor: progress;
+}
+
+.srch-prod.is-pending .srch-prod-media {
+    opacity: 0.6;
+}
+
+.srch-prod-media {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    background: var(--astra-card-2);
+    overflow: hidden;
+}
+
+.srch-prod-img,
+.srch-prod-avatar {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.srch-prod-img {
+    object-fit: cover;
+}
+
+/* «Новинка» поверх арта: фиолетовый wash на плотной подложке —
+   иначе полупрозрачный фиолет не держит контраст на любой картинке */
+.srch-prod-new {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background:
+        linear-gradient(0deg, var(--astra-violet-wash), var(--astra-violet-wash)),
+        rgba(14, 13, 18, 0.92);
+}
+
+.srch-prod-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px 14px;
+    min-width: 0;
+}
+
+.srch-prod-pricerow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+}
+
+.srch-prod-price {
+    font-family: var(--astra-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--astra-soft);
+}
+
+/* Старая цена — ТА ЖЕ гарнитура и вес, что у живой цены (Unbounded 700),
+   только мельче и приглушённее. Раньше она падала на телесную гарнитуру
+   и читалась как чужая строка, а не как «было». */
+.srch-prod-old {
+    font-family: var(--astra-display);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--astra-ink-dim);
+    text-decoration: line-through;
+}
+
+.srch-prod-name {
+    font-family: var(--astra-body);
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.35;
+    color: var(--astra-ink-dim);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.srch-skel {
+    height: 246px;
+    border-radius: var(--astra-r-lg);
+}
+
+/* ============================================================
+   Responsive — 1440 / 1024 / 768 / 420, без горизонтального скролла
+   ============================================================ */
+
+@media (max-width: 768px) {
+    .srch-page {
+        gap: 22px;
+        padding: 20px 18px 88px;
+    }
+
+    .srch-form {
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .srch-page {
+        padding: 14px 12px 80px;
+    }
+
+    .srch-title {
+        font-size: calc((28px) * var(--astra-heading-scale, 1));
+    }
+
+    .srch-submit-ring,
+    .srch-submit {
+        width: 100%;
+    }
+
+    .srch-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .srch-state {
+        padding: 20px 16px;
+    }
+
+    .srch-state .astra-btn-ghost {
+        width: 100%;
+    }
+
+    .srch-skel {
+        height: 214px;
+    }
+}
+
+/* ============================================================
+   Reduced motion — никаких переездов и подъёмов
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .srch-prod,
+    .srch-input,
+    .srch-clear {
+        transition: none;
+    }
+
+    .srch-prod:hover {
+        transform: none;
+    }
+
+    /* карточки появляются мгновенно — гасить поверх них нечего */
+    .srch-skel-layer {
+        display: none;
+    }
+
+    .srch-swap-in {
+        animation: none;
+    }
+}

@@ -57,3 +57,11 @@ export const duplicateCategorySettings = (sourceCategoryId, body) => {
         body,
     });
 };
+
+export const updateCategory = (id, body) => {
+    return apiRequest({
+        url: `/categories/${id}`,
+        method: 'PATCH',
+        body,
+    });
+};

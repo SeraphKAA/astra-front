@@ -1,0 +1,342 @@
+/* ============================================================
+   ASTRA Popover — «кнопка превращается в панель»
+   Порт cult-ui popover на чистый CSS. Скин v3: пепельная карточка
+   --astra-card, ОДНА волосяная рамка, ОДНА мягкая тень, радиус
+   --astra-r-xl. Ни второго слоя тени, ни жёсткого кольца.
+   Сама траектория морфа считается в Popover.jsx (FLIP), здесь только
+   покой, посадка панели и оформление её содержимого.
+   ============================================================ */
+
+.astra-popover-root {
+    position: relative;
+    display: inline-flex;
+}
+
+/* Базовый вид триггера намеренно с нулевой значимостью (:where):
+   классы вызывающей стороны (например .message-action-btn) всегда
+   перекрывают его без !important. */
+button:where(.astra-popover-trigger) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    cursor: pointer;
+    background: var(--astra-card-2);
+    color: var(--astra-ink);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-md);
+    font-family: var(--astra-body);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Перекрёстное затухание: подпись триггера уходит, подпись панели
+   приходит — вместе с морфом это читается как один объект. */
+.astra-popover-trigger {
+    transition: opacity var(--astra-t-color) var(--astra-ease);
+}
+
+.astra-popover-trigger.is-open {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.astra-popover-trigger-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: inherit;
+}
+
+.astra-popover-trigger:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+/* ---------- панель ---------- */
+.astra-popover-panel {
+    position: absolute;
+    z-index: 40;
+    box-sizing: border-box;
+    width: var(--astra-popover-w, 300px);
+    max-width: calc(100vw - 32px);
+    /* обрезка — часть морфа: контент раскрывается из угла триггера */
+    overflow: hidden;
+    background: var(--astra-card);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-xl);
+    box-shadow: var(--astra-shadow);
+    will-change: transform, opacity;
+}
+
+.astra-popover-panel:focus {
+    outline: none;
+}
+
+.astra-popover-panel--bottom { top: 0; }
+.astra-popover-panel--top { bottom: 0; }
+.astra-popover-panel--start { left: 0; }
+.astra-popover-panel--end { right: 0; }
+
+.astra-popover-panel--center {
+    left: 50%;
+    margin-left: calc(var(--astra-popover-w, 300px) / -2);
+}
+
+/* Контрмасштаб: пока коробка растёт, содержимое остаётся в своём
+   натуральном размере и просто раскрывается. */
+.astra-popover-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 16px 16px;
+    will-change: transform, opacity;
+}
+
+.astra-popover-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.astra-popover-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 20px;
+    /* место под скрытую кнопку «Закрыть», когда она проявилась */
+    padding-right: 8px;
+}
+
+.astra-popover-label {
+    display: block;
+    font-family: var(--astra-display);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.35;
+    color: var(--astra-ink);
+}
+
+.astra-popover-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--astra-ink-dim);
+}
+
+.astra-popover-body p {
+    margin: 0;
+}
+
+.astra-popover-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* ---------- поле ввода ----------
+   .astra-field гасит любую подсветку при вводе; здесь только посадка.
+   Рамку прибиваем гвоздями: правило темы .astra-field:focus ставит
+   border-color: inherit, а это подсветило бы рамку цветом текста. */
+.astra-popover-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 92px;
+    max-height: 168px;
+    padding: 10px 12px;
+    resize: none;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--astra-line);
+    border-radius: var(--astra-r-md);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    /* 16px — иначе iOS зумит страницу при фокусе */
+    font-size: 16px;
+    line-height: 1.45;
+}
+
+.astra-popover-textarea::placeholder {
+    color: var(--astra-ink-dim);
+}
+
+.astra-popover-panel textarea.astra-popover-textarea:focus,
+.astra-popover-panel textarea.astra-popover-textarea:focus-visible {
+    border-color: var(--astra-line);
+    box-shadow: none;
+    background-image: none;
+    outline: none;
+}
+
+/* видимость обхода с клавиатуры — тонкий ясеневый контур, не заливка */
+:root[data-modality="keyboard"] .astra-popover-panel textarea.astra-popover-textarea:focus-visible {
+    outline: 1px solid var(--astra-focus-field);
+    outline-offset: 0;
+}
+
+.astra-popover-textarea:disabled {
+    opacity: 1;
+    background: var(--astra-card-2);
+    color: var(--astra-ink-dim);
+    cursor: not-allowed;
+}
+
+/* ---------- кнопки ---------- */
+/* Кнопки панели говорят ТЕМ ЖЕ голосом и держат ТУ ЖЕ форму, что кнопки
+   всего приложения: скругление --astra-r-md (силуэт поисковой пилюли на
+   44px) и шрифт кнопок --astra-display 600/14. Раньше здесь стояли свои
+   значения (r-sm и текстовый шрифт 13px), и на экране поддержки рядом
+   оказывались три разные кнопки. */
+.astra-popover-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: var(--astra-r-md);
+    font-family: var(--astra-display);
+    font-size: 14px;
+    font-weight: 600;
+    transition:
+        background var(--astra-t-color) var(--astra-ease),
+        border-color var(--astra-t-color) var(--astra-ease),
+        color var(--astra-t-color) var(--astra-ease);
+}
+
+.astra-popover-btn:focus-visible {
+    outline: 2px solid var(--astra-ink);
+    outline-offset: 2px;
+}
+
+.astra-popover-btn--ghost {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--astra-line-strong);
+    color: var(--astra-ink);
+}
+
+.astra-popover-btn--ghost:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.075);
+    border-color: rgba(236, 234, 238, 0.3);
+}
+
+/* Разрушительное действие носит СВОЙ цвет (--astra-err), а не розовый.
+   Чернила почти чёрные: белое на #FF4D5E даёт 3.3:1, #1A0509 — 5.7:1. */
+.astra-popover-btn--danger {
+    background: var(--astra-err);
+    border-color: transparent;
+    color: #1A0509;
+}
+
+.astra-popover-btn--danger:hover:not(:disabled) {
+    background: #FF6472;
+}
+
+/* гасим сменой поверхности, а не прозрачностью */
+.astra-popover-btn:disabled {
+    opacity: 1;
+    background: var(--astra-card-2);
+    border-color: var(--astra-line);
+    color: var(--astra-ink-dim);
+    cursor: not-allowed;
+}
+
+.astra-popover-ring {
+    border-radius: var(--astra-r-sm);
+}
+
+/* розовое кольцо на розовой кнопке не читается — берём ясеневое */
+.astra-popover-ring:focus-within {
+    outline-color: var(--astra-ink);
+}
+
+@supports selector(:has(*)) {
+    .astra-popover-ring:has(:focus-visible) {
+        outline-color: var(--astra-ink);
+    }
+}
+
+.astra-popover-submit {
+    min-height: 44px;
+    padding: 0 18px;
+    font-size: 13px;
+}
+
+/* ---------- ошибка внутри панели ---------- */
+.astra-popover-error {
+    margin: 0;
+    font-family: var(--astra-body);
+    font-size: 12px;
+    line-height: 1.45;
+    /* 7.8:1 на --astra-card */
+    color: #FF8A94;
+}
+
+/* ---------- единственная кнопка закрытия ----------
+   Видимого крестика нет: кнопка визуально скрыта, живёт в ловушке
+   фокуса и проявляется, когда до неё дошли с клавиатуры. Контур
+   внутренний (offset отрицательный) — панель обрезает переполнение. */
+.astra-popover-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.astra-popover-close:focus-visible {
+    z-index: 2;
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    padding: 0 14px;
+    overflow: visible;
+    clip: auto;
+    clip-path: none;
+    background: var(--astra-card-2);
+    border: 1px solid var(--astra-line-strong);
+    border-radius: var(--astra-r-sm);
+    color: var(--astra-ink);
+    font-family: var(--astra-body);
+    font-size: 13px;
+    font-weight: 600;
+    outline: 2px solid var(--astra-ink);
+    outline-offset: -2px;
+}
+
+@media (max-width: 480px) {
+    .astra-popover-panel {
+        max-width: calc(100vw - 24px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .astra-popover-trigger,
+    .astra-popover-btn {
+        transition: none;
+    }
+}

@@ -1,6 +1,6 @@
 import { apiRequest } from "../../../shared/commonApi";
-import { LS } from "../../../utilities/utilLocalStorage";
 import { publicURL } from "../../../shared/commonApi";
+import {emitCartUpdated} from "../../cart/model/events";
 /* ========================
    USER
 ======================== */
@@ -28,18 +28,27 @@ export const getOrderByPublicId = (publicId) => {
     });
 };
 
-export const createOrderFromCart = (checkoutProfiles = []) => {
-    return apiRequest({
+export const createOrderFromCart = (payload = {}) => {
+    const result = apiRequest({
         url: "/orders/from-cart",
         method: "POST",
-        body: { checkout_profiles: checkoutProfiles },
+        body: {
+            checkout_profiles: payload.checkout_profiles ?? [],
+            promocode_code: payload.promocode_code ?? null,
+        },
     });
+    emitCartUpdated();
+    return result;
 };
 
-export const initRobokassaPayment = (orderPublicId) => {
+export const initRobokassaPayment = (orderPublicId, useBalance = true) => {
     return apiRequest({
-        url: `/payments/robokassa/init?order_public_id=${encodeURIComponent(orderPublicId)}&use_balance=true`,
+        url: `/payments/robokassa/init`,
         method: "POST",
+        body: {
+            order_public_id: orderPublicId,
+            use_balance: useBalance,
+        },
     });
 };
 
@@ -69,6 +78,14 @@ export const assignMeToOrder = (publicId) => {
     });
 };
 
+export const unassignMeFromOrder = (publicId) => {
+    return apiRequest({
+        url: "/orders/unassign-me",
+        method: "POST",
+        body: { public_id: publicId },
+    });
+};
+
 export const getMyAssignedOrders = (limit = 50, offset = 0) => {
     return apiRequest({
         url: `/orders/filter?limit=${limit}&offset=${offset}`,
@@ -90,10 +107,10 @@ export const exportOrdersAnalyticsExcel = async ({ dateFrom, dateTo } = {}) => {
     if (dateFrom) params.append("date_from", dateFrom);
     if (dateTo) params.append("date_to", dateTo);
 
-    const token = await LS.get("access_token");
     const resp = await fetch(`${publicURL}/orders/analytics/export?${params.toString()}`, {
         method: "GET",
-        headers: token ? { Authorization: "Bearer " + token } : {},
+        credentials: "include",
+        headers: { Accept: "application/json" }, // если бэкенд ожидает JSON
     });
     if (!resp.ok) {
         const text = await resp.text().catch(() => "");
@@ -106,4 +123,34 @@ export const getAdminDashboardAnalytics = (chartDays = 14) => {
     return apiRequest({
         url: `/orders/analytics/dashboard?chart_days=${chartDays}`,
     });
+};
+
+
+export const refundOrder = (publicId, reason, amount = null) => {
+    return apiRequest({
+        url: `/orders/refund`,
+        method: "POST",
+        body: {
+            public_id: publicId,
+            reason: reason || null,
+            amount: amount ?? null,
+        },
+    });
+};
+
+export const getOrdersByFilter = (filters = {}, limit = 50, offset = 0) => {
+  return apiRequest({
+    url: `/orders/filter?limit=${limit}&offset=${offset}`,
+    method: "POST",
+    body: filters,
+  });
+};
+
+// Назначить продавца на заказ
+export const assignSellerToOrder = (publicId, sellerId) => {
+  return apiRequest({
+    url: "/orders/assign-seller",
+    method: "POST",
+    body: { public_id: publicId, seller_id: sellerId },
+  });
 };

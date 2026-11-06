@@ -1,0 +1,97 @@
+/* SlidingNumber — цифровые барабаны.
+   Цифра не просто «переезжает»: колонка едет transform'ом, а сама цифра
+   на входе всплывает и проявляется, на выходе — уходит и растворяется.
+   Всё на compositor-свойствах (transform/opacity/filter). */
+
+.fx-slidenum {
+    display: inline-flex;
+    align-items: baseline;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Доступное значение для скринридера (барабаны aria-hidden) */
+.fx-slidenum-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.fx-slidenum-slot {
+    display: inline-block;
+    height: 1em;
+    overflow: hidden;
+    line-height: 1;
+}
+
+.fx-slidenum-reel {
+    display: block;
+    transition: transform var(--astra-t-move) var(--astra-ease);
+    will-change: transform;
+}
+
+.fx-slidenum-digit {
+    display: block;
+    height: 1em;
+    line-height: 1;
+    /* активная цифра проявлена, соседние по барабану — приглушены и размыты,
+       поэтому на подъезде цифра «проявляется», а уходящая тает */
+    opacity: 0.35;
+    filter: blur(0.4px);
+    transition:
+        opacity var(--astra-t-move) var(--astra-ease),
+        filter var(--astra-t-move) var(--astra-ease);
+}
+
+.fx-slidenum-digit.is-current {
+    opacity: 1;
+    filter: blur(0);
+}
+
+/* Смена всего значения (например, после промокода): строка коротко
+   всплывает целиком — движение поверх барабанов, не вместо них. */
+.fx-slidenum.is-changing {
+    animation: fx-slidenum-pulse var(--astra-t-move) var(--astra-ease);
+}
+
+@keyframes fx-slidenum-pulse {
+    from {
+        transform: translateY(0.12em);
+        opacity: 0.55;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Нецифровые символы (₽, пробел, запятая) — тоже мягко подхватывают смену */
+.fx-slidenum-sym {
+    display: inline-block;
+    transition: opacity var(--astra-t-color) var(--astra-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .fx-slidenum-reel,
+    .fx-slidenum-digit,
+    .fx-slidenum-sym {
+        transition: none;
+    }
+
+    .fx-slidenum.is-changing {
+        animation: none;
+    }
+
+    .fx-slidenum-digit {
+        opacity: 1;
+        filter: none;
+    }
+}
